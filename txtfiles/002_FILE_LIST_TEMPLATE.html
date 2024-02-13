@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="description" content="List of MD5 Hash values for files">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" type="text/css" href="css/stylesheetHF.css">
+  <!-- Reference URL: https://www.w3schools.com/css/default.asp -->
+
+  <title>File Name List</title>
+
+  <link rel="shortcut icon" type="img/png" href="img/binary.png">
+
+  <script src="scripts/main.js"></script>
+
+</head>
+
+<body>
+
+  <div class="btn-div">
+    <a href="javascript:window.print()">
+      <button class="button no-print">Print Page</button>
+    </a>
+  </div>
+
+  <div class="header-div">
+    <div class="header">unclassified // fouo</div>
+  </div>
+  
+  <div class="disclaimer-div">
+    <div class="disclaimer">
+      <span class="disclaimer-text">
+        CONFIDENTIAL -- This document contains neither recommendations nor conclusions of the Virginia State Police. It is the property of the Virginia State Police and is loaned to your agency; it and its contents are not to be distributed outside your agency.
+      </span>
+    </div>
+  </div>
+
+  <div class="rpt-header-div">
+
+    <img src="img/vsp patch.png" alt="State Police Patch">
+
+    <table class="table-01">
+      <col width="200">
+      <col width="450">
+      <div>
+        <tr><td class="td-l">Case Number:</td><td class="td-r">XX-XXXXXX</td></tr>  <!-- Change CASE NUMBER as needed -->
+        <tr><td class="td-l">Investigator:</td><td class="td-r">SA Michael A Sponheimer</td></tr>
+        <tr><td class="td-l">Agency:</td><td class="td-r">Virginia State Police</td></tr>
+        <tr><td class="td-l">Division:</td><td class="td-r">High-Tech Crimes Division</td></tr>
+        <tr><td class="td-l">Email:</td><td class="td-r">Michael.Sponheimer@vsp.virginia.gov</td></tr>
+      </div>
+    </table>
+
+  </div>
+
+  <div class="options-div no-print">
+
+    <table class="options-table">
+      <tr>
+        <td>Table Row Color (Even):</td>  <!-- sets background color of the even rows of the main table -->
+        <td>
+          <select name="background" id="background" onchange="changeBackground(this)">
+            <option value="#FFFFFF">White</option>
+            <option value="#DCDCDC">Gainsboro</option>
+            <option value="#D3D3D3">LightGray</option>
+            <option value="#C0C0C0">Silver</option>
+            <option value="#A9A9A9">DarkGray</option>
+            <option value="#808080">Gray</option>
+            <option value="#696969">DimGray</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Table Font:</td>  <!-- Sets the font of the rows of the main table -->
+        <td>
+          <select name="font" id="font" onchange="changeFontFace(this)">
+            <option value="Arial">Arial</option>
+            <option value="Calibri">Calibri</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Garamond">Garamond</option>
+            <option value="Tahoma">Tahoma</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Verdana">Verdana</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Table Font Size:</td>  <!-- sets the size of the font in the rows of the main table -->
+        <td>
+          <select name="size" id="size" onchange="changeFontSize(this)">
+            <option value="8pt">8 pt</option>
+            <option value="9pt">9 pt</option>
+            <option value="10pt">10 pt</option>
+            <option value="11pt">11 pt</option>
+            <option value="12pt">12 pt</option>
+            <option value="13pt">13 pt</option>
+            <option value="14pt">14 pt</option>
+            <option value="15pt">15 pt</option>
+            <option value="16pt">16 pt</option>
+            <option value="17pt">17 pt</option>
+            <option value="18pt">18 pt</option>
+            <option value="19pt">19 pt</option>
+            <option value="20pt">20 pt</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+
+    <script>
+      function changeBackground(x) {
+        console.log("Alternate row color changed to: " + x.value);
+        var tableRowColor = document.getElementById("table02Body");
+        table02Body.style.backgroundColor = x.value;
+      }
+    </script>
+
+    <script>
+      function changeFontFace(x) {
+        console.log("Font Face changed to: " + x.value);
+        var tableFontFace = document.getElementById("table02Body");
+        table02Body.style.fontFamily = x.value;
+      }
+    </script>
+
+    <script>
+      function changeFontSize(x) {
+        console.log("Font size changed to: " + x.value);
+        var tableFontSize = document.getElementById("table02Body");
+        table02Body.style.fontSize = x.value;
+      }
+    </script>
+
+  </div>  <!-- last div for table appearance controls -->
+
+  <div class="folder-div">
+    <p>File Name List for Folder: 18-14547\Cell_Phones\MILLS_Acquisition</p>  <!-- change folder name as needed -->
+  </div>
+
+  <div class="data-table-div">
+    <table class="table-02">  <!-- total table width = 1000px -->
+      <col width="85px">
+      <col width="90px">
+      <col width="175px">
+      <col width="150px">
+      <col width="500px">
+      <thead>
+        <tr>
+          <th>Line #</th><th>Mode</th><th>LastWriteTime</th><th>SizeInKB</th><th>Name</th>
+        </tr>
+      </thead>
+      <tbody id="table02Body">
+        <tr>
+          <td>1</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>2</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>3</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>4</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>5</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>6</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>7</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>8</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>9</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>10</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>11</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>12</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>13</td><td>MODE</td><td>DATE</td><td>Size</td><td>NAME</td>
+        </tr>
+        <tr>
+          <td>10010</td><td>MODE</td><td>DATE</td><td>Size</td><td>Table Data\this-is-a-test-to-see_if_the_Row_will...expand728363\223443\55vf4wdwds\fsfwr33df\im just typing extra data here to see if the row will expand and be printable</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="attribute-div">
+    <table class="table-03">
+      <tr><th colspan="3"><b>NOTE: </b>Mode Attributes</th></tr>
+      <tr><td>"d"</td><td>-</td><td>Directory</td></tr>
+      <tr><td>"a"</td><td>-</td><td>Archive</td></tr>
+      <tr><td>"r"</td><td>-</td><td>Read-Only</td></tr>
+      <tr><td>"h"</td><td>-</td><td>Hidden</td></tr>
+      <tr><td>"s"</td><td>-</td><td>System</td></tr>
+      <tr><td>"l"</td><td>-</td><td>Reparse Point, Symlink, etc.</td></tr>
+    </table>
+  </div>
+
+  <div class="disclaimer-div">
+    <div class="disclaimer">
+      <span class="disclaimer-text">
+        CONFIDENTIAL -- This document contains neither recommendations nor conclusions of the Virginia State Police. It is the property of the Virginia State Police and is loaned to your agency; it and its contents are not to be distributed outside your agency.
+      </span>
+    </div>
+  </div>
+
+  <div class="header-div">
+    <div class="header">unclassified // fouo</div>
+  </div>
+
+</body>
+
+</html>
