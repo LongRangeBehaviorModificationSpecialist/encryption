@@ -1,5 +1,5 @@
 __pycache__
-.gnupg/
-temp/
+.gnupg
+temp
 *.asc
 *.txt
