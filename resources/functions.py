@@ -1,5 +1,4 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import binascii
 from rich.console import Console
@@ -74,8 +73,8 @@ after decryption (y/n)? >>> """)
                       folder_path: Path) -> list:
         dirs = []
         for dir_name, sub_dirs, file_list in os.walk(folder_path):
-            for file_name in file_list:
-                dirs.append(dir_name + '\\' + file_name)
+            for file in file_list:
+                dirs.append(dir_name + '\\' + file)
         return dirs
 
 
@@ -93,21 +92,21 @@ after decryption (y/n)? >>> """)
 
     def get_email_address(self) -> str:
         email_address = console.input("""[khaki3]
-[-] Enter email address of the PGP key owner:
+[-] Enter email address of the PGP key owner
 >>> """)
         return email_address
 
 
     def get_encrypted_file_name(self,
-                                file_to_encrypt: Path) -> Path:
-        enc_file_name = f'{file_to_encrypt}.encrypted'
-        return Path(enc_file_name)
+                                file_path: Path) -> Path:
+        encrypted_file = f'{file_path}.encrypted'
+        return Path(encrypted_file)
 
 
     def get_file_path(self,
                       text: str) -> Path:
         file_path = console.input(f"""[khaki3]
-[-] Enter the path of the file to be {text}:
+[-] Enter the path of the file to be {text}
 >>> """)
         # file_path = 'I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt'
         return Path(file_path)
@@ -115,18 +114,18 @@ after decryption (y/n)? >>> """)
 
     def get_folder_path(self,
                         text: str) -> Path:
-#         folder_path = console.input(f"""[khaki3]
-# [-] Enter the path of the directory containing the files to be {text}:
-# >>> """)
-        folder_path = 'I:\\encryption\\aaa\\txtfiles_AES'
+        folder_path = console.input(f"""[khaki3]
+[-] Enter the path of the directory containing the files to be {text}
+>>> """)
+        # folder_path = 'I:\\encryption\\aaa\\txtfiles_AES'
         return Path(folder_path)
 
 
     def get_key_file_path(self) -> Path:
-#         key_file = console.input("""[khaki3]
-# [-] Enter the path to the KEY FILE you want to use:
-# >>> """)
-        key_file = 'I:\\encryption\\aaa\\2024-01-24_105425_key.key'
+        key_file = console.input("""[khaki3]
+[-] Enter the path to the KEY FILE you want to use
+>>> """)
+        # key_file = 'I:\\encryption\\aaa\\2024-01-24_105425_key.key'
         return Path(key_file)
 
 
@@ -157,11 +156,11 @@ Your password checks out. Continuing...""")
            ):
             console.print("""[red1]
 Your password did not meet the minimun requirements. Please try again.\n
-Your password must meet the following criteria:\n
+Your password must meet the following criteria\n
   [-] Is at least ten characters long
   [-] Contain at least one number
   [-] Contain at least one capital letter and
-  [-] Contain at least one of the following symbols: \
+  [-] Contain at least one of the following symbols:\
 ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |""")
             Functions.get_password(self)
         else:
@@ -171,9 +170,10 @@ Your password must meet the following criteria:\n
 
     def get_pgp_password(self) -> str:
         password = console.input("""[khaki3]
-[-] Enter a password to use for the PGP private key:
+[-] Enter a password to use for the PGP private key
 >>> """)
-        self.validate_password(self, password)
+        Functions.validate_password(self,
+                                    password=password)
         return password
 
 
@@ -200,7 +200,7 @@ Your password must meet the following criteria:\n
 
 
     def no_valid_yn_option(self) -> None:
-        no_valid_yn_option = console.print("""[bold red]
+        no_valid_yn_option = console.print("""[red1]
 !!! You did not enter a valid option. The valid options are either 'y' OR \
 'n'. Please try again.""")
         return no_valid_yn_option
@@ -273,36 +273,37 @@ Key File Hash Value (SHA-256): {key_file_hash_value}""")
 
 
     def get_xor_key(self) -> str:
-#         xor_key = console.input("""[khaki3]
-# Enter the key you want to use for the encryption:
-# >>> """)
-        xor_key = '12345'
+        xor_key = console.input("""[khaki3]
+Enter the key you want to use for the encryption >>> """)
+        # xor_key = '12345'
         return xor_key
 
 
     def get_message_to_xor(self) -> str:
-#         message = console.input("""[khaki3]
-# Enter the message string you want to encrypt:
-# >>> """)
-        message = 'This is a super secret message. The launch code is: 456F8A1C453EF92BEFAA23.'
+        message = console.input("""[khaki3]
+Enter the message string you want to encrypt
+>>> """)
+        # message = 'This is a super secret message. The launch code is: 456F8A1C453EF92BEFAA23.'
         return message
 
 
     def get_file_to_xor(self) -> Path:
-        # file = Functions.get_file_path(self, text='you want to encrypt')
-        file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py'
+        file_path = Functions.get_file_path(self,
+                                            text='you want to encrypt')
+        # file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py'
         return Path(file_path)
 
 
     def get_xor_message_to_decrypt(self) -> str:
-#         message = console.input("""[khaki3]
-# Enter the message string you want to decrypt:
-# >>> """)
-        message = """eZZG\x15XA\x13U\x15BGCQG\x11AVWGTF\x13YPBARSP\x1f\x12g\\P\x11^RA[RZ\x13WZUW\x13]F\x0b\x12\x07\x01\x03w\nr\x05v\x05\x07\x00qs\x08\x00qqsps\x01\x07\x1b"""
+        message = console.input("""[khaki3]
+Enter the message string you want to decrypt
+>>> """)
+        # message = """eZZG\x15XA\x13U\x15BGCQG\x11AVWGTF\x13YPBARSP\x1f\x12g\\P\x11^RA[RZ\x13WZUW\x13]F\x0b\x12\x07\x01\x03w\nr\x05v\x05\x07\x00qs\x08\x00qqsps\x01\x07\x1b"""
         return message
 
 
     def get_xor_file_to_decrypt(self) -> str:
-        # encrypted_file = Functions.get_file_path(self, text='you want to decrypt')
-        file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py.encrypted'
+        file_path = Functions.get_file_path(self,
+                                            text='you want to decrypt')
+        # file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py.encrypted'
         return file_path

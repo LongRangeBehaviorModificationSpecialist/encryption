@@ -1,5 +1,4 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from cryptography.fernet import Fernet
 import os
@@ -7,9 +6,6 @@ from pathlib import Path
 from rich.console import Console
 
 from resources.functions import Functions
-from vars import (key_file,
-                  folder_path_for_key_test,
-                  file_to_decrypt_with_key)
 
 # Make the console object
 console = Console()
@@ -35,7 +31,8 @@ class KeyFileDecryptor:
 DECRYPT A FILE USING A KNOWN .KEY FILE
 =======================================""")
 
-        key_to_load = Functions.load_key(self, key_file)
+        key_to_load = Functions.load_key(self,
+                                         key_file=key_file)
         f = Fernet(key_to_load)
 
         console.print(f"""[bright_white]
@@ -47,13 +44,15 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
             decrypted_file = Path(file_name)
         else:
             decrypted_file = Functions.get_decrypted_file_name(self,
-                                                                    file_path)
+                                                               file_path)
 
         with open(file_path, 'rb') as ef:
             encrypted_data = ef.read()
         decrypted_data = f.decrypt(encrypted_data)
         with open(decrypted_file, 'wb') as df:
-            df.write(decrypted_data)
+            Functions.write_to_file(self,
+                                    file=df,
+                                    message=decrypted_data)
 
         Functions.print_confirm_file_action(self,
                                             file_name=decrypted_file,
@@ -61,22 +60,19 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
 
 
     def decrypt_files_in_folder_with_key(self,
-                                             key_file: Path,
-                                             folder_path: Path) -> None:
+                                         key_file: Path,
+                                         folder_path: Path) -> None:
         console.print("""[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
 =====================================================""")
 
-        key_to_load = Functions.load_key(self, key_file)
+        key_to_load = Functions.load_key(self,
+                                         key_file=key_file)
         f = Fernet(key_to_load)
 
-        # folder_path = Functions.get_folder_path(
-        #     self,
-        #     text='containing the files to be decrypted')
-        # folder_path = 'I:\\encryption\\aaa\\txtfiles02'
-
-        dirs = Functions.get_all_files(self, folder_path_for_key_test)
+        dirs = Functions.get_all_files(self,
+                                       folder_path=folder_path)
         for file in dirs:
             file_name, file_ext = os.path.splitext(file)
 
@@ -91,7 +87,10 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
             decrypted_data = f.decrypt(encrypted_data)
 
             with open(decrypted_file_name, 'wb') as df:
-                df.write(decrypted_data)
+                Functions.write_to_file(self,
+                                        file=df,
+                                        message=decrypted_data)
+
 
         # ASK USER IF THEY WANT TO DELETE THE ORIGINAL ENCRYPTED FILES
         delete_original_enc_files = Functions.ask_delete_original_enc_files(self)
@@ -99,7 +98,7 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
         # IF USER CHOOSES `NO`, THE ORIGINALS FILES **NOT** DELETED
         if delete_original_enc_files.lower().strip() == 'n':
             Functions.print_original_files_not_deleted(self,
-                                                       folder_path_for_key_test,
+                                                       folder_path,
                                                        action='decrypted')
 
         # IF THE USER CHOOSES `YES` WILL DELETE ORIGINAL FILES
@@ -108,7 +107,7 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
                 if file_ext == '.encrypted':
                     os.remove(file)
             Functions.print_original_files_deleted(self,
-                                                   folder_path_for_key_test,
+                                                   folder_path,
                                                    action='decrypted')
 
         # IF THE USER DID NOT CHOOSE EITHER `Y` OR `N`

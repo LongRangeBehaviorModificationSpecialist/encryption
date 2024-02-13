@@ -1,5 +1,4 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from rich.console import Console
 import gnupg
@@ -8,10 +7,6 @@ import os
 import sys
 
 from resources.functions import Functions
-from vars import (password,
-                  pgp_file_to_encrypt,
-                  pgp_file_to_decrypt,
-                  pgp_folder_path)
 
 # Make the console object
 console = Console()
@@ -34,7 +29,7 @@ class PGPClass:
 [-] File encryption successful.
     {status.stderr}""")
         else:
-            console.print("""[red3]
+            console.print("""[red1]
 [-] File encryption WAS NOT successful. Please try again.""")
 
 
@@ -55,7 +50,9 @@ class PGPClass:
         return public_key
 
 
-    def pgp_export_private_key(self, keyid: str, password: str) -> None:
+    def pgp_export_private_key(self,
+                               keyid: str,
+                               password: str) -> None:
         """Decrypts a file using a provided .key file
 
             Args:
@@ -65,8 +62,6 @@ class PGPClass:
             Returns:
                 file: private PGP key
         """
-        # password = Functions.get_password(self)
-
         private_key = PGPClass.gpg.export_keys(keyids=keyid,
                                                secret=True,
                                                passphrase=password,
@@ -88,16 +83,7 @@ class PGPClass:
             Returns:
                 file: new pgp key pair
         """
-
-#         password = console.input("""[khaki]
-# [-] Enter a password to use for the PGP keys
-# >>> """)
-        # password = 'Supersecretpassword1234!'
-
         PGPClass.gpg.encoding = 'utf-8'
-
-        # email_address = Functions.get_email_address(self)
-        # email_address = 'mikespon@gmail.com'
 
         input_data = PGPClass.gpg.gen_key_input(name_email=email_address,
                                                 passphrase=password,
@@ -121,12 +107,8 @@ class PGPClass:
     def pgp_encrypt_file(self,
                          file_path: Path) -> None:
 
-        # clear_file = Functions.get_file_path(
-        #     self,
-        #     text='ENCRYPT')
-
         encrypted_file = Functions.get_encrypted_file_name(self,
-                                                           file_path)
+                                                           file_path=file_path)
 
         with open(file_path, 'rb') as f:
             status = PGPClass.gpg.encrypt_file(
@@ -141,14 +123,6 @@ class PGPClass:
     def pgp_decrypt_file(self,
                          file_path: Path,
                          password: str) -> None:
-
-        # password = Functions.get_password(self)
-        # password = 'Supersecretpassword1234!'
-
-        # pgp_file_to_decrypt = Functions.get_file_path(
-        #     self,
-        #     text='DECRYPT')
-        # pgp_file_to_decrypt = 'C:\\Users\\mikes\\Desktop\\\encryption\\aaa\\Falcon_OneDrive_Backup_for_PGP.py.encrypted'
 
         file = file_path
         if file.endswith('.encrypted'):
@@ -168,18 +142,16 @@ class PGPClass:
     def pgp_encrypt_folder(self,
                            folder_path: Path) -> None:
 
-#         pgp_folder_path = console.input("""[khaki3]
-# [-] Enter the path of the directory containing the files to be ENCRYPTED
-# >>> """)
-
         delete_originals = console.input("""[khaki3]
 [-] Do you want to delete the original files after encryption (y/n)? >>> """)
+
         delete_originals = delete_originals.strip().lower()
 
         if delete_originals == 'y':
             choice = console.input("""[khaki3]
 [-] All of the original files in this directory will be [orange_red1]\
 PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue (y/n)? >>> """)
+
             choice = choice.strip().lower()
 
             if choice == 'y':
@@ -200,7 +172,7 @@ Exiting program. Please wait...""")
             # NO VALID CHOICE WAS ENTERED
             else:
                 console.print("""[khaki3]
-!!! Seriously, you did not enter a valid option. Exiting...""")
+Seriously, you did not enter a valid option. Exiting...""")
             sys.exit(0)
 
         # IF THE USER CHOOSES NOT TO DELETE ORIGINAL FILES
@@ -214,7 +186,7 @@ Exiting program. Please wait...""")
         # NO VALID CHOICE WAS ENTERED
         else:
             console.print("""[khaki3]
-!!! Seriously, you did not enter a valid option. Exiting...""")
+Seriously, you did not enter a valid option. Exiting...""")
             sys.exit(0)
 
         # PRINT STATUS MESSAGE TO THE TERMINAL

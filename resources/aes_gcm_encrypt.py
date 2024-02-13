@@ -1,5 +1,4 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -21,22 +20,13 @@ class AESGCMDataEncryptor:
     have proper backups before running it.
     """
 
-    def get_file_path(self) -> Path:
-        file_path = 'I:\\encryption\\aaa\\compare_dirs_GCM.py'
-        return (Path(file_path))
-
-
-    def get_folder_path(self) -> Path:
-        folder_path = f'I:\\encryption\\aaa\\txtfiles_GCM'
-        return Path(folder_path)
-
-
     def aes_gcm_encrypt_file(self,
                              file_path: Path,
                              password: str) -> None:
         """Encrypts a single file using AES GCM encryption"""
 
-        key = Functions.encode_key(self, password=password)
+        key = Functions.encode_key(self,
+                                   password=password)
         with open(file_path, 'rb') as f:
             plaintext = f.read()
 
@@ -47,13 +37,13 @@ class AESGCMDataEncryptor:
             backend=default_backend())
         encryptor = cipher.encryptor()
         ciphertext = encryptor.update(plaintext) + encryptor.finalize()
-        encrypted_file_path = Path(f'{file_path}.encrypted')
+        encrypted_file = Path(f'{file_path}.encrypted')
 
-        with open(encrypted_file_path, 'wb') as f:
+        with open(encrypted_file, 'wb') as f:
             f.write(iv + encryptor.tag + ciphertext)
 
         console.print(f"""[green3]
-{file_path.name:34s}{'--->':7s}{encrypted_file_path.name}
+{file_path.name:34s}{'--->':7s}{encrypted_file.name}
 {'':34s}{'':7s}iv: {iv.hex().upper()}
 {'':34s}{'':7s}tag: {encryptor.tag.hex().upper()}
 {'':34s}{'':7s}cipherText: {ciphertext[0:16]}...""")
@@ -66,7 +56,8 @@ class AESGCMDataEncryptor:
         """Encrypts all files in a directory using AES GCM encryption"""
 
         choice = Functions.confirm_delete_original_files(self)
-        dirs = Functions.get_all_files(self, folder_path)
+        dirs = Functions.get_all_files(self,
+                                       folder_path=folder_path)
 
         for file in dirs:
             file = Path(file)
@@ -78,12 +69,12 @@ class AESGCMDataEncryptor:
             for file in dirs:
                 os.remove(file)
             Functions.print_original_files_deleted(self,
-                                               folder_path=folder_path,
-                                               action='ENCRYPTED')
-        elif choice.lower().strip() == 'n':
-            Functions.print_original_files_not_deleted(self,
                                                    folder_path=folder_path,
                                                    action='ENCRYPTED')
+        elif choice.lower().strip() == 'n':
+            Functions.print_original_files_not_deleted(self,
+                                                       folder_path=folder_path,
+                                                       action='ENCRYPTED')
         else:
             Functions.no_valid_yn_option(self)
             AESGCMDataEncryptor.aes_gcm_encrypt_directory(self)

@@ -1,5 +1,4 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
@@ -52,7 +51,9 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
             AES.block_size)
 
         with open(decrypted_file, 'wb') as f:
-            f.write(decrypted_data)
+            Functions.write_to_file(self,
+                                    file=f,
+                                    message=decrypted_data)
 
         Functions.print_confirm_file_action(self,
                                             file_name=decrypted_file,
@@ -89,11 +90,12 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
             encrypted_data = f.read()
 
         cipher = AES.new(key=key, mode=mode, iv=iv)
-        clear_file_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
+        decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
 
         with open(decrypted_file, 'wb') as f:
-            f.write(clear_file_data)
-
+            Functions.write_to_file(self,
+                                    file=f,
+                                    message=decrypted_data)
 
 
     def aes_decrypt_all_files_in_dir(self,

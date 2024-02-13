@@ -14,7 +14,7 @@ from resources import (AESDecryptor,
                        Functions)
 
 __author__ = "mikespon"
-__last_updated__ = "2024-02-11"
+__last_updated__ = "2024-02-13"
 
 # Make the console object
 console = Console()
@@ -31,7 +31,7 @@ class App:
         try again and enter a valid option.
         """
         console.print("""[red1]
-!!! You did not enter a valid option. Please try again.""")
+You did not enter a valid option. Please try again.""")
         App.main(self)
 
 
@@ -79,7 +79,7 @@ Choose an option
 2)  Encrypt a file using a newly created .key file
 3)  Encrypt all files in a directory using a .key file\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -88,17 +88,20 @@ ENTER CHOICE >>> """)
 
             if option == '1':
                 key_file = Functions.get_key_file_path(self)
-                file_path = Functions.get_file_path(self, text="ENCRYPT")
+                file_path = Functions.get_file_path(self,
+                                                    text="ENCRYPT")
                 KeyFileEncryptor.get_key_data_to_encrypt_file(self,
                                                               key_file=key_file,
                                                               file_path=file_path)
             elif option == '2':
-                file_path = Functions.get_file_path(self, text="ENCRYPT")
+                file_path = Functions.get_file_path(self,
+                                                    text="ENCRYPT")
                 KeyFileEncryptor.encrypt_file_with_new_key(self,
                                                            file_path=file_path)
             elif option == '3':
                 key_file = Functions.get_key_file_path(self)
-                folder_path = Functions.get_folder_path(self, text="ENCRYPT")
+                folder_path = Functions.get_folder_path(self,
+                                                        text="ENCRYPT")
                 KeyFileEncryptor.encrypt_files_in_dir_with_key(self,
                                                                key_file=key_file,
                                                                folder_path=folder_path)
@@ -121,7 +124,7 @@ Choose an option
 1)  Encrypt a single file using a password
 2)  Encrypt all files in a directory using a password\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -135,7 +138,8 @@ ENTER CHOICE >>> """)
 
 
             if option == '1':
-                file_path = Functions.get_file_path(self, text="ENCRYPTED")
+                file_path = Functions.get_file_path(self,
+                                                    text="ENCRYPTED")
                 password = Functions.get_password(self)
                 AESEncryptor.aes_encrypt_single_file(self,
                                                      file_path=file_path,
@@ -157,7 +161,8 @@ ENTER CHOICE >>> """)
 
                 make_aes_dir_choice = make_aes_dir_choice.strip()
 
-                folder_path = Functions.get_folder_path(self, text="ENCRYPTED")
+                folder_path = Functions.get_folder_path(self,
+                                                        text="ENCRYPTED")
                 # password = Functions.get_password(self)
 
                 if make_aes_dir_choice== '1':
@@ -198,7 +203,7 @@ Choose an option
 1)  Encrypt a single file using a password (AES-GCM)
 2)  Encrypt all files in a directory using a password (AES-GCM)\n
 R)  Return to main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -212,7 +217,8 @@ ENTER CHOICE >>> """)
                                                          file_path=file_path,
                                                          password=password)
             elif option == '2':
-                folder_path = Functions.get_folder_path(self, text="ENCRYPT")
+                folder_path = Functions.get_folder_path(self,
+                                                        text="ENCRYPT")
                 # password = Functions.get_password(self)
                 AESGCMDataEncryptor.aes_gcm_encrypt_directory(self,
                                                               folder_path=folder_path,
@@ -237,7 +243,7 @@ Choose an option
 2)  Encrypt files using PGP encryption
 3)  Encrypt all files in a directory using PGP keys\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -255,7 +261,8 @@ ENTER CHOICE >>> """)
                 PGPClass.pgp_encrypt_file(self,
                                           file_path=file_path)
             elif option == '3':
-                folder_path = Functions.get_folder_path(self, text="ENCRYPT")
+                folder_path = Functions.get_folder_path(self,
+                                                        text="ENCRYPT")
                 PGPClass.pgp_encrypt_folder(self,
                                             folder_path=folder_path)
             elif option.lower() == 'r':
@@ -277,7 +284,7 @@ Choose an option
 1)  Encrypt a single message string
 2)  Encrypt a file\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -320,7 +327,7 @@ Choose an option
 1)  Decrypt a file using a .key file
 2)  Decrypt all files in a folder using a .key file\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -329,13 +336,15 @@ ENTER CHOICE >>> """)
 
             if option == '1':
                 key_file = Functions.get_key_file_path(self)
-                file_path = Functions.get_file_path(self, text="DECRYPT")
+                file_path = Functions.get_file_path(self,
+                                                    text="DECRYPT")
                 KeyFileDecryptor.decrypt_file_with_key(self,
                                                        key_file=key_file,
                                                        file_path=file_path)
             elif option == '2':
                 key_file = Functions.get_key_file_path(self)
-                file_path = Functions.get_file_path(self, text="DECRYPT")
+                file_path = Functions.get_file_path(self,
+                                                    text="DECRYPT")
                 KeyFileDecryptor.decrypt_files_in_folder_with_key(self,
                                                                   key_file=key_file,
                                                                   file_path=file_path)
@@ -358,7 +367,7 @@ Choose an option
 1)  Decrypt a file using a password (AES encrypted)
 2)  Decrypt all files in a folder using a password\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -372,7 +381,8 @@ ENTER CHOICE >>> """)
                                               file_path=file_path,
                                               password=password)
             elif option == '2':
-                folder_path = Functions.get_folder_path(self, text="DECRYPT")
+                folder_path = Functions.get_folder_path(self,
+                                                        text="DECRYPT")
                 # password = Functions.get_password(self)
                 AESDecryptor.aes_decrypt_all_files_in_dir(self,
                                                           folder_path=folder_path,
@@ -396,7 +406,7 @@ Choose an option
 1)  Decrypt a single file using a password
 2)  Decrypt all files in a directory using a password\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -404,13 +414,15 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if choice == '1':
-                file_path = Functions.get_file_path(self, text='DECRYPTED')
+                file_path = Functions.get_file_path(self,
+                                                    text='DECRYPTED')
                 # password = Functions.get_password(self)
                 AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
                                                          file_path=file_path,
                                                          password=password)
             elif choice == '2':
-                folder_path = Functions.get_folder_path(self, text='DECRYPTED')
+                folder_path = Functions.get_folder_path(self,
+                                                        text='DECRYPTED')
                 AESGCMDataDecryptor.aes_gcm_decrypt_directory(self,
                                                               folder_path=folder_path)
             elif option.lower() == 'r':
@@ -432,7 +444,7 @@ Choose an option
 1)  Decrypt a file using PGP key
 2)  -- Decrypt all files in a folder using PGP key --\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
@@ -466,7 +478,7 @@ Choose an option
 1)  Decrypt a single message
 2)  Decrypt a file\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
