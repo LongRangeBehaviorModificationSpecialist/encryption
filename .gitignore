@@ -1,8 +1,10 @@
 __pycache__
 .gnupg
 temp
+txtfiles
 *.asc
 *.txt
 testingtemp.py
 vars.py
 .vscode
+txtfiles

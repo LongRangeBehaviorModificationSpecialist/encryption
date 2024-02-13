@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from rich.console import Console
-import os
 from resources import (AESDecryptor,
                        AESEncryptor,
                        AESGCMDataDecryptor,
@@ -14,14 +13,13 @@ from resources import (AESDecryptor,
                        XORDecryption,
                        Functions)
 
-
 __author__ = "mikespon"
 __last_updated__ = "2024-02-11"
 
 # Make the console object
 console = Console()
 
-password = 'mysecretpassword34'
+# password = 'mysecretpassword34'
 email_address = 'testaddress@email.com'
 
 
@@ -62,7 +60,7 @@ G)  Decrypt file/files using a password (AES-CBC Mode)
 H)  Decrypt file/files using a password (AES-GCM Mode)
 I)  Decrypt file/files using a PGP key file
 J)  Decrypt message/file using XOR\n
-Q)  Quit the Application[bold khaki3]\n
+Q)  Quit the Application[khaki3]\n
 ENTER CHOICE >>> """)
 
         Functions.clear_screen(self)
@@ -130,9 +128,15 @@ ENTER CHOICE >>> """)
 
             option = option.strip()
 
+# I:\encryption\aaa\File_2_Folder_2_for_AES.txt
+
+# I:\encryption\aaa\txtfiles_AES
+# Mysecretpassword123!
+
+
             if option == '1':
-                file_path = Functions.get_file_path(self, text="ENCRYPT")
-                # password = Functions.get_password(self)
+                file_path = Functions.get_file_path(self, text="ENCRYPTED")
+                password = Functions.get_password(self)
                 AESEncryptor.aes_encrypt_single_file(self,
                                                      file_path=file_path,
                                                      password=password)
@@ -146,14 +150,14 @@ Choose an option
 3)  Encrypt all files in directory then add to unencrypted .zip file \
 (file size may be larger)\n
 R)  Return to the main menu
-Q)  Quit the application[bold khaki3]\n
+Q)  Quit the application[khaki3]\n
 ENTER CHOICE >>> """)
 
                 Functions.clear_screen(self)
 
                 make_aes_dir_choice = make_aes_dir_choice.strip()
 
-                folder_path = Functions.get_folder_path(self, text="ENCRYPT")
+                folder_path = Functions.get_folder_path(self, text="ENCRYPTED")
                 # password = Functions.get_password(self)
 
                 if make_aes_dir_choice== '1':

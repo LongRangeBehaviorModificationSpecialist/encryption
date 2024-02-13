@@ -65,46 +65,6 @@ after decryption (y/n)? >>> """)
         sys.exit(0)
 
 
-    def get_password(self) -> str:
-        password = console.input(f"""[khaki3]
-[-] Enter the PASSWORD you want to use >>> """)
-        valid = Functions.validate_password(self,
-                                            password=password)
-        if valid == True:
-            console.print("""[sandy_brown]
->>> Your password checks out. Continuing...""")
-            return password
-        else:
-            console.print("""[khaki3]
-[-] Your password did not meet the minimun requirements. Please try again.""")
-            Functions.get_password(self)
-
-
-    def validate_password(self,
-                          password: str) -> None:
-        symbols = ['!', '@', '#', '%', '&', '*', '(',
-                   ')', '?', '<', '>', '-', '+', '=']
-        if len(password) < 10:
-            console.print("""[red1]
-*** Make sure your password is at least 10 characters""")
-            Functions.get_password(self)
-        elif re.search('[0-9]', password) is None:
-            console.print("""[red1]
-*** Make sure your password has a number in it""")
-            Functions.get_password(self)
-        elif re.search('[A-Z]', password) is None:
-            console.print("""[red1]
-*** Make sure your password has a capital letter in it""")
-            Functions.get_password(self)
-        elif not any(char in symbols for char in password):
-            console.print("""[red1]
-*** Your password should have at least one of the following symbols: \
-! @ # % & * ( ) ? < > - + =""")
-            Functions.get_password(self)
-        else:
-            return True
-
-
     def get_aes_iv(self) -> bytes:
         iv = os.urandom(16)
         return iv
@@ -146,10 +106,10 @@ after decryption (y/n)? >>> """)
 
     def get_file_path(self,
                       text: str) -> Path:
-#         file_path = console.input(f"""[khaki3]
-# [-] Enter the path of the file to be {text}:
-# >>> """)
-        file_path = 'I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt'
+        file_path = console.input(f"""[khaki3]
+[-] Enter the path of the file to be {text}:
+>>> """)
+        # file_path = 'I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt'
         return Path(file_path)
 
 
@@ -168,6 +128,45 @@ after decryption (y/n)? >>> """)
 # >>> """)
         key_file = 'I:\\encryption\\aaa\\2024-01-24_105425_key.key'
         return Path(key_file)
+
+
+    def get_password(self) -> str:
+        password = console.input(f"""[khaki3]
+[-] Enter the PASSWORD you want to use >>> """)
+        valid = Functions.validate_password(self,
+                                            password=password)
+        if valid != password:
+            console.print("""[blue]
+Please try again.\n""")
+            Functions.get_password(self)
+        else:
+            console.print("""[khaki3]
+Your password checks out. Continuing...""")
+            return str(password)
+
+
+    def validate_password(self,
+                          password: str) -> None:
+        symbols = ['!', '@', '#', '%', '&', '*', '(',
+                   ')', '?', '<', '>', '-', '+', '=',
+                   '[', ']', '~', '^', '|']
+        if (len(password) < 10 or
+            re.search('[0-9]', password) is None or
+            re.search('[A-Z]', password) is None or
+            not any(char in symbols for char in password)
+           ):
+            console.print("""[red1]
+Your password did not meet the minimun requirements. Please try again.\n
+Your password must meet the following criteria:\n
+  [-] Is at least ten characters long
+  [-] Contain at least one number
+  [-] Contain at least one capital letter and
+  [-] Contain at least one of the following symbols: \
+! @ # % & * ( ) ? < > - + = [ ] ~ ^ |""")
+            Functions.get_password(self)
+        else:
+            print(f"Returned `password` = {password}")
+            return password
 
 
     def get_pgp_password(self) -> str:
