@@ -22,6 +22,7 @@ __last_updated__ = "2024-02-11"
 console = Console()
 
 password = 'mysecretpassword34'
+email_address = 'testaddress@email.com'
 
 
 class App:
@@ -60,7 +61,7 @@ F)  Decrypt file/files using a .key file
 G)  Decrypt file/files using a password (AES-CBC Mode)
 H)  Decrypt file/files using a password (AES-GCM Mode)
 I)  Decrypt file/files using a PGP key file
-J) Decrypt message/file using XOR\n
+J)  Decrypt message/file using XOR\n
 Q)  Quit the Application[bold khaki3]\n
 ENTER CHOICE >>> """)
 
@@ -131,7 +132,7 @@ ENTER CHOICE >>> """)
 
             if option == '1':
                 file_path = Functions.get_file_path(self, text="ENCRYPT")
-                # password = Functions.get_aes_encryption_password(self)
+                # password = Functions.get_password(self)
                 AESEncryptor.aes_encrypt_single_file(self,
                                                      file_path=file_path,
                                                      password=password)
@@ -153,7 +154,7 @@ ENTER CHOICE >>> """)
                 make_aes_dir_choice = make_aes_dir_choice.strip()
 
                 folder_path = Functions.get_folder_path(self, text="ENCRYPT")
-                # password = Functions.get_aes_encryption_password(self)
+                # password = Functions.get_password(self)
 
                 if make_aes_dir_choice== '1':
                     AESEncryptor.aes_encrypt_all_files_in_dir(self,
@@ -202,13 +203,13 @@ ENTER CHOICE >>> """)
 
             if option == '1':
                 file_path = Functions.get_file_path(self)
-                # password = Functions.get_aes_encryption_password(self)
+                # password = Functions.get_password(self)
                 AESGCMDataEncryptor.aes_gcm_encrypt_file(self,
                                                          file_path=file_path,
                                                          password=password)
             elif option == '2':
                 folder_path = Functions.get_folder_path(self, text="ENCRYPT")
-                # password = Functions.get_aes_encryption_password(self)
+                # password = Functions.get_password(self)
                 AESGCMDataEncryptor.aes_gcm_encrypt_directory(self,
                                                               folder_path=folder_path,
                                                               password=password)
@@ -240,11 +241,19 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if option == '1':
-                PGPClass.generate_pgp_key(self)
+                # password = Functions.get_password(self)
+                # email_address = Functions.get_email_address(self)
+                PGPClass.generate_pgp_key(self,
+                                          password=password,
+                                          email_address=email_address)
             elif option == '2':
-                PGPClass.pgp_encrypt(self)
+                file_path = Functions.get_file_path(self)
+                PGPClass.pgp_encrypt_file(self,
+                                          file_path=file_path)
             elif option == '3':
-                PGPClass.pgp_encrypt_folder(self)
+                folder_path = Functions.get_folder_path(self, text="ENCRYPT")
+                PGPClass.pgp_encrypt_folder(self,
+                                            folder_path=folder_path)
             elif option.lower() == 'r':
                 App.return_to_main_menu(self)
             elif option.lower() == 'q':
@@ -272,9 +281,17 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if option == '1':
-                XOREncryption.get_message_to_xor(self)
+                message = Functions.get_message_to_xor(self)
+                xor_key = Functions.get_xor_key(self)
+                XOREncryption.encrypt_msg_with_xor(self,
+                                                   message=message,
+                                                   xor_key=xor_key)
             elif option == '2':
-                XOREncryption.get_file_to_xor(self)
+                file_path = Functions.get_file_path(self)
+                xor_key = Functions.get_xor_key(self)
+                XOREncryption.encrypt_file_with_xor(self,
+                                                    file_path=file_path,
+                                                    xor_key=xor_key)
             elif option.lower() == 'r':
                 App.return_to_main_menu(self)
             elif option.lower() == 'q':
@@ -307,9 +324,17 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if option == '1':
-                KeyFileDecryptor.decrypt_file_with_key(self)
+                key_file = Functions.get_key_file_path(self)
+                file_path = Functions.get_file_path(self, text="DECRYPT")
+                KeyFileDecryptor.decrypt_file_with_key(self,
+                                                       key_file=key_file,
+                                                       file_path=file_path)
             elif option == '2':
-                KeyFileDecryptor.decrypt_all_files_in_folder_with_key(self)
+                key_file = Functions.get_key_file_path(self)
+                file_path = Functions.get_file_path(self, text="DECRYPT")
+                KeyFileDecryptor.decrypt_files_in_folder_with_key(self,
+                                                                  key_file=key_file,
+                                                                  file_path=file_path)
             elif option.lower() == 'r':
                 App.return_to_main_menu(self)
             elif option.lower() == 'q':
@@ -337,9 +362,17 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if option == '1':
-                AESDecryptor.aes_decrypt_file(self)
+                file_path = Functions.get_file_path(self)
+                # password = Functions.get_password(self)
+                AESDecryptor.aes_decrypt_file(self,
+                                              file_path=file_path,
+                                              password=password)
             elif option == '2':
-                AESDecryptor.aes_decrypt_all_files_in_dir(self)
+                folder_path = Functions.get_folder_path(self, text="DECRYPT")
+                # password = Functions.get_password(self)
+                AESDecryptor.aes_decrypt_all_files_in_dir(self,
+                                                          folder_path=folder_path,
+                                                          password=password)
             elif option.lower() == 'r':
                 App.return_to_main_menu()
             elif option.lower() == 'q':
@@ -351,7 +384,7 @@ ENTER CHOICE >>> """)
         elif choice == 'h':
             option = console.input("""[dodger_blue1]
 =======================================
-USE PASSWORD TO ENCRYPT FILE(S) [GCM]
+USE PASSWORD TO DECRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
 -------------------
 Choose an option
@@ -367,9 +400,15 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if choice == '1':
-                AESGCMDataDecryptor.aes_gcm_decrypt_file(self)
+                file_path = Functions.get_file_path(self, text='DECRYPTED')
+                # password = Functions.get_password(self)
+                AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
+                                                         file_path=file_path,
+                                                         password=password)
             elif choice == '2':
-                AESGCMDataDecryptor.aes_gcm_decrypt_directory(self)
+                folder_path = Functions.get_folder_path(self, text='DECRYPTED')
+                AESGCMDataDecryptor.aes_gcm_decrypt_directory(self,
+                                                              folder_path=folder_path)
             elif option.lower() == 'r':
                 App.return_to_main_menu(self)
             elif option.lower() == 'q':
@@ -397,7 +436,11 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if option == '1':
-                PGPClass.pgp_decrypt(self)
+                file_path = Functions.get_file_path(self)
+                # password = Functions.get_password(self)
+                PGPClass.pgp_decrypt_file(self,
+                                          file_path=file_path,
+                                          password=password)
             elif option == '2':
                 pass
             elif option.lower() == 'r':
@@ -427,9 +470,17 @@ ENTER CHOICE >>> """)
             option = option.strip()
 
             if option == '1':
-                XORDecryption.get_xor_message_to_decrypt(self)
+                message = Functions.get_xor_message_to_decrypt(self)
+                xor_key = Functions.get_xor_key(self)
+                XORDecryption.decrypt_msg_with_xor(self,
+                                                   message=message,
+                                                   xor_key=xor_key)
             elif option == '2':
-                XORDecryption.get_xor_file_to_decrypt(self)
+                file_path = Functions.get_file_path(self)
+                xor_key = Functions.get_xor_key(self)
+                XORDecryption.decrypt_file_with_xor(self,
+                                                    file_path=file_path,
+                                                    xor_key=xor_key)
             elif option.lower() == 'r':
                 App.return_to_main_menu(self)
             elif option.lower() == 'q':

@@ -30,7 +30,7 @@ class KeyFileEncryptor:
             Returns:
                 file (str): new .key file used to encrypt a message or file
         """
-        key_file_path = Path('L:\\encryption\\aaa')
+        key_file_path = Path('I:\\encryption\\aaa')
         now = datetime.now()
         dt = now.strftime('%Y%m%d_%H%M%S')
         key = Fernet.generate_key()
@@ -91,7 +91,7 @@ ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
 =============================================""")
 
         # file_path = Functions.get_file_path(self, text='ENCRYPT')
-        # file_path = 'L:\\encryption\\aaa\\Falcon_OneDrive_Backup.py'
+        # file_path = 'I:\\encryption\\aaa\\Falcon_OneDrive_Backup.py'
 
         enc_file_name = Functions.get_encrypted_file_name(self,
                                                           file_path)

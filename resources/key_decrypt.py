@@ -18,7 +18,9 @@ console = Console()
 class KeyFileDecryptor:
 
     @Functions.timeit
-    def decrypt_file_with_key(self):
+    def decrypt_file_with_key(self,
+                              key_file: Path,
+                              file_path: Path) -> None:
         """Decrypts a file using a provided .key file
 
             Args:
@@ -33,8 +35,6 @@ class KeyFileDecryptor:
 DECRYPT A FILE USING A KNOWN .KEY FILE
 =======================================""")
 
-        # key_file = Functions.get_key_file_path(self)
-
         key_to_load = Functions.load_key(self, key_file)
         f = Fernet(key_to_load)
 
@@ -42,37 +42,31 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
 [{Functions.get_date_time(self)}] Key file: \
 `{os.path.basename(key_file)}` loaded successfully""")
 
-        # file_to_decrypt_with_key = Functions.get_file_path(
-        #     self,
-        #     text='DECRYPT')
-
-        file_name, file_ext = os.path.splitext(file_to_decrypt_with_key)
+        file_name, file_ext = os.path.splitext(file_path)
         if file_ext == '.encrypted':
-            decrypted_file_name = Path(file_name)
+            decrypted_file = Path(file_name)
         else:
-            decrypted_file_name = Functions.get_decrypted_file_name(self,
-                                                                    file_to_decrypt_with_key)
+            decrypted_file = Functions.get_decrypted_file_name(self,
+                                                                    file_path)
 
-        with open(file_to_decrypt_with_key, 'rb') as ef:
+        with open(file_path, 'rb') as ef:
             encrypted_data = ef.read()
         decrypted_data = f.decrypt(encrypted_data)
-        with open(decrypted_file_name, 'wb') as df:
+        with open(decrypted_file, 'wb') as df:
             df.write(decrypted_data)
 
         Functions.print_confirm_file_action(self,
-                                            file_name=decrypted_file_name,
+                                            file_name=decrypted_file,
                                             text="Decryption")
 
 
-    @Functions.timeit
-    def decrypt_all_files_in_folder_with_key(self):
+    def decrypt_files_in_folder_with_key(self,
+                                             key_file: Path,
+                                             folder_path: Path) -> None:
         console.print("""[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
 =====================================================""")
-
-        # key_file = Functions.get_key_file_path(self)
-        # key_file = 'L:\\encryption\\aaa\\2024-01-24_105425_key.key'
 
         key_to_load = Functions.load_key(self, key_file)
         f = Fernet(key_to_load)
@@ -80,7 +74,7 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
         # folder_path = Functions.get_folder_path(
         #     self,
         #     text='containing the files to be decrypted')
-        # folder_path = 'L:\\encryption\\aaa\\txtfiles02'
+        # folder_path = 'I:\\encryption\\aaa\\txtfiles02'
 
         dirs = Functions.get_all_files(self, folder_path_for_key_test)
         for file in dirs:
@@ -120,4 +114,4 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
         # IF THE USER DID NOT CHOOSE EITHER `Y` OR `N`
         else:
             Functions.no_valid_yn_option(self)
-            KeyFileDecryptor.decrypt_all_files_in_folder_with_key(self)
+            KeyFileDecryptor.decrypt_files_in_folder_with_key(self)

@@ -26,7 +26,7 @@ class AESGCMDataDecryptor:
 # Q)  Quit the application[bold khaki3]\n
 # ENTER CHOICE >>> """)
 
-#         # password = Functions.get_aes_encryption_password(self)
+#         # password = Functions.get_password(self)
 #         # password = 'mysecretpassword34'
 
 #         pswd_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -48,22 +48,16 @@ class AESGCMDataDecryptor:
 #             AESGCMDataDecryptor.aes_gcm_decryptor(self)
 
 
-    # def get_key(self) -> bytes:
-    #     pswd_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-    #     # Convert the sha-256 value of the password string to a byte string
-    #     key = binascii.unhexlify(pswd_hash)
-    #     return key
+    def aes_gcm_decrypt_file(self,
+                             file_path: Path,
+                             password: str) -> None:
 
+        key = Functions.encode_key(self,
+                                   password=password)
 
-    def aes_gcm_decrypt_file(self) -> None:
+        file = Path(file_path)
 
-        # encrypted_file_path = Functions.get_folder_path(
-        #     self,
-        #     text='containing the files to be decrypted')
-        # encrypted_file_path = 'L:\\encryption\\aaa\\Falcon_OneDrive_Backup.py.encrypted'
-        key = Functions.encode_key(self, password=password)
-
-        with open(gcm_file_to_decrypt, 'rb') as encrypted_file:
+        with open(file, 'rb') as encrypted_file:
             encrypted_data = encrypted_file.read()
 
         iv = encrypted_data[:16]
@@ -76,7 +70,10 @@ class AESGCMDataDecryptor:
         decryptor = cipher.decryptor()
         plaintext = decryptor.update(ciphertext) + decryptor.finalize()
         # Remove the '.encrypted' file extension
-        decrypted_file = gcm_file_to_decrypt[:-10]
+        if file.endswith('.encrypted'):
+            decrypted_file = file[:-10]
+        else:
+            decrypted_file = f'{file}.decrypted'
 
         with open(decrypted_file, 'wb') as decrypted_file:
             decrypted_file.write(plaintext)
@@ -85,22 +82,18 @@ class AESGCMDataDecryptor:
         return decrypted_file
 
 
-    def aes_gcm_decrypt_directory(self) -> None:
+    def aes_gcm_decrypt_directory(self,
+                                  folder_path: Path,
+                                  password: str) -> None:
 
-        # gcm_folder_path = Functions.get_folder_path(
-        #     self,
-        #     text='containing the files to be decrypted')
-        # gcm_folder_path = 'L:\\encryption\\aaa\\txtfiles02'
-        key = AESGCMDataDecryptor.get_key(self)
-
-        f = Path(gcm_folder_path)
+        f = Path(folder_path)
 
         dirs = Functions.get_all_files(self, f)
         for file in dirs:
             if file.endswith('.encrypted'):
                 AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
-                                                         encrypted_file_path=f,
-                                                         key=key)
+                                                         file_path=file,
+                                                         password=password)
 
 #     def aes_gcm_decrypt_file(self):
 

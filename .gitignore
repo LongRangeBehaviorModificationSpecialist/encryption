@@ -3,3 +3,6 @@ __pycache__
 temp
 *.asc
 *.txt
+testingtemp.py
+vars.py
+.vscode

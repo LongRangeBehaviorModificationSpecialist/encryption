@@ -4,15 +4,12 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
-import binascii
-import hashlib
 import os
 from rich.console import Console
 from pathlib import Path
 import shutil
 
 from resources.functions import Functions
-
 
 # Make the console object
 console = Console()
@@ -35,7 +32,8 @@ class AESEncryptor:
         """
 
         # Convert the password string into bytes to use as a key to encrypt data
-        key = Functions.encode_key(self, password=password)
+        key = Functions.encode_key(self,
+                                   password=password)
         iv = Functions.get_aes_iv(self)
         mode = AES.MODE_CBC
 
@@ -117,10 +115,9 @@ The original files HAVE BEEN DELETED
 
         elif choice.lower().strip() == 'n':
             for file_to_encrypt in dirs:
-                AESEncryptor.aes_encrypt_multi_file(
-                    self,
-                    file_to_encrypt=file_to_encrypt,
-                    password=password)
+                AESEncryptor.aes_encrypt_multi_file(self,
+                                                    file_to_encrypt=file_to_encrypt,
+                                                    password=password)
             console.print(f"""[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
@@ -138,19 +135,22 @@ The original files HAVE NOT BEEN DELETED
             Functions.confirm_delete_original_files(self)
 
 
-    def ask_delete_original_zip(self, file_to_encrypt: Path) -> None:
+    def ask_delete_original_zip(self,
+                                file_to_encrypt: Path) -> None:
         delete_unencrypted_zip = console.input("""[khaki3]
 [-] Do you want to delete the unencrypted .zip file (y/n)? \
 [orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> """)
         if delete_unencrypted_zip.lower().strip() == 'y':
             os.remove(file_to_encrypt)
             Functions.print_confirm_file_action(self,
-                                            file_name = Path(f'{file_to_encrypt}.encrypted'),
-                                            text="Encrypted")
+                                                file_name = Path(
+                                                    f'{file_to_encrypt}.encrypted'),
+                                                text="Encrypted")
         elif delete_unencrypted_zip.lower().strip() == 'n':
             Functions.print_confirm_file_action(self,
-                                            file_name = Path(f'{file_to_encrypt}.encrypted'),
-                                            text="Encrypted")
+                                                file_name = Path(
+                                                    f'{file_to_encrypt}.encrypted'),
+                                                text="Encrypted")
         else:
             Functions.no_valid_yn_option(self)
             AESEncryptor.ask_delete_original_zip(self, file_to_encrypt)

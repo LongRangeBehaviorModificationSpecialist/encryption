@@ -65,43 +65,44 @@ after decryption (y/n)? >>> """)
         sys.exit(0)
 
 
-    def get_aes_decryption_password(self) -> str:
-        password = console.input("""[khaki3]
-[-] Enter the PASSWORD to DECRYPT the file >>> """)
-        return password
+    def get_password(self) -> str:
+        password = console.input(f"""[khaki3]
+[-] Enter the PASSWORD you want to use >>> """)
+        valid = Functions.validate_password(self,
+                                            password=password)
+        if valid == True:
+            console.print("""[sandy_brown]
+>>> Your password checks out. Continuing...""")
+            return password
+        else:
+            console.print("""[khaki3]
+[-] Your password did not meet the minimun requirements. Please try again.""")
+            Functions.get_password(self)
 
 
-    def get_aes_encryption_key(self) -> bytes:
-        password = console.input("""[khaki3]
-[-] Enter a PASSWORD to use to encrypt the file(s) >>> """)
+    def validate_password(self,
+                          password: str) -> None:
         symbols = ['!', '@', '#', '%', '&', '*', '(',
                    ')', '?', '<', '>', '-', '+', '=']
         if len(password) < 10:
             console.print("""[red1]
 *** Make sure your password is at least 10 characters""")
-            Functions.get_aes_encryption_password(self)
+            Functions.get_password(self)
         elif re.search('[0-9]', password) is None:
             console.print("""[red1]
 *** Make sure your password has a number in it""")
-            Functions.get_aes_encryption_password(self)
+            Functions.get_password(self)
         elif re.search('[A-Z]', password) is None:
             console.print("""[red1]
 *** Make sure your password has a capital letter in it""")
-            Functions.get_aes_encryption_password(self)
+            Functions.get_password(self)
         elif not any(char in symbols for char in password):
             console.print("""[red1]
 *** Your password should have at least one of the following symbols: \
-!@#%&*()?<>-+=""")
-            Functions.get_aes_encryption_password(self)
+! @ # % & * ( ) ? < > - + =""")
+            Functions.get_password(self)
         else:
-            # Get the sha-256 hash value of the password string
-            # Which will be 256 bits in length
-            pswd_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-            # Convert the sha-256 value of the password string to a byte string
-            key = binascii.unhexlify(pswd_hash)
-            console.print("""[sandy_brown]
->>> Your password checks out. Continuing...""")
-        return key
+            return True
 
 
     def get_aes_iv(self) -> bytes:
@@ -112,7 +113,7 @@ after decryption (y/n)? >>> """)
     def get_all_files(self,
                       folder_path: Path) -> list:
         dirs = []
-        for dir_name, sub_dir_list, file_list in os.walk(folder_path):
+        for dir_name, sub_dirs, file_list in os.walk(folder_path):
             for file_name in file_list:
                 dirs.append(dir_name + '\\' + file_name)
         return dirs
@@ -148,9 +149,7 @@ after decryption (y/n)? >>> """)
 #         file_path = console.input(f"""[khaki3]
 # [-] Enter the path of the file to be {text}:
 # >>> """)
-        # file_path = 'L:\\encryption\\aaa\\File_2_Folder_2_for_KEY.txt'
-        # file_path = 'L:\\encryption\\aaa\\File_for_NEW_KEY_TEST.JPG'
-        file_path = 'L:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt'
+        file_path = 'I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt'
         return Path(file_path)
 
 
@@ -159,8 +158,7 @@ after decryption (y/n)? >>> """)
 #         folder_path = console.input(f"""[khaki3]
 # [-] Enter the path of the directory containing the files to be {text}:
 # >>> """)
-        # folder_path = 'L:\\encryption\\aaa\\txtfiles_KEY'
-        folder_path = 'L:\\encryption\\aaa\\txtfiles_AES'
+        folder_path = 'I:\\encryption\\aaa\\txtfiles_AES'
         return Path(folder_path)
 
 
@@ -168,7 +166,7 @@ after decryption (y/n)? >>> """)
 #         key_file = console.input("""[khaki3]
 # [-] Enter the path to the KEY FILE you want to use:
 # >>> """)
-        key_file = 'L:\\encryption\\aaa\\2024-01-24_105425_key.key'
+        key_file = 'I:\\encryption\\aaa\\2024-01-24_105425_key.key'
         return Path(key_file)
 
 
@@ -268,3 +266,44 @@ Key File Hash Value (SHA-256): {key_file_hash_value}""")
                       file: typing.TextIO,
                       message: str) -> None:
         file.write(message)
+
+
+# ==================================
+# XOR Functions
+# ==================================
+
+
+    def get_xor_key(self) -> str:
+#         xor_key = console.input("""[khaki3]
+# Enter the key you want to use for the encryption:
+# >>> """)
+        xor_key = '12345'
+        return xor_key
+
+
+    def get_message_to_xor(self) -> str:
+#         message = console.input("""[khaki3]
+# Enter the message string you want to encrypt:
+# >>> """)
+        message = 'This is a super secret message. The launch code is: 456F8A1C453EF92BEFAA23.'
+        return message
+
+
+    def get_file_to_xor(self) -> Path:
+        # file = Functions.get_file_path(self, text='you want to encrypt')
+        file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py'
+        return Path(file_path)
+
+
+    def get_xor_message_to_decrypt(self) -> str:
+#         message = console.input("""[khaki3]
+# Enter the message string you want to decrypt:
+# >>> """)
+        message = """eZZG\x15XA\x13U\x15BGCQG\x11AVWGTF\x13YPBARSP\x1f\x12g\\P\x11^RA[RZ\x13WZUW\x13]F\x0b\x12\x07\x01\x03w\nr\x05v\x05\x07\x00qs\x08\x00qqsps\x01\x07\x1b"""
+        return message
+
+
+    def get_xor_file_to_decrypt(self) -> str:
+        # encrypted_file = Functions.get_file_path(self, text='you want to decrypt')
+        file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py.encrypted'
+        return file_path

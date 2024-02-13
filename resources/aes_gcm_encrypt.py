@@ -22,12 +22,12 @@ class AESGCMDataEncryptor:
     """
 
     def get_file_path(self) -> Path:
-        file_path = 'L:\\encryption\\aaa\\compare_dirs_GCM.py'
+        file_path = 'I:\\encryption\\aaa\\compare_dirs_GCM.py'
         return (Path(file_path))
 
 
     def get_folder_path(self) -> Path:
-        folder_path = f'L:\\encryption\\aaa\\txtfiles_GCM'
+        folder_path = f'I:\\encryption\\aaa\\txtfiles_GCM'
         return Path(folder_path)
 
 

@@ -77,11 +77,13 @@ class PGPClass:
         return private_key
 
 
-    def generate_pgp_key(self) -> None:
+    def generate_pgp_key(self,
+                         password: str,
+                         email_address: str) -> None:
         """Generates new pair of PGP keys
 
             Args:
-                None
+                password -> str: password to use to generate the pgp keys
 
             Returns:
                 file: new pgp key pair
@@ -95,7 +97,7 @@ class PGPClass:
         PGPClass.gpg.encoding = 'utf-8'
 
         # email_address = Functions.get_email_address(self)
-        email_address = 'mikespon@gmail.com'
+        # email_address = 'mikespon@gmail.com'
 
         input_data = PGPClass.gpg.gen_key_input(name_email=email_address,
                                                 passphrase=password,
@@ -116,16 +118,17 @@ class PGPClass:
                                         password=password)
 
 
-    def pgp_encrypt(self) -> None:
+    def pgp_encrypt_file(self,
+                         file_path: Path) -> None:
 
         # clear_file = Functions.get_file_path(
         #     self,
         #     text='ENCRYPT')
 
         encrypted_file = Functions.get_encrypted_file_name(self,
-                                                           pgp_file_to_encrypt)
+                                                           file_path)
 
-        with open(pgp_file_to_encrypt, 'rb') as f:
+        with open(file_path, 'rb') as f:
             status = PGPClass.gpg.encrypt_file(
                 f,
                 recipients=['mikespon@gmail.com'],
@@ -135,7 +138,9 @@ class PGPClass:
         PGPClass.print_status(self, status)
 
 
-    def pgp_decrypt(self):
+    def pgp_decrypt_file(self,
+                         file_path: Path,
+                         password: str) -> None:
 
         # password = Functions.get_password(self)
         # password = 'Supersecretpassword1234!'
@@ -143,9 +148,9 @@ class PGPClass:
         # pgp_file_to_decrypt = Functions.get_file_path(
         #     self,
         #     text='DECRYPT')
-        pgp_file_to_decrypt = 'C:\\Users\\mikes\\Desktop\\\encryption\\aaa\\Falcon_OneDrive_Backup_for_PGP.py.encrypted'
+        # pgp_file_to_decrypt = 'C:\\Users\\mikes\\Desktop\\\encryption\\aaa\\Falcon_OneDrive_Backup_for_PGP.py.encrypted'
 
-        file = pgp_file_to_decrypt
+        file = file_path
         if file.endswith('.encrypted'):
             decrypted_file = file[:-10]
         else:
@@ -160,7 +165,8 @@ class PGPClass:
         PGPClass.print_status(self, status)
 
 
-    def pgp_encrypt_folder(self):
+    def pgp_encrypt_folder(self,
+                           folder_path: Path) -> None:
 
 #         pgp_folder_path = console.input("""[khaki3]
 # [-] Enter the path of the directory containing the files to be ENCRYPTED
@@ -177,13 +183,13 @@ PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue (y/n)? >>> """)
             choice = choice.strip().lower()
 
             if choice == 'y':
-                for file in os.listdir(pgp_folder_path):
-                    with open(f'{pgp_folder_path}\\{file}', 'rb') as efile:
+                for file in os.listdir(folder_path):
+                    with open(f'{folder_path}\\{file}', 'rb') as efile:
                         status = PGPClass.gpg.encrypt_file(
                             efile,
                             recipients=['mikespon@gmail.com'],
-                            output=f'{pgp_folder_path}\\{file}.encrypted')
-                os.remove(f'{pgp_folder_path}\\{file}')
+                            output=f'{folder_path}\\{file}.encrypted')
+                os.remove(f'{folder_path}\\{file}')
 
             # EXIT THE PROGRAM
             elif choice == 'n':
@@ -199,11 +205,11 @@ Exiting program. Please wait...""")
 
         # IF THE USER CHOOSES NOT TO DELETE ORIGINAL FILES
         elif delete_originals == 'n':
-            with open(f'{pgp_folder_path}\\{file}', 'rb') as efile:
+            with open(f'{folder_path}\\{file}', 'rb') as efile:
                 status = PGPClass.gpg.encrypt_file(
                     efile,
                     recipients=['mikespon@gmail.com'],
-                    output=f'{pgp_folder_path}\\{file}.encrypted')
+                    output=f'{folder_path}\\{file}.encrypted')
 
         # NO VALID CHOICE WAS ENTERED
         else:
