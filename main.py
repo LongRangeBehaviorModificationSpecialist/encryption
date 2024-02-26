@@ -88,23 +88,35 @@ ENTER CHOICE >>> """)
 
             if option == '1':
                 key_file = Functions.get_key_file_path(self)
-                file_path = Functions.get_file_path(self,
-                                                    text="ENCRYPT")
-                KeyFileEncryptor.get_key_data_to_encrypt_file(self,
-                                                              key_file=key_file,
-                                                              file_path=file_path)
+                file_path = Functions.get_file_path(
+                    self,
+                    text='ENCRYPT'
+                )
+                KeyFileEncryptor.get_key_data_to_encrypt_file(
+                    self,
+                    key_file=key_file,
+                    file_path=file_path
+                )
             elif option == '2':
-                file_path = Functions.get_file_path(self,
-                                                    text="ENCRYPT")
-                KeyFileEncryptor.encrypt_file_with_new_key(self,
-                                                           file_path=file_path)
+                file_path = Functions.get_file_path(
+                    self,
+                    text='ENCRYPT'
+                )
+                KeyFileEncryptor.encrypt_file_with_new_key(
+                    self,
+                    file_path=file_path
+                )
             elif option == '3':
                 key_file = Functions.get_key_file_path(self)
-                folder_path = Functions.get_folder_path(self,
-                                                        text="ENCRYPT")
-                KeyFileEncryptor.encrypt_files_in_dir_with_key(self,
-                                                               key_file=key_file,
-                                                               folder_path=folder_path)
+                folder_path = Functions.get_folder_path(
+                    self,
+                    text='ENCRYPT'
+                )
+                KeyFileEncryptor.encrypt_files_in_dir_with_key(
+                    self,
+                    key_file=key_file,
+                    folder_path=folder_path
+                )
             elif option.lower() == 'r':
                 App.return_to_main_menu(App)
             elif option.lower() == 'q':
@@ -138,12 +150,16 @@ ENTER CHOICE >>> """)
 
 
             if option == '1':
-                file_path = Functions.get_file_path(self,
-                                                    text="ENCRYPTED")
+                file_path = Functions.get_file_path(
+                    self,
+                    text='ENCRYPTED'
+                )
                 password = Functions.get_password(self)
-                AESEncryptor.aes_encrypt_single_file(self,
-                                                     file_path=file_path,
-                                                     password=password)
+                AESEncryptor.aes_encrypt_single_file(
+                    self,
+                    file_path=file_path,
+                    password=password
+                )
             elif option == '2':
                 make_aes_dir_choice = console.input("""[khaki3]
 -------------------
