@@ -25,8 +25,10 @@ class AESDecryptor:
 DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
 =================================================""")
 
-        key = Functions.encode_key(self,
-                                   password=password)
+        key = Functions.encode_key(
+            self,
+            password=password
+        )
 
         file_path = Path(file_path)
 
@@ -47,10 +49,15 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
             iv = f.read(16)
             enc_file_data = f.read()
 
-        cipher = AES.new(key=key, mode=mode, iv=iv)
+        cipher = AES.new(
+            key=key, 
+            mode=mode,
+            iv=iv
+        )
         decrypted_data = unpad(
             cipher.decrypt(enc_file_data),
-            AES.block_size)
+            AES.block_size
+        )
 
         with open(decrypted_file, 'wb') as f:
             Functions.write_to_file(
@@ -66,13 +73,15 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
         )
 
 
-    def _return_dir_data(self,
-                         folder_path: Path) -> tuple:
+    def _return_dir_data(
+            self,
+            folder_path: Path) -> tuple:
 
         dirs = Functions.get_all_files(
             self,
             folder_path=folder_path
         )
+
         for file_to_decrypt in dirs:
             file_name, file_ext = os.path.splitext(file_to_decrypt)
             if file_ext == '.encrypted':
@@ -98,7 +107,6 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
                 self,
                 folder_path)[2])
             
-
         # Open the file and read the iv value and the encrypted file data
         with open(file_to_decrypt, 'rb') as f:
             iv = f.read(16)
@@ -154,6 +162,7 @@ DECRYPT FILES IN FOLDER USING PASSWORD (AES)
                 folder_path,
                 action='decrypted'
             )
+
         # IF THE USER CHOOSES `Y` WILL DELETE ORIGINAL FILES
         elif delete_encrypted_files.lower().strip() == 'y':
             file_ext = AESDecryptor._return_dir_data(
