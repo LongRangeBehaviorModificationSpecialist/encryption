@@ -14,12 +14,15 @@ console = Console()
 class AESGCMDataDecryptor:
 
 
-    def aes_gcm_decrypt_file(self,
-                             file_path: Path,
-                             password: str) -> None:
+    def aes_gcm_decrypt_file(
+            self,
+            file_path: Path,
+            password: str) -> None:
 
-        key = Functions.encode_key(self,
-                                   password=password)
+        key = Functions.encode_key(
+            self,
+            password=password
+        )
 
         file = Path(file_path)
 
@@ -32,7 +35,8 @@ class AESGCMDataDecryptor:
         cipher = Cipher(
             algorithms.AES(key),
             modes.GCM(iv, tag),
-            backend=default_backend())
+            backend=default_backend()
+        )
         decryptor = cipher.decryptor()
         decrypted_data = decryptor.update(ciphertext) + decryptor.finalize()
         # Remove the '.encrypted' file extension
@@ -42,25 +46,29 @@ class AESGCMDataDecryptor:
             decrypted_file = f'{file}.decrypted'
 
         with open(decrypted_file, 'wb') as f:
-            Functions.write_to_file(self,
-                                    file=f,
-                                    message=decrypted_data)
-
+            Functions.write_to_file(
+                self,
+                file=f,
+                message=decrypted_data
+            )
         console.print("""[green3]
 >>> File decrypted successfully. Thank you. Come again.""")
         return decrypted_file
 
 
-    def aes_gcm_decrypt_directory(self,
-                                  folder_path: Path,
-                                  password: str) -> None:
-
+    def aes_gcm_decrypt_directory(
+            self,
+            folder_path: Path,
+            password: str) -> None:
         f = Path(folder_path)
-
-        dirs = Functions.get_all_files(self,
-                                       folder_path=f)
+        dirs = Functions.get_all_files(
+            self,
+            folder_path=f
+        )
         for file in dirs:
             if file.endswith('.encrypted'):
-                AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
-                                                         file_path=file,
-                                                         password=password)
+                AESGCMDataDecryptor.aes_gcm_decrypt_file(
+                    self,
+                    file_path=file,
+                    password=password
+                )
