@@ -50,9 +50,8 @@ class AESGCMDataDecryptor:
                 file=f,
                 message=decrypted_data
             )
-        console.print("""[green3]
->>> File decrypted successfully. Thank you. Come again."""
-        )
+        console.print('''[green3]
+>>> File decrypted successfully. Thank you. Come again.''')
         return decrypted_file
 
 
