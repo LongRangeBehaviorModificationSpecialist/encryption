@@ -173,8 +173,7 @@ The following files in `{f}` were encrypted\n''')
             for file in dirs:
                 console.print(
 f'''[green3]{os.path.basename(
-    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted'''
-                )
+    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted''')
             console.print(f'''[green3]
 The original files HAVE NOT BEEN DELETED
 ==========================================''')
