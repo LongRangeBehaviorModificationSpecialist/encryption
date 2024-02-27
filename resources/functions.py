@@ -155,14 +155,16 @@ Your password checks out. Continuing..."""
 
 
     def validate_password(self, password: str) -> str:
-        symbols = ['!', '@', '#', '%', '&', '*', '(',
-                   ')', '?', '<', '>', '-', '+', '=',
-                   '[', ']', '~', '^', '|']
+        symbols = [
+            '!', '@', '#', '%', '&', '*', '(',
+            ')', '?', '<', '>', '-', '+', '=',
+            '[', ']', '~', '^', '|'
+        ]
         if (len(password) < 10 or
             re.search('[0-9]', password) is None or
             re.search('[A-Z]', password) is None or
             not any(char in symbols for char in password)
-           ):
+            ):
             console.print("""[red1]
 Your password did not meet the minimun requirements. Please try again.\n
 Your password must meet the following criteria\n
@@ -218,11 +220,10 @@ Your password must meet the following criteria\n
         return no_valid_yn_option
 
 
-    def print_confirm_file_action(
-            self,
-            file_name: Path,
-            text: str) -> None:
-        confirmation = console.print(f"""[green3]
+    def print_confirm_file_action(self,
+                                  file_name: Path,
+                                  text: str) -> None:
+        confirm = console.print(f"""[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 {text} file name:
@@ -231,41 +232,38 @@ Your password must meet the following criteria\n
   {file_name.parent}
 =========================================="""
         )
-        return confirmation
+        return confirm
 
 
-    def print_original_files_deleted(
-            self,
-            folder_path: Path,
-            action: str) -> None:
-        confirmation = console.print(f"""[green3]
+    def print_original_files_deleted(self,
+                                     folder_path: Path,
+                                     action: str) -> None:
+        confirm = console.print(f"""[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 Files in the `{folder_path}` directory have been {action}\n
 The original files HAVE BEEN DELETED
 =========================================="""
         )
-        return confirmation
+        return confirm
 
 
-    def print_original_files_not_deleted(
-            self,
-            folder_path: Path,
-            action: str) -> None:
-        confirmation = console.print(f"""[green3]
+    def print_original_files_not_deleted(self,
+                                         folder_path: Path,
+                                         action: str) -> None:
+        confirm = console.print(f"""[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 Files in the `{folder_path}` directory have been {action}\n
 The original files were NOT DELETED
 =========================================="""
         )
-        return confirmation
+        return confirm
 
 
-    def write_hash_to_file(
-            self,
-            key_file_path: Path,
-            key_file_hash_value: str) -> None:
+    def write_hash_to_file(self,
+                           key_file_path: Path,
+                           key_file_hash_value: str) -> None:
         key_file_path = Path(key_file_path)
         key_file_hash_file = f'{key_file_path}.sha256'
         with open(key_file_hash_file, 'w', encoding='utf-8') as f:
@@ -282,10 +280,9 @@ Key File Hash Value (SHA-256): {key_file_hash_value}"""
         )
 
 
-    def write_to_file(
-            self,
-            file: typing.TextIO,
-            message: str) -> None:
+    def write_to_file(self,
+                      file: typing.TextIO,
+                      message: str) -> None:
         file.write(message)
 
 
