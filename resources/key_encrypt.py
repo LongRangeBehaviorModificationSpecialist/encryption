@@ -48,8 +48,7 @@ class KeyFileEncryptor:
         console.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key File created successfully
 [{Functions.get_date_time(self)}] Key File saved in `{key_file_path}` directory
-[{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}'''
-        )
+[{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}''')
         Functions.write_hash_to_file(
             self,
             key_file_name,
@@ -70,8 +69,7 @@ class KeyFileEncryptor:
 
         console.print(f'''[blue]
 [{Functions.get_date_time(self)}] [bright_white]Key file \
-`{os.path.basename(key_file)}` loaded successfully'''
-        )
+`{os.path.basename(key_file)}` loaded successfully''')
 
         encrypted_file = Functions.get_encrypted_file_name(
             self,
@@ -100,8 +98,7 @@ class KeyFileEncryptor:
         console.print('''[dodger_blue1]
 =============================================
 ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
-============================================='''
-        )
+=============================================''')
 
         # file_path = Functions.get_file_path(self, text='ENCRYPT')
         # file_path = 'I:\\encryption\\aaa\\Falcon_OneDrive_Backup.py'
@@ -172,8 +169,7 @@ ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
             console.print('''[dodger_blue1]
 =====================================================
 ENCRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
-====================================================='''
-            )
+=====================================================''')
 
             key_to_load = Functions.load_key(
                 self,
