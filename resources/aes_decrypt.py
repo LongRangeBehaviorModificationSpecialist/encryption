@@ -20,10 +20,11 @@ class AESDecryptor:
                          file_path: Path,
                          password: str,
                          mode=AES.MODE_CBC) -> None:
-        console.print("""[dodger_blue1]
+
+        console.print('''[dodger_blue1]
 =================================================
 DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
-================================================="""
+================================================='''
         )
 
         key = Functions.encode_key(
@@ -136,10 +137,10 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
                                      folder_path: Path,
                                      password: str,
                                      mode=AES.MODE_CBC) -> None:
-        console.print("""[dodger_blue1]
+        console.print('''[dodger_blue1]
 =============================================
 DECRYPT FILES IN FOLDER USING PASSWORD (AES)
-============================================="""
+============================================='''
         )
 
         dirs = Functions.get_all_files(
