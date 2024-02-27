@@ -32,8 +32,7 @@ class XOREncryption:
 **ACTION SUCCESSFUL**\n
 The encrypted message is:\n
   [bright_white]{encrypted_text}[green3]\n
-=========================================='''
-        )
+==========================================''')
 
 
     def encrypt_file_with_xor(self,
@@ -59,8 +58,7 @@ The encrypted message is:\n
 ==========================================
 **ACTION SUCCESSFUL**\n
   File Encrypted with XOR key
-=========================================='''
-        )
+==========================================''')
 
 
 class XORDecryption:
@@ -83,8 +81,7 @@ class XORDecryption:
 **ACTION SUCCESSFUL**\n
 The original message is:\n
   [bright_white]{decrypted_message}[green3]\n
-=========================================='''
-        )
+==========================================''')
 
 
     def decrypt_file_with_xor(self,
@@ -113,5 +110,4 @@ The original message is:\n
 ==========================================
 **ACTION SUCCESSFUL**\n
   File Decrypted with XOR key
-=========================================='''
-        )
+==========================================''')
