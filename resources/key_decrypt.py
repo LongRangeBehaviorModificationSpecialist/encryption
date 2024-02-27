@@ -14,10 +14,9 @@ console = Console()
 class KeyFileDecryptor:
 
     @Functions.timeit
-    def decrypt_file_with_key(
-            self,
-            key_file: Path,
-            file_path: Path) -> None:
+    def decrypt_file_with_key(self,
+                              key_file: Path,
+                              file_path: Path) -> None:
         """Decrypts a file using a provided .key file
 
             Args:
@@ -56,6 +55,7 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
         with open(file_path, 'rb') as ef:
             encrypted_data = ef.read()
         decrypted_data = f.decrypt(encrypted_data)
+
         with open(decrypted_file, 'wb') as df:
             Functions.write_to_file(
                 self,
@@ -70,10 +70,9 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
         )
 
 
-    def decrypt_files_in_folder_with_key(
-            self,
-            key_file: Path,
-            folder_path: Path) -> None:
+    def decrypt_files_in_folder_with_key(self,
+                                         key_file: Path,
+                                         folder_path: Path) -> None:
         console.print("""[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
@@ -109,7 +108,6 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
                     file=df,
                     message=decrypted_data
                 )
-
 
         # ASK USER IF THEY WANT TO DELETE THE ORIGINAL ENCRYPTED FILES
         delete_original_enc_files = Functions.ask_delete_original_enc_files(self)
