@@ -45,10 +45,10 @@ class KeyFileEncryptor:
             self,
             new_key_file=key_file_name
         )
-        console.print(f"""[bright_white]
+        console.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key File created successfully
 [{Functions.get_date_time(self)}] Key File saved in `{key_file_path}` directory
-[{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}"""
+[{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}'''
         )
         Functions.write_hash_to_file(
             self,
