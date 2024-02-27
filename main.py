@@ -13,8 +13,8 @@ from resources import (AESDecryptor,
                        XORDecryption,
                        Functions)
 
-__author__ = "mikespon"
-__last_updated__ = "2024-02-13"
+__author__ = 'mikespon'
+__last_updated__ = '2024-02-26'
 
 # Make the console object
 console = Console()
@@ -27,24 +27,25 @@ class App:
 
 
     def no_valid_option(self) -> None:
-        """When a valid opetion is not entered, the user will be prompted to
+        '''When a valid opetion is not entered, the user will be prompted to
         try again and enter a valid option.
-        """
-        console.print("""[red1]
-You did not enter a valid option. Please try again.""")
+        '''
+        console.print('''[red1]
+You did not enter a valid option. Please try again.'''
+        )
         App.main(self)
 
 
     def return_to_main_menu(self) -> None:
-        """Returns the user to the main application menu"""
+        '''Returns the user to the main application menu'''
         Functions.clear_screen(self)
         App.main(self)
 
 
     def main(self) -> None:
         Functions.clear_screen(self)
-        """Main function where the user can pick what option they want"""
-        choice = console.input(f"""[dodger_blue1]
+        '''Main function where the user can pick what option they want'''
+        choice = console.input(f'''[dodger_blue1]
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
 =============================================[bright_white]\n
@@ -61,14 +62,15 @@ H)  Decrypt file/files using a password (AES-GCM Mode)
 I)  Decrypt file/files using a PGP key file
 J)  Decrypt message/file using XOR\n
 Q)  Quit the Application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+        )
 
         Functions.clear_screen(self)
 
         choice = choice.strip().lower()
 
         if choice == 'a':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 ENCRYPT FILE WITH PROVIDED .KEY FILE
 =======================================[khaki3]\n
@@ -80,7 +82,8 @@ Choose an option
 3)  Encrypt all files in a directory using a .key file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -126,7 +129,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'b':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO ENCRYPT FILE(S) [AES]
 =======================================[khaki3]\n
@@ -137,7 +140,8 @@ Choose an option
 2)  Encrypt all files in a directory using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -161,7 +165,7 @@ ENTER CHOICE >>> """)
                     password=password
                 )
             elif option == '2':
-                make_aes_dir_choice = console.input("""[khaki3]
+                make_aes_dir_choice = console.input('''[khaki3]
 -------------------
 Choose an option
 -------------------[bright_white]\n
@@ -171,7 +175,8 @@ Choose an option
 (file size may be larger)\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+                )
 
                 Functions.clear_screen(self)
 
@@ -217,7 +222,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'c':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO ENCRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
@@ -228,7 +233,8 @@ Choose an option
 2)  Encrypt all files in a directory using a password (AES-GCM)\n
 R)  Return to main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -262,7 +268,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'd':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 ENCRYPT FILE(S) USING PGP KEY
 =======================================[khaki3]\n
@@ -274,7 +280,8 @@ Choose an option
 3)  Encrypt all files in a directory using PGP keys\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -312,7 +319,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'e':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 ENCRYPT FILE(S) USING AN XOR KEY
 =======================================[khaki3]\n
@@ -323,7 +330,8 @@ Choose an option
 2)  Encrypt a file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -359,7 +367,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'f':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 DECRYPT FILE WITH PROVIDED .KEY FILE
 =======================================[khaki3]\n
@@ -370,7 +378,8 @@ Choose an option
 2)  Decrypt all files in a folder using a .key file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -407,7 +416,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'g':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO DECRYPT FILE(S) [AES]
 =======================================[khaki3]\n
@@ -418,7 +427,8 @@ Choose an option
 2)  Decrypt all files in a folder using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -452,7 +462,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'h':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO DECRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
@@ -463,7 +473,8 @@ Choose an option
 2)  Decrypt all files in a directory using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -498,7 +509,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'i':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 DECRYPT FILE(S) USING PGP KEY
 =======================================[khaki3]\n
@@ -509,7 +520,8 @@ Choose an option
 2)  -- Decrypt all files in a folder using PGP key --\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
@@ -534,7 +546,7 @@ ENTER CHOICE >>> """)
 
 
         elif choice == 'j':
-            option = console.input("""[dodger_blue1]
+            option = console.input('''[dodger_blue1]
 =======================================
 DECRYPT FILE(S) USING AN XOR KEY
 =======================================[khaki3]\n
@@ -545,7 +557,8 @@ Choose an option
 2)  Decrypt a file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> """)
+ENTER CHOICE >>> '''
+            )
 
             Functions.clear_screen(self)
 
