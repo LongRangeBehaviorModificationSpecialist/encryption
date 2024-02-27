@@ -20,8 +20,10 @@ console = Console()
 class KeyFileEncryptor:
 
 
-    def generate_new_key_file(self,
-                              key_file_path: Path) -> str:
+    def generate_new_key_file(
+            self,
+            key_file_path: Path
+        ) -> str:
         """Generate a new key file (with the date & time appended to the file
         name) to be used to encrypt the message or file of the user's choice
 
@@ -36,43 +38,59 @@ class KeyFileEncryptor:
         key = Fernet.generate_key()
         key_file_name = Path(f'{key_file_path}').joinpath(f'{dt}_key.key')
         with open(key_file_name, 'wb') as f:
-            Functions.write_to_file(self,
-                                    file=f,
-                                    message=key)
-        key_file_hash_value = Functions.hash_new_key_file(self,
-                                                          new_key_file=key_file_name)
+            Functions.write_to_file(
+                self,
+                file=f,
+                message=key
+            )
+        key_file_hash_value = Functions.hash_new_key_file(
+            self,
+            new_key_file=key_file_name
+        )
         console.print(f"""[bright_white]
 [{Functions.get_date_time(self)}] Key File created successfully
 [{Functions.get_date_time(self)}] Key File saved in `{key_file_path}` directory
-[{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}""")
-        Functions.write_hash_to_file(self,
-                                     key_file_name,
-                                     key_file_hash_value)
+[{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}"""
+        )
+        Functions.write_hash_to_file(
+            self,
+            key_file_name,
+            key_file_hash_value
+        )
         return key_file_name
 
 
-    def get_key_data_to_encrypt_file(self,
-                                     key_file: Path,
-                                     file_path: Path) -> None:
+    def get_key_data_to_encrypt_file(
+            self,
+            key_file: Path,
+            file_path: Path) -> None:
 
-        key_to_load = Functions.load_key(self,
-                                         key_file=key_file)
+        key_to_load = Functions.load_key(
+            self,
+            key_file=key_file
+        )
         key = Fernet(key_to_load)
 
         console.print(f"""[blue]
 [{Functions.get_date_time(self)}] [bright_white]Key file \
-`{os.path.basename(key_file)}` loaded successfully""")
+`{os.path.basename(key_file)}` loaded successfully"""
+        )
 
-        encrypted_file = Functions.get_encrypted_file_name(self,
-                                                           file_path=file_path)
-        KeyFileEncryptor.encrypt_file_with_key(self,
-                                               key=key,
-                                               file_to_encrypt=file_path,
-                                               encrypted_file=encrypted_file)
+        encrypted_file = Functions.get_encrypted_file_name(
+            self,
+            file_path=file_path
+        )
+        KeyFileEncryptor.encrypt_file_with_key(
+            self,
+            key=key,
+            file_to_encrypt=file_path,
+            encrypted_file=encrypted_file
+        )
 
 
-    def encrypt_file_with_new_key(self,
-                                  file_path: Path) -> None:
+    def encrypt_file_with_new_key(
+            self,
+            file_path: Path) -> None:
         """Generate a new .key file which will be saved in the same directory
         as the file to be encrypted
 
@@ -86,7 +104,8 @@ class KeyFileEncryptor:
         console.print("""[dodger_blue1]
 =============================================
 ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
-=============================================""")
+============================================="""
+        )
 
         # file_path = Functions.get_file_path(self, text='ENCRYPT')
         # file_path = 'I:\\encryption\\aaa\\Falcon_OneDrive_Backup.py'
