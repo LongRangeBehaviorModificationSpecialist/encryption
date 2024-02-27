@@ -17,15 +17,14 @@ console = Console()
 class AESEncryptor:
 
 
-    def aes_encrypt_single_file(
-            self,
-            file_path: Path,
-            password: str) -> None:
+    def aes_encrypt_single_file(self,
+                                file_path: Path,
+                                password: str) -> None:
         """Encrypt a file with a user-provided password
 
             Args:
-                str: Path to the file to be encrypted
-                str: Password used to encrypt the file
+                file_path: Path -> Path to the file to be encrypted
+                password: str -> Password used to encrypt the file
 
             Returns:
                 file: AES-CBC encrypted file
@@ -74,29 +73,30 @@ class AESEncryptor:
         )
 
 
-    def aes_encrypt_multi_file(
-            self,
-            file_path: Path,
-            password: str) -> None:
+    def aes_encrypt_multi_file(self,
+                               file_path: Path,
+                               password: str) -> None:
         """Encrypt a file with a user-provided password
 
             Args:
-                str: Path to the file to be encrypted
-                str: Password used to encrypt the file
+                file_path: Path -> Path to the file to be encrypted
+                password: str -> Password used to encrypt the file
 
             Returns:
                 file: AES-CBC encrypted file
         """
-        # Convert the password string into bytes to use as a key to encrypt data
+        # Convert the password string into bytes to use as a key to
+        # encrypt the data
         key = Functions.encode_key(
             self,
             password=password
         )
-
         iv = Functions.get_aes_iv(self)
         mode = AES.MODE_CBC
+
         with open(file_path, 'rb') as f:
             orig_file_data = f.read()
+
         cipher = AES.new(
             key=key,
             mode=mode,
@@ -122,14 +122,14 @@ class AESEncryptor:
             )
 
 
-    def aes_encrypt_all_files_in_dir(
-            self,
-            folder_path: Path,
-            password: str) -> None:
+    def aes_encrypt_all_files_in_dir(self,
+                                     folder_path: Path,
+                                     password: str) -> None:
         console.print("""[dodger_blue1]
 ===========================================================
 ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
-===========================================================""")
+==========================================================="""
+        )
 
         # Turn folder path string into Path object
         f = Path(folder_path)
@@ -151,14 +151,17 @@ ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
             console.print(f"""[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
-The following files in `{f}` were encrypted\n""")
+The following files in `{f}` were encrypted\n"""
+            )
             for file in dirs:
                 console.print(
 f"""[green3]{os.path.basename(
-    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted""")
+    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted"""
+                )
             console.print(f"""[green3]
 The original files HAVE BEEN DELETED
-==========================================""")
+=========================================="""
+            )
 
         elif choice.lower().strip() == 'n':
             for file_to_encrypt in dirs:
@@ -170,26 +173,30 @@ The original files HAVE BEEN DELETED
             console.print(f"""[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
-The following files in `{f}` were encrypted\n""")
+The following files in `{f}` were encrypted\n"""
+            )
             for file in dirs:
                 console.print(
 f"""[green3]{os.path.basename(
-    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted""")
+    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted"""
+                )
             console.print(f"""[green3]
 The original files HAVE NOT BEEN DELETED
-==========================================""")
+=========================================="""
+            )
 
         else:
             Functions.no_valid_yn_option(self)
             Functions.confirm_delete_original_files(self)
 
 
-    def ask_delete_original_zip(
-            self,
-            file_path: Path) -> None:
+    def ask_delete_original_zip(self,
+                                file_path: Path) -> None:
+
         delete_unencrypted_zip = console.input("""[khaki3]
 [-] Do you want to delete the unencrypted .zip file (y/n)? \
-[orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> """)
+[orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> """
+        )
         if delete_unencrypted_zip.lower().strip() == 'y':
             os.remove(file_path)
             Functions.print_confirm_file_action(
@@ -212,10 +219,9 @@ The original files HAVE NOT BEEN DELETED
             AESEncryptor.ask_delete_original_zip(self, file_path)
 
 
-    def aes_zip_files_then_encrypt(
-            self,
-            folder_path: Path,
-            password: bytes) -> None:
+    def aes_zip_files_then_encrypt(self,
+                                   folder_path: Path,
+                                   password: bytes) -> None:
 
         f = Path(folder_path)
 
@@ -238,10 +244,9 @@ The original files HAVE NOT BEEN DELETED
         )
 
 
-    def aes_encrypt_files_then_zip(
-            self,
-            folder_path: Path,
-            password: bytes) -> None:
+    def aes_encrypt_files_then_zip(self,
+                                   folder_path: Path,
+                                   password: bytes) -> None:
 
         choice = Functions.confirm_delete_original_files(self)
 
@@ -274,7 +279,8 @@ The files in the `{f}` directory have been encrypted
 The output file is `{f.name}.zip`
 The output file was saved in `{f.parent}`\n
 The directory and the original files HAVE BEEN DELETED
-==========================================""")
+=========================================="""
+            )
 
         elif choice.lower().strip() == 'n':
 
@@ -300,7 +306,8 @@ The files in the `{f}` directory have been encrypted
 The output file is `{f.name}.zip`
 The output file was saved in `{f.parent}`\n
 The directory and the original files HAVE NOT BEEN DELETED
-==========================================""")
+=========================================="""
+            )
 
         else:
             Functions.no_valid_yn_option(self)
