@@ -30,8 +30,7 @@ class KeyFileDecryptor:
         console.print('''[dodger_blue1]
 =======================================
 DECRYPT A FILE USING A KNOWN .KEY FILE
-======================================='''
-        )
+=======================================''')
 
         key_to_load = Functions.load_key(
             self,
@@ -41,8 +40,7 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
 
         console.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key file: \
-`{os.path.basename(key_file)}` loaded successfully'''
-        )
+`{os.path.basename(key_file)}` loaded successfully''')
 
         file_name, file_ext = os.path.splitext(file_path)
         if file_ext == '.encrypted':
@@ -77,8 +75,7 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
         console.print('''[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
-====================================================='''
-        )
+=====================================================''')
 
         key_to_load = Functions.load_key(
             self,
