@@ -125,11 +125,10 @@ class AESEncryptor:
     def aes_encrypt_all_files_in_dir(self,
                                      folder_path: Path,
                                      password: str) -> None:
-        console.print("""[dodger_blue1]
+        console.print('''[dodger_blue1]
 ===========================================================
 ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
-==========================================================="""
-        )
+===========================================================''')
 
         # Turn folder path string into Path object
         f = Path(folder_path)
@@ -148,20 +147,17 @@ ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
                     password=password
                 )
                 os.remove(file)
-            console.print(f"""[green3]
+            console.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
-The following files in `{f}` were encrypted\n"""
-            )
+The following files in `{f}` were encrypted\n''' )
             for file in dirs:
                 console.print(
-f"""[green3]{os.path.basename(
-    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted"""
-                )
-            console.print(f"""[green3]
+f'''[green3]{os.path.basename(
+    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted''')
+            console.print(f'''[green3]
 The original files HAVE BEEN DELETED
-=========================================="""
-            )
+==========================================''')
 
         elif choice.lower().strip() == 'n':
             for file_to_encrypt in dirs:
@@ -170,20 +166,18 @@ The original files HAVE BEEN DELETED
                     file_path=file_to_encrypt,
                     password=password
                 )
-            console.print(f"""[green3]
+            console.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
-The following files in `{f}` were encrypted\n"""
-            )
+The following files in `{f}` were encrypted\n''')
             for file in dirs:
                 console.print(
-f"""[green3]{os.path.basename(
-    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted"""
+f'''[green3]{os.path.basename(
+    file):34s}{'--->':7s}{os.path.basename(file)}.encrypted'''
                 )
-            console.print(f"""[green3]
+            console.print(f'''[green3]
 The original files HAVE NOT BEEN DELETED
-=========================================="""
-            )
+==========================================''')
 
         else:
             Functions.no_valid_yn_option(self)
@@ -193,10 +187,10 @@ The original files HAVE NOT BEEN DELETED
     def ask_delete_original_zip(self,
                                 file_path: Path) -> None:
 
-        delete_unencrypted_zip = console.input("""[khaki3]
+        delete_unencrypted_zip = console.input('''[khaki3]
 [-] Do you want to delete the unencrypted .zip file (y/n)? \
-[orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> """
-        )
+[orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> ''')
+
         if delete_unencrypted_zip.lower().strip() == 'y':
             os.remove(file_path)
             Functions.print_confirm_file_action(
@@ -272,15 +266,14 @@ The original files HAVE NOT BEEN DELETED
                 root_dir=f
             )
             shutil.rmtree(f)
-            console.print(f"""[green3]
+            console.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The files in the `{f}` directory have been encrypted
 The output file is `{f.name}.zip`
 The output file was saved in `{f.parent}`\n
 The directory and the original files HAVE BEEN DELETED
-=========================================="""
-            )
+==========================================''')
 
         elif choice.lower().strip() == 'n':
 
@@ -299,15 +292,14 @@ The directory and the original files HAVE BEEN DELETED
                 format='zip',
                 root_dir=f
             )
-            console.print(f"""[green3]
+            console.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The files in the `{f}` directory have been encrypted
 The output file is `{f.name}.zip`
 The output file was saved in `{f.parent}`\n
 The directory and the original files HAVE NOT BEEN DELETED
-=========================================="""
-            )
+==========================================''')
 
         else:
             Functions.no_valid_yn_option(self)
