@@ -48,7 +48,7 @@ class PGPClass:
             output=PGPClass.public_key_file
         )
 
-        console.print(f'"'[bright_white]
+        console.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Public key exported successfully''')
         return public_key
 
