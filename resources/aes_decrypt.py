@@ -24,8 +24,7 @@ class AESDecryptor:
         console.print('''[dodger_blue1]
 =================================================
 DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
-================================================='''
-        )
+=================================================''')
 
         key = Functions.encode_key(
             self,
@@ -140,8 +139,7 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
         console.print('''[dodger_blue1]
 =============================================
 DECRYPT FILES IN FOLDER USING PASSWORD (AES)
-============================================='''
-        )
+=============================================''')
 
         dirs = Functions.get_all_files(
             self,
