@@ -33,9 +33,8 @@ class PGPClass:
 [-] File encryption WAS NOT successful. Please try again.""")
 
 
-    def pgp_export_public_key(
-            self,
-            keyid: str) -> None:
+    def pgp_export_public_key(self,
+                              keyid: str) -> None:
         """Decrypts a file using a provided .key file
 
             Args:
@@ -50,14 +49,14 @@ class PGPClass:
         )
 
         console.print(f"""[bright_white]
-[{Functions.get_date_time(self)}] Public key exported successfully""")
+[{Functions.get_date_time(self)}] Public key exported successfully"""
+        )
         return public_key
 
 
-    def pgp_export_private_key(
-            self,
-            keyid: str,
-            password: str) -> None:
+    def pgp_export_private_key(self,
+                               keyid: str,
+                               password: str) -> None:
         """Decrypts a file using a provided .key file
 
             Args:
@@ -75,14 +74,14 @@ class PGPClass:
         )
 
         console.print(f"""[bright_white]
-[{Functions.get_date_time(self)}] Private key exported successfully""")
+[{Functions.get_date_time(self)}] Private key exported successfully"""
+        )
         return private_key
 
 
-    def generate_pgp_key(
-            self,
-            password: str,
-            email_address: str) -> None:
+    def generate_pgp_key(self,
+                         password: str,
+                         email_address: str) -> None:
         """Generates new pair of PGP keys
 
             Args:
@@ -104,7 +103,8 @@ class PGPClass:
         keyid = PGPClass.gpg.gen_key(input_data)
 
         console.print(f"""[bright_white]
-[{Functions.get_date_time(self)}] Generated Key ID: {keyid}""")
+[{Functions.get_date_time(self)}] Generated Key ID: {keyid}"""
+        )
 
         PGPClass.pgp_export_public_key(
             self,
@@ -117,9 +117,8 @@ class PGPClass:
         )
 
 
-    def pgp_encrypt_file(
-            self,
-            file_path: Path) -> None:
+    def pgp_encrypt_file(self,
+                         file_path: Path) -> None:
 
         encrypted_file = Functions.get_encrypted_file_name(
             self,
@@ -135,12 +134,12 @@ class PGPClass:
         PGPClass.print_status(self, status)
 
 
-    def pgp_decrypt_file(
-            self,
-            file_path: Path,
-            password: str) -> None:
+    def pgp_decrypt_file(self,
+                         file_path: Path,
+                         password: str) -> None:
 
         file = file_path
+
         if file.endswith('.encrypted'):
             decrypted_file = file[:-10]
         else:
@@ -156,19 +155,21 @@ class PGPClass:
         PGPClass.print_status(self, status)
 
 
-    def pgp_encrypt_folder(
-            self,
-            folder_path: Path) -> None:
+    def pgp_encrypt_folder(self,
+                           folder_path: Path) -> None:
 
         delete_originals = console.input("""[khaki3]
-[-] Do you want to delete the original files after encryption (y/n)? >>> """)
+[-] Do you want to delete the original files after encryption (y/n)? >>> """
+        )
 
         delete_originals = delete_originals.strip().lower()
 
         if delete_originals == 'y':
             choice = console.input("""[khaki3]
 [-] All of the original files in this directory will be [orange_red1]\
-PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue (y/n)? >>> """)
+PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue \
+(y/n)? >>> """
+            )
 
             choice = choice.strip().lower()
 
@@ -191,7 +192,8 @@ Exiting program. Please wait...""")
             # NO VALID CHOICE WAS ENTERED
             else:
                 console.print("""[khaki3]
-Seriously, you did not enter a valid option. Exiting...""")
+Seriously, you did not enter a valid option. Exiting..."""
+                )
             sys.exit(0)
 
         # IF THE USER CHOOSES NOT TO DELETE ORIGINAL FILES
@@ -206,7 +208,8 @@ Seriously, you did not enter a valid option. Exiting...""")
         # NO VALID CHOICE WAS ENTERED
         else:
             console.print("""[khaki3]
-Seriously, you did not enter a valid option. Exiting...""")
+Seriously, you did not enter a valid option. Exiting..."""
+            )
             sys.exit(0)
 
         # PRINT STATUS MESSAGE TO THE TERMINAL
