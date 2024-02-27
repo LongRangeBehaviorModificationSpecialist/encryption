@@ -20,7 +20,7 @@ class AESEncryptor:
     def aes_encrypt_single_file(self,
                                 file_path: Path,
                                 password: str) -> None:
-        """Encrypt a file with a user-provided password
+        '''Encrypt a file with a user-provided password
 
             Args:
                 file_path: Path -> Path to the file to be encrypted
@@ -28,7 +28,7 @@ class AESEncryptor:
 
             Returns:
                 file: AES-CBC encrypted file
-        """
+        '''
 
         # Convert the password string into bytes to use as a key to encrypt data
         key = Functions.encode_key(
@@ -76,7 +76,7 @@ class AESEncryptor:
     def aes_encrypt_multi_file(self,
                                file_path: Path,
                                password: str) -> None:
-        """Encrypt a file with a user-provided password
+        '''Encrypt a file with a user-provided password
 
             Args:
                 file_path: Path -> Path to the file to be encrypted
@@ -84,7 +84,7 @@ class AESEncryptor:
 
             Returns:
                 file: AES-CBC encrypted file
-        """
+        '''
         # Convert the password string into bytes to use as a key to
         # encrypt the data
         key = Functions.encode_key(
