@@ -29,6 +29,7 @@ class AESGCMDataEncryptor:
             self,
             password=password
         )
+
         with open(file_path, 'rb') as f:
             plaintext = f.read()
 
@@ -65,6 +66,7 @@ class AESGCMDataEncryptor:
             self,
             folder_path=folder_path
         )
+
         for file in dirs:
             file = Path(file)
             AESGCMDataEncryptor.aes_gcm_encrypt_file(
@@ -72,6 +74,7 @@ class AESGCMDataEncryptor:
                 file_path=file,
                 password=password
             )
+
         if choice == 'y':
             # Optionally, you can remove the original file
             for file in dirs:
@@ -81,12 +84,14 @@ class AESGCMDataEncryptor:
                 folder_path=folder_path,
                 action='ENCRYPTED'
             )
+
         elif choice == 'n':
             Functions.print_original_files_not_deleted(
                 self,
                 folder_path=folder_path,
                 action='ENCRYPTED'
             )
+
         else:
             Functions.no_valid_yn_option(self)
             AESGCMDataEncryptor.aes_gcm_encrypt_directory(self)
