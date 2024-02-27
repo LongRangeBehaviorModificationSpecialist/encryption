@@ -31,8 +31,7 @@ class App:
         try again and enter a valid option.
         '''
         console.print('''[red1]
-You did not enter a valid option. Please try again.'''
-        )
+You did not enter a valid option. Please try again.''')
         App.main(self)
 
 
@@ -62,8 +61,7 @@ H)  Decrypt file/files using a password (AES-GCM Mode)
 I)  Decrypt file/files using a PGP key file
 J)  Decrypt message/file using XOR\n
 Q)  Quit the Application[khaki3]\n
-ENTER CHOICE >>> '''
-        )
+ENTER CHOICE >>> ''')
 
         Functions.clear_screen(self)
 
@@ -82,8 +80,7 @@ Choose an option
 3)  Encrypt all files in a directory using a .key file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -140,8 +137,7 @@ Choose an option
 2)  Encrypt all files in a directory using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -175,8 +171,7 @@ Choose an option
 (file size may be larger)\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-                )
+ENTER CHOICE >>> ''')
 
                 Functions.clear_screen(self)
 
@@ -233,8 +228,7 @@ Choose an option
 2)  Encrypt all files in a directory using a password (AES-GCM)\n
 R)  Return to main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -280,8 +274,7 @@ Choose an option
 3)  Encrypt all files in a directory using PGP keys\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -330,8 +323,7 @@ Choose an option
 2)  Encrypt a file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -378,8 +370,7 @@ Choose an option
 2)  Decrypt all files in a folder using a .key file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -427,8 +418,7 @@ Choose an option
 2)  Decrypt all files in a folder using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -473,8 +463,7 @@ Choose an option
 2)  Decrypt all files in a directory using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -520,8 +509,7 @@ Choose an option
 2)  -- Decrypt all files in a folder using PGP key --\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
@@ -557,8 +545,7 @@ Choose an option
 2)  Decrypt a file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> '''
-            )
+ENTER CHOICE >>> ''')
 
             Functions.clear_screen(self)
 
