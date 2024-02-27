@@ -1,5 +1,4 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from cryptography.fernet import Fernet
 from datetime import datetime
@@ -22,15 +21,16 @@ class KeyFileEncryptor:
 
     def generate_new_key_file(self,
                               key_file_path: Path) -> str:
-        """Generate a new key file (with the date & time appended to the file
-        name) to be used to encrypt the message or file of the user's choice
+        '''Generate a new key file (with the date & time appended to the
+        file name) to be used to encrypt the message or file of the user's
+        choice.
 
             Args:
                 key_file_path (str): path to new .key file that was created
 
             Returns:
                 file (str): new .key file used to encrypt a message or file
-        """
+        '''
         now = datetime.now()
         dt = now.strftime('%Y%m%d_%H%M%S')
         key = Fernet.generate_key()
@@ -68,9 +68,9 @@ class KeyFileEncryptor:
         )
         key = Fernet(key_to_load)
 
-        console.print(f"""[blue]
+        console.print(f'''[blue]
 [{Functions.get_date_time(self)}] [bright_white]Key file \
-`{os.path.basename(key_file)}` loaded successfully"""
+`{os.path.basename(key_file)}` loaded successfully'''
         )
 
         encrypted_file = Functions.get_encrypted_file_name(
@@ -87,7 +87,7 @@ class KeyFileEncryptor:
 
     def encrypt_file_with_new_key(self,
                                   file_path: Path) -> None:
-        """Generate a new .key file which will be saved in the same directory
+        '''Generate a new .key file which will be saved in the same directory
         as the file to be encrypted
 
         Args:
@@ -96,11 +96,11 @@ class KeyFileEncryptor:
 
         Returns:
             file: Encrypted file
-        """
-        console.print("""[dodger_blue1]
+        '''
+        console.print('''[dodger_blue1]
 =============================================
 ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
-============================================="""
+============================================='''
         )
 
         # file_path = Functions.get_file_path(self, text='ENCRYPT')
@@ -135,15 +135,16 @@ ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
                               key: str,
                               file_to_encrypt: str,
                               encrypted_file: str) -> None:
-        """Encrypts a file using a provided .key
+        '''Encrypts a file using a provided .key
 
             Args:
                 str: Path to the .key file to be used for encryption
                 str: Path of the file to be encrypted
 
             Returns:
-                file: Encrypted file in the same directory as the original file
-        """
+                file: Encrypted file in the same directory as the original
+                      file
+        '''
         with open(file_to_encrypt, 'rb') as of:
             original_data = of.read()
 
@@ -168,10 +169,10 @@ ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
                                       key_file: Path,
                                       folder_path: Path) -> None:
         while True:
-            console.print("""[dodger_blue1]
+            console.print('''[dodger_blue1]
 =====================================================
 ENCRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
-====================================================="""
+====================================================='''
             )
 
             key_to_load = Functions.load_key(
