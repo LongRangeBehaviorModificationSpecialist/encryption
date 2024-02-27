@@ -23,7 +23,8 @@ class AESDecryptor:
         console.print("""[dodger_blue1]
 =================================================
 DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
-=================================================""")
+================================================="""
+        )
 
         key = Functions.encode_key(
             self,
@@ -73,9 +74,8 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
         )
 
 
-    def _return_dir_data(
-            self,
-            folder_path: Path) -> tuple:
+    def _return_dir_data(self,
+                         folder_path: Path) -> tuple:
 
         dirs = Functions.get_all_files(
             self,
@@ -92,11 +92,11 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
         return file_to_decrypt, file_ext, decrypted_file
 
 
-    def _aes_decrypt_all_files(
-            self,
-            folder_path: Path,
-            key: bytes,
-            mode: str) -> None:
+    def _aes_decrypt_all_files(self,
+                               folder_path: Path,
+                               key: bytes,
+                               mode: str) -> None:
+
         file_to_decrypt = Path(
             AESDecryptor._return_dir_data(
                 self,
@@ -112,7 +112,11 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
             iv = f.read(16)
             encrypted_data = f.read()
 
-        cipher = AES.new(key=key, mode=mode, iv=iv)
+        cipher = AES.new(
+            key=key,
+            mode=mode,
+            iv=iv
+        )
         decrypted_data = unpad(
             cipher.decrypt(
                 encrypted_data
@@ -128,15 +132,15 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
             )
 
 
-    def aes_decrypt_all_files_in_dir(
-            self,
-            folder_path: Path,
-            password: str,
-            mode=AES.MODE_CBC) -> None:
+    def aes_decrypt_all_files_in_dir(self,
+                                     folder_path: Path,
+                                     password: str,
+                                     mode=AES.MODE_CBC) -> None:
         console.print("""[dodger_blue1]
 =============================================
 DECRYPT FILES IN FOLDER USING PASSWORD (AES)
-=============================================""")
+============================================="""
+        )
 
         dirs = Functions.get_all_files(
             self,
@@ -147,10 +151,11 @@ DECRYPT FILES IN FOLDER USING PASSWORD (AES)
             password=password
         )
         # ASK USER IF THEY WANT TO DELETE THE ORIGINAL ENCRYPTED FILES
-        delete_encrypted_files = Functions.ask_delete_original_enc_files(self)
+        delete_files = Functions.ask_delete_original_enc_files(self)
+        delete_files = delete_files.lower().strip()
 
         # IF USER CHOOSES `N` THE ORIGINALS FILES **NOT** DELETED
-        if delete_encrypted_files.lower().strip() == 'n':
+        if delete_files == 'n':
             AESDecryptor._aes_decrypt_all_files(
                 self,
                 folder_path=dirs,
@@ -164,7 +169,7 @@ DECRYPT FILES IN FOLDER USING PASSWORD (AES)
             )
 
         # IF THE USER CHOOSES `Y` WILL DELETE ORIGINAL FILES
-        elif delete_encrypted_files.lower().strip() == 'y':
+        elif delete_files == 'y':
             file_ext = AESDecryptor._return_dir_data(
                 self, 
                 folder_path)[1]
@@ -176,7 +181,7 @@ DECRYPT FILES IN FOLDER USING PASSWORD (AES)
                 folder_path,
                 action='decrypted'
             )
+        # THE USER DID NOT CHOOSE EITHER 'Y' OR 'N'
         else:
-            # THE USER DID NOT CHOOSE EITHER `Y` OR `N`
             Functions.no_valid_yn_option(self)
             sys.exit(0)
