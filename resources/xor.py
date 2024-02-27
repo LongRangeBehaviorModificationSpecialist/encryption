@@ -27,12 +27,12 @@ class XOREncryption:
         with open(xor_enc_msg_file, 'w') as f:
             f.write(encrypted_text)
 
-        console.print(f"""[green3]
+        console.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The encrypted message is:\n
-    [bright_white]{encrypted_text}[green3]\n
-=========================================="""
+  [bright_white]{encrypted_text}[green3]\n
+=========================================='''
         )
 
 
@@ -55,11 +55,11 @@ The encrypted message is:\n
         with open(xor_enc_file, 'w', encoding='utf-8') as f:
             f.write(encrypted_data)
 
-        console.print("""[green3]
+        console.print('''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
-File Encrypted with XOR key
-=========================================="""
+  File Encrypted with XOR key
+=========================================='''
         )
 
 
@@ -78,12 +78,12 @@ class XORDecryption:
             decrypted_message += chr(
                 ord(text_to_decrypt) ^ ord(key_to_decrypt)
             )
-        console.print(f"""[green3]
+        console.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The original message is:\n
-    [bright_white]{decrypted_message}[green3]\n
-=========================================="""
+  [bright_white]{decrypted_message}[green3]\n
+=========================================='''
         )
 
 
@@ -109,9 +109,9 @@ The original message is:\n
         with open(decrypted_file, 'w') as f:
             f.write(decrypted_data)
 
-        console.print("""[green3]
+        console.print('''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
-File Decrypted with XOR key
-=========================================="""
+  File Decrypted with XOR key
+=========================================='''
         )
