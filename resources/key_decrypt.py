@@ -17,19 +17,20 @@ class KeyFileDecryptor:
     def decrypt_file_with_key(self,
                               key_file: Path,
                               file_path: Path) -> None:
-        """Decrypts a file using a provided .key file
+        '''Decrypts a file using a provided .key file
 
             Args:
                 str: Path to the key_file
                 str: Path of the file to be decrypted
 
             Returns:
-                file: Decrypted file in the same directory as the original file
-        """
-        console.print("""[dodger_blue1]
+                file: Decrypted file in the same directory as the original
+                      file
+        '''
+        console.print('''[dodger_blue1]
 =======================================
 DECRYPT A FILE USING A KNOWN .KEY FILE
-======================================="""
+======================================='''
         )
 
         key_to_load = Functions.load_key(
@@ -38,9 +39,9 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
         )
         f = Fernet(key_to_load)
 
-        console.print(f"""[bright_white]
+        console.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key file: \
-`{os.path.basename(key_file)}` loaded successfully"""
+`{os.path.basename(key_file)}` loaded successfully'''
         )
 
         file_name, file_ext = os.path.splitext(file_path)
@@ -73,10 +74,10 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
     def decrypt_files_in_folder_with_key(self,
                                          key_file: Path,
                                          folder_path: Path) -> None:
-        console.print("""[dodger_blue1]
+        console.print('''[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
-====================================================="""
+====================================================='''
         )
 
         key_to_load = Functions.load_key(
@@ -112,7 +113,7 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
         # ASK USER IF THEY WANT TO DELETE THE ORIGINAL ENCRYPTED FILES
         delete_original_enc_files = Functions.ask_delete_original_enc_files(self)
 
-        # IF USER CHOOSES `NO`, THE ORIGINALS FILES **NOT** DELETED
+        # IF USER CHOOSES 'NO', THE ORIGINALS FILES **NOT** DELETED
         if delete_original_enc_files.lower().strip() == 'n':
             Functions.print_original_files_not_deleted(
                 self,
@@ -120,7 +121,7 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
                 action='decrypted'
             )
 
-        # IF THE USER CHOOSES `YES` WILL DELETE ORIGINAL FILES
+        # IF THE USER CHOOSES 'YES', THIS WILL DELETE ORIGINAL FILES
         elif delete_original_enc_files.lower().strip() == 'y':
             for file in dirs:
                 if file_ext == '.encrypted':
