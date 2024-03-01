@@ -17,62 +17,76 @@ class KeyFileDecryptor:
     def decrypt_file_with_key(self,
                               key_file: Path,
                               file_path: Path) -> None:
-        """Decrypts a file using a provided .key file
+        '''Decrypts a file using a provided .key file
 
             Args:
                 str: Path to the key_file
                 str: Path of the file to be decrypted
 
             Returns:
-                file: Decrypted file in the same directory as the original file
-        """
-        console.print("""[dodger_blue1]
+                file: Decrypted file in the same directory as the original
+                      file
+        '''
+        console.print('''[dodger_blue1]
 =======================================
 DECRYPT A FILE USING A KNOWN .KEY FILE
-=======================================""")
+=======================================''')
 
-        key_to_load = Functions.load_key(self,
-                                         key_file=key_file)
+        key_to_load = Functions.load_key(
+            self,
+            key_file=key_file
+        )
         f = Fernet(key_to_load)
 
-        console.print(f"""[bright_white]
+        console.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key file: \
-`{os.path.basename(key_file)}` loaded successfully""")
+`{os.path.basename(key_file)}` loaded successfully''')
 
         file_name, file_ext = os.path.splitext(file_path)
         if file_ext == '.encrypted':
             decrypted_file = Path(file_name)
         else:
-            decrypted_file = Functions.get_decrypted_file_name(self,
-                                                               file_path)
+            decrypted_file = Functions.get_decrypted_file_name(
+                self,
+                file_path
+            )
 
         with open(file_path, 'rb') as ef:
             encrypted_data = ef.read()
         decrypted_data = f.decrypt(encrypted_data)
-        with open(decrypted_file, 'wb') as df:
-            Functions.write_to_file(self,
-                                    file=df,
-                                    message=decrypted_data)
 
-        Functions.print_confirm_file_action(self,
-                                            file_name=decrypted_file,
-                                            text="Decryption")
+        with open(decrypted_file, 'wb') as df:
+            Functions.write_to_file(
+                self,
+                file=df,
+                message=decrypted_data
+            )
+
+        Functions.print_confirm_file_action(
+            self,
+            file_name=decrypted_file,
+            text='Decryption'
+        )
 
 
     def decrypt_files_in_folder_with_key(self,
                                          key_file: Path,
                                          folder_path: Path) -> None:
-        console.print("""[dodger_blue1]
+        console.print('''[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
-=====================================================""")
+=====================================================''')
 
-        key_to_load = Functions.load_key(self,
-                                         key_file=key_file)
+        key_to_load = Functions.load_key(
+            self,
+            key_file=key_file
+        )
         f = Fernet(key_to_load)
 
-        dirs = Functions.get_all_files(self,
-                                       folder_path=folder_path)
+        dirs = Functions.get_all_files(
+            self,
+            folder_path=folder_path
+        )
         for file in dirs:
             file_name, file_ext = os.path.splitext(file)
 
@@ -87,28 +101,33 @@ DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
             decrypted_data = f.decrypt(encrypted_data)
 
             with open(decrypted_file_name, 'wb') as df:
-                Functions.write_to_file(self,
-                                        file=df,
-                                        message=decrypted_data)
-
+                Functions.write_to_file(
+                    self,
+                    file=df,
+                    message=decrypted_data
+                )
 
         # ASK USER IF THEY WANT TO DELETE THE ORIGINAL ENCRYPTED FILES
         delete_original_enc_files = Functions.ask_delete_original_enc_files(self)
 
-        # IF USER CHOOSES `NO`, THE ORIGINALS FILES **NOT** DELETED
+        # IF USER CHOOSES 'NO', THE ORIGINALS FILES **NOT** DELETED
         if delete_original_enc_files.lower().strip() == 'n':
-            Functions.print_original_files_not_deleted(self,
-                                                       folder_path,
-                                                       action='decrypted')
+            Functions.print_original_files_not_deleted(
+                self,
+                folder_path,
+                action='decrypted'
+            )
 
-        # IF THE USER CHOOSES `YES` WILL DELETE ORIGINAL FILES
+        # IF THE USER CHOOSES 'YES', THIS WILL DELETE ORIGINAL FILES
         elif delete_original_enc_files.lower().strip() == 'y':
             for file in dirs:
                 if file_ext == '.encrypted':
                     os.remove(file)
-            Functions.print_original_files_deleted(self,
-                                                   folder_path,
-                                                   action='decrypted')
+            Functions.print_original_files_deleted(
+                self,
+                folder_path,
+                action='decrypted'
+            )
 
         # IF THE USER DID NOT CHOOSE EITHER `Y` OR `N`
         else:
