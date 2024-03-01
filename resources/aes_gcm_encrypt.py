@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
 from pathlib import Path
 from rich.console import Console
+from rich import print
 
 from resources.functions import Functions
 
@@ -25,10 +26,7 @@ class AESGCMDataEncryptor:
                              password: str) -> None:
         '''Encrypts a single file using AES GCM encryption'''
 
-        key = Functions.encode_key(
-            self,
-            password=password
-        )
+        key = Functions.encode_key(self, password=password)
 
         with open(file_path, 'rb') as f:
             plaintext = f.read()
@@ -37,8 +35,7 @@ class AESGCMDataEncryptor:
         cipher = Cipher(
             algorithms.AES(key),
             modes.GCM(iv),
-            backend=default_backend()
-        )
+            backend=default_backend())
         encryptor = cipher.encryptor()
         ciphertext = encryptor.update(plaintext) + encryptor.finalize()
         encrypted_file = Path(f'{file_path}.encrypted')
@@ -46,11 +43,12 @@ class AESGCMDataEncryptor:
         with open(encrypted_file, 'wb') as f:
             f.write(iv + encryptor.tag + ciphertext)
 
-        console.print(f'''[green3]
+        print(f'''[green3]
 {file_path.name:34s}{'->':7s}{encrypted_file.name}
 {'':34s}{'':7s}iv: {iv.hex().upper()}
 {'':34s}{'':7s}tag: {encryptor.tag.hex().upper()}
 {'':34s}{'':7s}cipherText: {ciphertext[0:16]}...''')
+
         return f
 
 
@@ -61,35 +59,27 @@ class AESGCMDataEncryptor:
 
         choice = Functions.confirm_delete_original_files(self)
         choice = choice.lower().strip()
-        dirs = Functions.get_all_files(
-            self,
-            folder_path=folder_path
-        )
+
+        dirs = Functions.get_all_files(self, folder_path=folder_path)
 
         for file in dirs:
             file = Path(file)
-            AESGCMDataEncryptor.aes_gcm_encrypt_file(
-                self,
+            AESGCMDataEncryptor.aes_gcm_encrypt_file(self,
                 file_path=file,
-                password=password
-            )
+                password=password)
 
         if choice == 'y':
             # Optionally, you can remove the original file
             for file in dirs:
                 os.remove(file)
-            Functions.print_original_files_deleted(
-                self,
+            Functions.print_original_files_deleted(self,
                 folder_path=folder_path,
-                action='ENCRYPTED'
-            )
+                action='ENCRYPTED')
 
         elif choice == 'n':
-            Functions.print_original_files_not_deleted(
-                self,
+            Functions.print_original_files_not_deleted(self,
                 folder_path=folder_path,
-                action='ENCRYPTED'
-            )
+                action='ENCRYPTED')
 
         else:
             Functions.no_valid_yn_option(self)

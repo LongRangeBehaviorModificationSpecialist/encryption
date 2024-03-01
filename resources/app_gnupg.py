@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 
 from rich.console import Console
+from rich import print
 import gnupg
 from pathlib import Path
 import os
@@ -24,12 +25,13 @@ class PGPClass:
 
 
     def print_status(self, status):
+
         if status.ok == True:
-            console.print(f'''[khaki3]
+            print(f'''[khaki3]
 [-] File encryption successful.
     {status.stderr}''')
         else:
-            console.print('''[red1]
+            print('''[red1]
 [-] File encryption WAS NOT successful. Please try again.''')
 
 
@@ -45,10 +47,9 @@ class PGPClass:
         '''
         public_key = PGPClass.gpg.export_keys(
             keyids=keyid,
-            output=PGPClass.public_key_file
-        )
+            output=PGPClass.public_key_file)
 
-        console.print(f'''[bright_white]
+        print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Public key exported successfully''')
         return public_key
 
@@ -69,11 +70,11 @@ class PGPClass:
             keyids=keyid,
             secret=True,
             passphrase=password,
-            output=PGPClass.private_key_file
-        )
+            output=PGPClass.private_key_file)
 
-        console.print(f'''[bright_white]
+        print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Private key exported successfully''')
+
         return private_key
 
 
@@ -94,39 +95,30 @@ class PGPClass:
             name_email=email_address,
             passphrase=password,
             key_type='RSA',
-            key_length=1024
-        )
+            key_length=1024)
 
         global keyid
         keyid = PGPClass.gpg.gen_key(input_data)
 
-        console.print(f'''[bright_white]
+        print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Generated Key ID: {keyid}''')
 
-        PGPClass.pgp_export_public_key(
-            self,
-            keyid=str(keyid)
-        )
-        PGPClass.pgp_export_private_key(
-            self,
-            keyid=str(keyid),
-            password=password
-        )
+        PGPClass.pgp_export_public_key(self, keyid=str(keyid))
+        PGPClass.pgp_export_private_key(self, keyid=str(keyid), password=password)
 
 
     def pgp_encrypt_file(self,
                          file_path: Path) -> None:
 
-        encrypted_file = Functions.get_encrypted_file_name(
-            self,
-            file_path=file_path
-        )
+        encrypted_file = Functions.get_encrypted_file_name(self,
+            file_path=file_path)
+
         with open(file_path, 'rb') as f:
             status = PGPClass.gpg.encrypt_file(
                 f,
                 recipients=['mikespon@gmail.com'],
-                output=encrypted_file
-            )
+                output=encrypted_file)
+
         # Print status message to the terminal
         PGPClass.print_status(self, status)
 
@@ -146,8 +138,8 @@ class PGPClass:
             status = PGPClass.gpg.decrypt_file(
                 f,
                 passphrase=password,
-                output=decrypted_file
-            )
+                output=decrypted_file)
+
         # Print status message to the terminal
         PGPClass.print_status(self, status)
 
@@ -161,6 +153,7 @@ class PGPClass:
         delete_originals = delete_originals.strip().lower()
 
         if delete_originals == 'y':
+
             choice = console.input('''[khaki3]
 [-] All of the original files in this directory will be [orange_red1]\
 PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue \
@@ -173,20 +166,19 @@ PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue \
                     with open(f'{folder_path}\\{file}', 'rb') as efile:
                         status = PGPClass.gpg.encrypt_file(
                             efile,
-                            recipients=['mikespon@gmail.com'],
-                            output=f'{folder_path}\\{file}.encrypted'
-                        )
+                            recipients=['TEST.EMAIL@gmail.com'],
+                            output=f'{folder_path}\\{file}.encrypted')
                 os.remove(f'{folder_path}\\{file}')
 
             # EXIT THE PROGRAM
             elif choice == 'n':
-                console.print('''[khaki3]
+                print('''[khaki3]
 Exiting program. Please wait...''')
                 sys.exit(0)
 
             # NO VALID CHOICE WAS ENTERED
             else:
-                console.print('''[khaki3]
+                print('''[khaki3]
 Seriously, you did not enter a valid option. Exiting...''')
             sys.exit(0)
 
@@ -195,13 +187,12 @@ Seriously, you did not enter a valid option. Exiting...''')
             with open(f'{folder_path}\\{file}', 'rb') as efile:
                 status = PGPClass.gpg.encrypt_file(
                     efile,
-                    recipients=['mikespon@gmail.com'],
-                    output=f'{folder_path}\\{file}.encrypted'
-                )
+                    recipients=['TEST.EMAIL@gmail.com'],
+                    output=f'{folder_path}\\{file}.encrypted')
 
         # NO VALID CHOICE WAS ENTERED
         else:
-            console.print('''[khaki3]
+            print('''[khaki3]
 Seriously, you did not enter a valid option. Exiting...''')
             sys.exit(0)
 

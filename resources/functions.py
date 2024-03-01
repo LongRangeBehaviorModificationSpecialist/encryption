@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 
 import binascii
+from rich import print
 from rich.console import Console
 from functools import wraps
 import hashlib
@@ -25,7 +26,7 @@ class Functions:
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
-            console.print(f'''[dodger_blue1]
+            print(f'''[dodger_blue1]
 Operation [ {func.__name__}() ] was completed in \
 {total_time:.4f} seconds''')
             # print(f"\nFunction {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds")
@@ -53,16 +54,14 @@ after decryption (y/n)? >>> ''')
 
     def encode_key(self, password: str) -> bytes:
         pswd_hash = hashlib.sha256(
-            password.encode('utf-8')
-        ).hexdigest()
+            password.encode('utf-8')).hexdigest()
         # Convert the sha-256 value of the password string to a byte string
         key = binascii.unhexlify(pswd_hash)
         return key
 
 
     def exit_application(self) -> None:
-        console.print('''[dodger_blue1]
->>> Exiting the application. Goodbye...''')
+        print('''[dodger_blue1]>>> Exiting the application. Goodbye...''')
         sys.exit(0)
 
 
@@ -129,17 +128,13 @@ after decryption (y/n)? >>> ''')
     def get_password(self) -> str:
         password = console.input(f'''[khaki3]
 [-] Enter the PASSWORD you want to use >>> ''')
-        valid = Functions.validate_password(
-            self,
-            password=password
-        )
+        valid = Functions.validate_password(self,
+            password=password)
         if valid != password:
-            console.print('''[blue]
-Please try again.\n''')
+            print('''[blue]Please try again.\n''')
             Functions.get_password(self)
         else:
-            console.print('''[khaki3]
-Your password checks out. Continuing...''')
+            print('''[khaki3]Your password checks out. Continuing...''')
             return str(password)
 
 
@@ -152,9 +147,8 @@ Your password checks out. Continuing...''')
         if (len(password) < 10 or
             re.search('[0-9]', password) is None or
             re.search('[A-Z]', password) is None or
-            not any(char in symbols for char in password)
-            ):
-            console.print('''[red1]
+            not any(char in symbols for char in password)):
+            print('''[red1]
 Your password did not meet the minimun requirements. Please try again.\n
 Your password must meet the following criteria\n
   [-] Is at least ten characters long
@@ -164,7 +158,7 @@ Your password must meet the following criteria\n
 ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |''')
             Functions.get_password(self)
         else:
-            console.print(f"Returned `password` = {password}")
+            print(f"Returned `password` = {password}")
             return password
 
 
@@ -172,10 +166,7 @@ Your password must meet the following criteria\n
         password = console.input('''[khaki3]
 [-] Enter a password to use for the PGP private key
 >>> ''')
-        Functions.validate_password(
-            self,
-            password=password
-        )
+        Functions.validate_password(self,password=password)
         return password
 
 
@@ -200,7 +191,7 @@ Your password must meet the following criteria\n
 
 
     def no_valid_yn_option(self) -> None:
-        no_valid_yn_option = console.print('''[red1]
+        no_valid_yn_option = print('''[red1]
 !!! You did not enter a valid option. The valid options are either 'y' OR \
 'n'. Please try again.''')
         return no_valid_yn_option
@@ -209,7 +200,7 @@ Your password must meet the following criteria\n
     def print_confirm_file_action(self,
                                   file_name: Path,
                                   text: str) -> None:
-        confirm = console.print(f'''[green3]
+        confirm = print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 {text} file name:
@@ -223,7 +214,7 @@ Your password must meet the following criteria\n
     def print_original_files_deleted(self,
                                      folder_path: Path,
                                      action: str) -> None:
-        confirm = console.print(f'''[green3]
+        confirm = print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 Files in the `{folder_path}` directory have been {action}\n
@@ -235,7 +226,7 @@ The original files HAVE BEEN DELETED
     def print_original_files_not_deleted(self,
                                          folder_path: Path,
                                          action: str) -> None:
-        confirm = console.print(f'''[green3]
+        confirm = print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 Files in the `{folder_path}` directory have been {action}\n
@@ -252,7 +243,7 @@ The original files were NOT DELETED
         with open(key_file_hash_file, 'w', encoding='utf-8') as f:
             f.write(f'''Key File Name: {key_file_path.name}\n
 Key File Hash Value (SHA-256): {key_file_hash_value}''')
-        console.print(f'''[bright_white]
+        print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key File hashed successfully
 [{Functions.get_date_time(self)}] Key File Hash verification saved in \
 `{os.path.dirname(key_file_path)}` directory
@@ -275,7 +266,6 @@ Key File Hash Value (SHA-256): {key_file_hash_value}''')
     def get_xor_key(self) -> str:
         xor_key = console.input('''[khaki3]
 Enter the key you want to use for the encryption >>> ''')
-        # xor_key = '12345'
         return xor_key
 
 
@@ -283,16 +273,12 @@ Enter the key you want to use for the encryption >>> ''')
         message = console.input('''[khaki3]
 Enter the message string you want to encrypt
 >>> ''')
-        # message = 'This is a super secret message. The launch code is: 456F8A1C453EF92BEFAA23.'
         return message
 
 
     def get_file_to_xor(self) -> Path:
-        file_path = Functions.get_file_path(
-            self,
-            text='you want to encrypt'
-        )
-        # file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py'
+        file_path = Functions.get_file_path(self,
+            text='you want to encrypt')
         return Path(file_path)
 
 
@@ -300,14 +286,10 @@ Enter the message string you want to encrypt
         message = console.input('''[khaki3]
 Enter the message string you want to decrypt
 >>> ''')
-        # message = """eZZG\x15XA\x13U\x15BGCQG\x11AVWGTF\x13YPBARSP\x1f\x12g\\P\x11^RA[RZ\x13WZUW\x13]F\x0b\x12\x07\x01\x03w\nr\x05v\x05\x07\x00qs\x08\x00qqsps\x01\x07\x1b"""
         return message
 
 
     def get_xor_file_to_decrypt(self) -> str:
-        file_path = Functions.get_file_path(
-            self,
-            text='you want to decrypt'
-        )
-        # file_path = 'C:\\Users\\mikes\\Desktop\\encryption\\aaa\\test_for_XOR.py.encrypted'
+        file_path = Functions.get_file_path(self,
+            text='you want to decrypt')
         return file_path

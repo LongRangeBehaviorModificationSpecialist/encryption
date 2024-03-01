@@ -5,6 +5,7 @@ from Crypto.Util.Padding import pad
 
 import os
 from rich.console import Console
+from rich import print
 from pathlib import Path
 import shutil
 
@@ -31,46 +32,25 @@ class AESEncryptor:
         '''
 
         # Convert the password string into bytes to use as a key to encrypt data
-        key = Functions.encode_key(
-            self,
-            password=password
-        )
+        key = Functions.encode_key(self, password=password)
         iv = Functions.get_aes_iv(self)
         mode = AES.MODE_CBC
 
         with open(file_path, 'rb') as f:
             orig_file_data = f.read()
 
-        cipher = AES.new(
-            key=key,
-            mode=mode,
-            iv=iv
-        )
+        cipher = AES.new(key=key, mode=mode, iv=iv)
         encrypted_data = cipher.encrypt(
-            pad(
-                orig_file_data,
-                AES.block_size
-            )
-        )
+            pad(orig_file_data, AES.block_size))
         encrypted_file = Path(f'{file_path}.encrypted')
 
         with open(encrypted_file, 'wb') as f:
-            Functions.write_to_file(
-                self,
-                file=f,
-                message=cipher.iv
-            )
-            Functions.write_to_file(
-                self,
-                file=f,
-                message=encrypted_data
-            )
+            Functions.write_to_file(self, file=f, message=cipher.iv)
+            Functions.write_to_file(self, file=f, message=encrypted_data)
 
-        Functions.print_confirm_file_action(
-            self,
+        Functions.print_confirm_file_action(self,
             file_name=encrypted_file,
-            text='Encrypted'
-        )
+            text='Encrypted')
 
 
     def aes_encrypt_multi_file(self,
@@ -87,45 +67,27 @@ class AESEncryptor:
         '''
         # Convert the password string into bytes to use as a key to
         # encrypt the data
-        key = Functions.encode_key(
-            self,
-            password=password
-        )
+        key = Functions.encode_key(self, password=password)
         iv = Functions.get_aes_iv(self)
         mode = AES.MODE_CBC
 
         with open(file_path, 'rb') as f:
             orig_file_data = f.read()
 
-        cipher = AES.new(
-            key=key,
-            mode=mode,
-            iv=iv
-        )
+        cipher = AES.new(key=key, mode=mode, iv=iv)
         encrypted_data = cipher.encrypt(
-            pad(
-                orig_file_data,
-                AES.block_size
-            )
-        )
+            pad(orig_file_data, AES.block_size))
         encrypted_file = Path(f'{file_path}.encrypted')
+
         with open(encrypted_file, 'wb') as f:
-            Functions.write_to_file(
-                self,
-                file=f,
-                message=cipher.iv
-            )
-            Functions.write_to_file(
-                self,
-                file=f,
-                message=encrypted_data
-            )
+            Functions.write_to_file(self, file=f, message=cipher.iv)
+            Functions.write_to_file(self, file=f, message=encrypted_data)
 
 
     def aes_encrypt_all_files_in_dir(self,
                                      folder_path: Path,
                                      password: str) -> None:
-        console.print('''[dodger_blue1]
+        print('''[dodger_blue1]
 ===========================================================
 ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
 ===========================================================''')
@@ -133,48 +95,41 @@ ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
         # Turn folder path string into Path object
         f = Path(folder_path)
 
-        dirs = Functions.get_all_files(
-            self,
-            folder_path=f
-        )
+        dirs = Functions.get_all_files(self, folder_path=f)
         choice = Functions.confirm_delete_original_files(self)
 
         if choice.lower().strip() == 'y':
             for file in dirs:
-                AESEncryptor.aes_encrypt_multi_file(
-                    self,
+                AESEncryptor.aes_encrypt_multi_file(self,
                     file_path=file,
-                    password=password
-                )
+                    password=password)
                 os.remove(file)
-            console.print(f'''[green3]
+            print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The following files in `{f}` were encrypted\n''' )
             for file in dirs:
-                console.print(
+                print(
 f'''[green3]{os.path.basename(
     file):34s}{'--->':7s}{os.path.basename(file)}.encrypted''')
-            console.print(f'''[green3]
+            print(f'''[green3]
 The original files HAVE BEEN DELETED
 ==========================================''')
 
         elif choice.lower().strip() == 'n':
             for file_to_encrypt in dirs:
-                AESEncryptor.aes_encrypt_multi_file(
-                    self,
+                AESEncryptor.aes_encrypt_multi_file(self,
                     file_path=file_to_encrypt,
-                    password=password
-                )
-            console.print(f'''[green3]
+                    password=password)
+            print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The following files in `{f}` were encrypted\n''')
             for file in dirs:
-                console.print(
+                print(
 f'''[green3]{os.path.basename(
     file):34s}{'--->':7s}{os.path.basename(file)}.encrypted''')
-            console.print(f'''[green3]
+            print(f'''[green3]
 The original files HAVE NOT BEEN DELETED
 ==========================================''')
 
@@ -192,21 +147,17 @@ The original files HAVE NOT BEEN DELETED
 
         if delete_unencrypted_zip.lower().strip() == 'y':
             os.remove(file_path)
-            Functions.print_confirm_file_action(
-                self,
+            Functions.print_confirm_file_action(self,
                 file_name = Path(
-                    f'{file_path}.encrypted'
-                ),
-                text='Encrypted'
-            )
+                    f'{file_path}.encrypted'),
+                text='Encrypted')
+
         elif delete_unencrypted_zip.lower().strip() == 'n':
-            Functions.print_confirm_file_action(
-                self,
+            Functions.print_confirm_file_action(self,
                 file_name = Path(
-                    f'{file_path}.encrypted'
-                ),
-                text='Encrypted'
-            )
+                    f'{file_path}.encrypted'),
+                text='Encrypted')
+
         else:
             Functions.no_valid_yn_option(self)
             AESEncryptor.ask_delete_original_zip(self, file_path)
@@ -218,23 +169,15 @@ The original files HAVE NOT BEEN DELETED
 
         f = Path(folder_path)
 
-        shutil.make_archive(
-            base_name=f,
-            format='zip',
-            root_dir=f)
+        shutil.make_archive(base_name=f, format='zip', root_dir=f)
         zip_file_name = f'{f.stem}.zip'
         zip_file_to_encrypt = Path(
-            f.parent).joinpath(f'{zip_file_name}'
-        )
-        AESEncryptor.aes_encrypt_multi_file(
-            self,
+            f.parent).joinpath(f'{zip_file_name}')
+        AESEncryptor.aes_encrypt_multi_file(self,
             file_path=zip_file_to_encrypt,
-            password=password
-        )
-        AESEncryptor.ask_delete_original_zip(
-            self,
-            file_path=zip_file_to_encrypt
-        )
+            password=password)
+        AESEncryptor.ask_delete_original_zip(self,
+            file_path=zip_file_to_encrypt)
 
 
     def aes_encrypt_files_then_zip(self,
@@ -248,24 +191,17 @@ The original files HAVE NOT BEEN DELETED
 
         if choice.lower().strip() == 'y':
 
-            dirs = Functions.get_all_files(
-                self,
-                folder_path=f
-            )
+            dirs = Functions.get_all_files(self, folder_path=f)
+
             for file in dirs:
-                AESEncryptor.aes_encrypt_multi_file(
-                    self,
+                AESEncryptor.aes_encrypt_multi_file(self,
                     file_path=file,
-                    password=password
-                )
+                    password=password)
                 os.remove(file)
-            shutil.make_archive(
-                base_name=f,
-                format='zip',
-                root_dir=f
-            )
+
+            shutil.make_archive(base_name=f, format='zip', root_dir=f)
             shutil.rmtree(f)
-            console.print(f'''[green3]
+            print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The files in the `{f}` directory have been encrypted
@@ -276,22 +212,15 @@ The directory and the original files HAVE BEEN DELETED
 
         elif choice.lower().strip() == 'n':
 
-            dirs = Functions.get_all_files(
-                self,
-                folder_path=f
-            )
+            dirs = Functions.get_all_files(self, folder_path=f)
+
             for file in dirs:
-                AESEncryptor.aes_encrypt_multi_file(
-                    self,
+                AESEncryptor.aes_encrypt_multi_file(self,
                     file_path=file,
-                    password=password
-                )
-            shutil.make_archive(
-                base_name=f,
-                format='zip',
-                root_dir=f
-            )
-            console.print(f'''[green3]
+                    password=password)
+
+            shutil.make_archive(base_name=f, format='zip', root_dir=f)
+            print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The files in the `{f}` directory have been encrypted
