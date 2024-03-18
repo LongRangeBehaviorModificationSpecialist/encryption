@@ -154,11 +154,11 @@ Your password must meet the following criteria\n
   [-] Is at least ten characters long
   [-] Contain at least one number
   [-] Contain at least one capital letter and
-  [-] Contain at least one of the following symbols:\
+  [-] Contain at least one of the following symbols: \
 ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |''')
             Functions.get_password(self)
         else:
-            print(f"Returned `password` = {password}")
+            print(f'Returned `password` = {password}')
             return password
 
 
