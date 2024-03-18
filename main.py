@@ -28,7 +28,7 @@ class App:
 
 
     def no_valid_option(self) -> None:
-        '''When a valid opetion is not entered, the user will be prompted to
+        '''When a valid option is not entered, the user will be prompted to
         try again and enter a valid option.
         '''
         print('''[red1]
@@ -37,14 +37,14 @@ You did not enter a valid option. Please try again.''')
 
 
     def return_to_main_menu(self) -> None:
-        '''Returns the user to the main application menu'''
+        '''Returns the user to the main application menu.'''
         Functions.clear_screen(self)
         App.main(self)
 
 
     def main(self) -> None:
         Functions.clear_screen(self)
-        '''Main function where the user can pick what option they want'''
+        '''Main function where the user can pick what option they want.'''
         choice = console.input(f'''[dodger_blue1]
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
@@ -131,12 +131,6 @@ ENTER CHOICE >>> ''')
             Functions.clear_screen(self)
 
             option = option.strip()
-
-# I:\encryption\aaa\File_2_Folder_2_for_AES.txt
-
-# I:\encryption\aaa\txtfiles_AES
-# Mysecretpassword123!
-
 
             if option == '1':
                 file_path = Functions.get_file_path(self, text='ENCRYPTED')
