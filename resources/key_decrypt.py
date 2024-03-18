@@ -18,11 +18,11 @@ class KeyFileDecryptor:
     def decrypt_file_with_key(self,
                               key_file: Path,
                               file_path: Path) -> None:
-        '''Decrypts a file using a provided .key file
+        '''Decrypts a file using a provided .key file.
 
             Args:
-                str: Path to the key_file
-                str: Path of the file to be decrypted
+                key_file: Path to the key_file
+                file_path: Path of the file to be decrypted
 
             Returns:
                 file: Decrypted file in the same directory as the original
@@ -54,7 +54,9 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
         decrypted_data = f.decrypt(encrypted_data)
 
         with open(decrypted_file, 'wb') as df:
-            Functions.write_to_file(self, file=df, message=decrypted_data)
+            Functions.write_to_file(self,
+                file=df,
+                message=decrypted_data)
 
         Functions.print_confirm_file_action(self,
             file_name=decrypted_file,
