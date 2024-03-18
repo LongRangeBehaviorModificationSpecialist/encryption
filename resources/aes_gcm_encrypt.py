@@ -15,8 +15,7 @@ console = Console()
 
 
 class AESGCMDataEncryptor:
-    '''
-    Keep the encryption key secure as it will be needed for decryption.
+    '''Keep the encryption key secure as it will be needed for decryption.
     Also, this program overwrites the original files with encrypted content.
     Make sure to have proper backups before running it.
     '''
@@ -24,7 +23,7 @@ class AESGCMDataEncryptor:
     def aes_gcm_encrypt_file(self,
                              file_path: Path,
                              password: str) -> None:
-        '''Encrypts a single file using AES GCM encryption'''
+        '''Encrypts a single file using AES GCM encryption.'''
 
         key = Functions.encode_key(self, password=password)
 
@@ -55,7 +54,7 @@ class AESGCMDataEncryptor:
     def aes_gcm_encrypt_directory(self,
                                   folder_path: Path,
                                   password: str) -> None:
-        '''Encrypts all files in a directory using AES GCM encryption'''
+        '''Encrypts all files in a directory using AES GCM encryption.'''
 
         choice = Functions.confirm_delete_original_files(self)
         choice = choice.lower().strip()
