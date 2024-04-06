@@ -14,7 +14,7 @@ from resources import (AESDecryptor,
                        XORDecryption,
                        Functions)
 
-__author__ = 'mikespon'
+__author__ = '[@mikespon]'
 __last_updated__ = '2024-03-01'
 
 # Make the console object
