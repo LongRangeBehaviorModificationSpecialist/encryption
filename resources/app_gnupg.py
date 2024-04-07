@@ -1,7 +1,6 @@
 # !/usr/bin/env python3
 
 from rich.console import Console
-from rich import print
 import gnupg
 from pathlib import Path
 import os
@@ -10,7 +9,7 @@ import sys
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class PGPClass:
@@ -27,11 +26,11 @@ class PGPClass:
     def print_status(self, status):
 
         if status.ok == True:
-            print(f'''[khaki3]
+            c.print(f'''[khaki3]
 [-] File encryption successful.
     {status.stderr}''')
         else:
-            print('''[red1]
+            c.print('''[red1]
 [-] File encryption WAS NOT successful. Please try again.''')
 
 
@@ -49,7 +48,7 @@ class PGPClass:
             keyids=keyid,
             output=PGPClass.public_key_file)
 
-        print(f'''[bright_white]
+        c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Public key exported successfully''')
         return public_key
 
@@ -72,7 +71,7 @@ class PGPClass:
             passphrase=password,
             output=PGPClass.private_key_file)
 
-        print(f'''[bright_white]
+        c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Private key exported successfully''')
 
         return private_key
@@ -100,7 +99,7 @@ class PGPClass:
         global keyid
         keyid = PGPClass.gpg.gen_key(input_data)
 
-        print(f'''[bright_white]
+        c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Generated Key ID: {keyid}''')
 
         PGPClass.pgp_export_public_key(self, keyid=str(keyid))
@@ -147,14 +146,14 @@ class PGPClass:
     def pgp_encrypt_folder(self,
                            folder_path: Path) -> None:
 
-        delete_originals = console.input('''[khaki3]
+        delete_originals = c.input('''[khaki3]
 [-] Do you want to delete the original files after encryption (y/n)? >>> ''')
 
         delete_originals = delete_originals.strip().lower()
 
         if delete_originals == 'y':
 
-            choice = console.input('''[khaki3]
+            choice = c.input('''[khaki3]
 [-] All of the original files in this directory will be [orange_red1]\
 PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue \
 (y/n)? >>> ''')
@@ -172,13 +171,13 @@ PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue \
 
             # EXIT THE PROGRAM
             elif choice == 'n':
-                print('''[khaki3]
+                c.print('''[khaki3]
 Exiting program. Please wait...''')
                 sys.exit(0)
 
             # NO VALID CHOICE WAS ENTERED
             else:
-                print('''[khaki3]
+                c.print('''[khaki3]
 Seriously, you did not enter a valid option. Exiting...''')
             sys.exit(0)
 
@@ -192,7 +191,7 @@ Seriously, you did not enter a valid option. Exiting...''')
 
         # NO VALID CHOICE WAS ENTERED
         else:
-            print('''[khaki3]
+            c.print('''[khaki3]
 Seriously, you did not enter a valid option. Exiting...''')
             sys.exit(0)
 

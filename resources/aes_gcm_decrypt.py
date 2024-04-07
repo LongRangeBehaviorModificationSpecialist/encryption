@@ -3,13 +3,12 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from rich.console import Console
-from rich import print
 from pathlib import Path
 
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class AESGCMDataDecryptor:
@@ -47,7 +46,7 @@ class AESGCMDataDecryptor:
         with open(decrypted_file, 'wb') as f:
             Functions.write_to_file(self, file=f, message=decrypted_data)
 
-        print('''[green3]
+        c.print('''[green3]
 >>> File decrypted successfully. Thank you. Come again.''')
         return decrypted_file
 

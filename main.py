@@ -1,8 +1,6 @@
 # !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from rich.console import Console
-from rich import print
 from resources import (AESDecryptor,
                        AESEncryptor,
                        AESGCMDataDecryptor,
@@ -15,10 +13,10 @@ from resources import (AESDecryptor,
                        Functions)
 
 __author__ = 'mikespon'
-__last_updated__ = '2024-03-01'
+__last_updated__ = '2024-04-07'
 
 # Make the console object
-console = Console()
+c = Console()
 
 # password = 'mysecretpassword34'
 email_address = 'testaddress@email.com'
@@ -31,7 +29,7 @@ class App:
         '''When a valid opetion is not entered, the user will be prompted to
         try again and enter a valid option.
         '''
-        print('''[red1]
+        c.print('''[red1]
 You did not enter a valid option. Please try again.''')
         App.main(self)
 
@@ -45,7 +43,7 @@ You did not enter a valid option. Please try again.''')
     def main(self) -> None:
         Functions.clear_screen(self)
         '''Main function where the user can pick what option they want'''
-        choice = console.input(f'''[dodger_blue1]
+        choice = c.input(f'''[dodger_blue1]
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
 =============================================[bright_white]\n
@@ -69,7 +67,7 @@ ENTER CHOICE >>> ''')
         choice = choice.strip().lower()
 
         if choice == 'a':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 ENCRYPT FILE WITH PROVIDED .KEY FILE
 =======================================[khaki3]\n
@@ -115,7 +113,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'b':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO ENCRYPT FILE(S) [AES]
 =======================================[khaki3]\n
@@ -145,7 +143,7 @@ ENTER CHOICE >>> ''')
                     file_path=file_path,
                     password=password)
             elif option == '2':
-                make_aes_dir_choice = console.input('''[khaki3]
+                make_aes_dir_choice = c.input('''[khaki3]
 -------------------
 Choose an option
 -------------------[bright_white]\n
@@ -192,7 +190,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'c':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO ENCRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
@@ -231,7 +229,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'd':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 ENCRYPT FILE(S) USING PGP KEY
 =======================================[khaki3]\n
@@ -273,7 +271,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'e':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 ENCRYPT FILE(S) USING AN XOR KEY
 =======================================[khaki3]\n
@@ -316,7 +314,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'f':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 DECRYPT FILE WITH PROVIDED .KEY FILE
 =======================================[khaki3]\n
@@ -356,7 +354,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'g':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO DECRYPT FILE(S) [AES]
 =======================================[khaki3]\n
@@ -395,7 +393,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'h':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 USE PASSWORD TO DECRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
@@ -433,7 +431,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'i':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 DECRYPT FILE(S) USING PGP KEY
 =======================================[khaki3]\n
@@ -467,7 +465,7 @@ ENTER CHOICE >>> ''')
 
 
         elif choice == 'j':
-            option = console.input('''[dodger_blue1]
+            option = c.input('''[dodger_blue1]
 =======================================
 DECRYPT FILE(S) USING AN XOR KEY
 =======================================[khaki3]\n

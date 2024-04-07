@@ -5,12 +5,11 @@ from datetime import datetime
 import os
 from pathlib import Path
 from rich.console import Console
-from rich import print
 
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class KeyFileEncryptor:
@@ -41,7 +40,7 @@ class KeyFileEncryptor:
         key_file_hash_value = Functions.hash_new_key_file(self,
             new_key_file=key_file_name)
 
-        print(f'''[bright_white]
+        c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key File created successfully
 [{Functions.get_date_time(self)}] Key File saved in `{key_file_path}` directory
 [{Functions.get_date_time(self)}] Key File Name: {os.path.basename(key_file_name)}''')
@@ -57,7 +56,7 @@ class KeyFileEncryptor:
         key_to_load = Functions.load_key(self, key_file=key_file)
         key = Fernet(key_to_load)
 
-        print(f'''[blue]
+        c.print(f'''[blue]
 [{Functions.get_date_time(self)}] [bright_white]Key file \
 `{os.path.basename(key_file)}` loaded successfully''')
 
@@ -81,7 +80,7 @@ class KeyFileEncryptor:
         Returns:
             file: Encrypted file
         '''
-        print('''[dodger_blue1]
+        c.print('''[dodger_blue1]
 =============================================
 ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
 =============================================''')
@@ -140,7 +139,7 @@ ENCRYPT A FILE USING NEWLY CREATED .KEY FILE
                                       key_file: Path,
                                       folder_path: Path) -> None:
         while True:
-            print('''[dodger_blue1]
+            c.print('''[dodger_blue1]
 =====================================================
 ENCRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
 =====================================================''')

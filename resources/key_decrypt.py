@@ -4,12 +4,11 @@ from cryptography.fernet import Fernet
 import os
 from pathlib import Path
 from rich.console import Console
-from rich import print
 
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class KeyFileDecryptor:
@@ -28,7 +27,7 @@ class KeyFileDecryptor:
                 file: Decrypted file in the same directory as the original
                       file
         '''
-        print('''[dodger_blue1]
+        c.print('''[dodger_blue1]
 =======================================
 DECRYPT A FILE USING A KNOWN .KEY FILE
 =======================================''')
@@ -36,7 +35,7 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
         key_to_load = Functions.load_key(self, key_file=key_file)
         f = Fernet(key_to_load)
 
-        print(f'''[bright_white]
+        c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key file: \
 `{os.path.basename(key_file)}` loaded successfully''')
 
@@ -64,7 +63,7 @@ DECRYPT A FILE USING A KNOWN .KEY FILE
     def decrypt_files_in_folder_with_key(self,
                                          key_file: Path,
                                          folder_path: Path) -> None:
-        print('''[dodger_blue1]
+        c.print('''[dodger_blue1]
 =====================================================
 DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
 =====================================================''')

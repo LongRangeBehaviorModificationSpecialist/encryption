@@ -1,7 +1,6 @@
 # !/usr/bin/env python3
 
 import binascii
-from rich import print
 from rich.console import Console
 from functools import wraps
 import hashlib
@@ -13,7 +12,7 @@ import time
 import typing
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class Functions:
@@ -26,16 +25,16 @@ class Functions:
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
-            print(f'''[dodger_blue1]
+            c.print(f'''[dodger_blue1]
 Operation [ {func.__name__}() ] was completed in \
 {total_time:.4f} seconds''')
-            # print(f"\nFunction {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds")
+            # c.print(f"\nFunction {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds")
             return result
         return timeit_wrapper
 
 
     def ask_delete_original_enc_files(self) -> str:
-        ask_delete_original_enc_files = console.input('''[khaki3]
+        ask_delete_original_enc_files = c.input('''[khaki3]
 [-] Do you want to delete the original encrypted files from the directory \
 after decryption (y/n)? >>> ''')
         return ask_delete_original_enc_files
@@ -46,7 +45,7 @@ after decryption (y/n)? >>> ''')
 
 
     def confirm_delete_original_files(self) -> str:
-        confirm_delete_originals = console.input('''[khaki3]
+        confirm_delete_originals = c.input('''[khaki3]
 [-] Do you want to delete the original files after they are encrypted (y/n)? \
 [orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> ''')
         return confirm_delete_originals
@@ -61,7 +60,7 @@ after decryption (y/n)? >>> ''')
 
 
     def exit_application(self) -> None:
-        print('''[dodger_blue1]>>> Exiting the application. Goodbye...''')
+        c.print('''[dodger_blue1]>>> Exiting the application. Goodbye...''')
         sys.exit(0)
 
 
@@ -90,7 +89,7 @@ after decryption (y/n)? >>> ''')
 
 
     def get_email_address(self) -> str:
-        email_address = console.input('''[khaki3]
+        email_address = c.input('''[khaki3]
 [-] Enter email address of the PGP key owner
 >>> ''')
         return email_address
@@ -102,7 +101,7 @@ after decryption (y/n)? >>> ''')
 
 
     def get_file_path(self, text: str) -> Path:
-        file_path = console.input(f'''[khaki3]
+        file_path = c.input(f'''[khaki3]
 [-] Enter the path of the file to be {text}
 >>> ''')
         # file_path = 'I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt'
@@ -110,7 +109,7 @@ after decryption (y/n)? >>> ''')
 
 
     def get_folder_path(self, text: str) -> Path:
-        folder_path = console.input(f'''[khaki3]
+        folder_path = c.input(f'''[khaki3]
 [-] Enter the path of the directory containing the files to be {text}
 >>> ''')
         # folder_path = 'I:\\encryption\\aaa\\txtfiles_AES'
@@ -118,7 +117,7 @@ after decryption (y/n)? >>> ''')
 
 
     def get_key_file_path(self) -> Path:
-        key_file = console.input('''[khaki3]
+        key_file = c.input('''[khaki3]
 [-] Enter the path to the KEY FILE you want to use
 >>> ''')
         # key_file = 'I:\\encryption\\aaa\\2024-01-24_105425_key.key'
@@ -126,15 +125,15 @@ after decryption (y/n)? >>> ''')
 
 
     def get_password(self) -> str:
-        password = console.input(f'''[khaki3]
+        password = c.input(f'''[khaki3]
 [-] Enter the PASSWORD you want to use >>> ''')
         valid = Functions.validate_password(self,
             password=password)
         if valid != password:
-            print('''[blue]Please try again.\n''')
+            c.print('''[blue]Please try again.\n''')
             Functions.get_password(self)
         else:
-            print('''[khaki3]Your password checks out. Continuing...''')
+            c.print('''[khaki3]Your password checks out. Continuing...''')
             return str(password)
 
 
@@ -148,7 +147,7 @@ after decryption (y/n)? >>> ''')
             re.search('[0-9]', password) is None or
             re.search('[A-Z]', password) is None or
             not any(char in symbols for char in password)):
-            print('''[red1]
+            c.print('''[red1]
 Your password did not meet the minimun requirements. Please try again.\n
 Your password must meet the following criteria\n
   [-] Is at least ten characters long
@@ -158,12 +157,12 @@ Your password must meet the following criteria\n
 ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |''')
             Functions.get_password(self)
         else:
-            print(f"Returned `password` = {password}")
+            c.print(f"Returned `password` = {password}")
             return password
 
 
     def get_pgp_password(self) -> str:
-        password = console.input('''[khaki3]
+        password = c.input('''[khaki3]
 [-] Enter a password to use for the PGP private key
 >>> ''')
         Functions.validate_password(self,password=password)
@@ -191,7 +190,7 @@ Your password must meet the following criteria\n
 
 
     def no_valid_yn_option(self) -> None:
-        no_valid_yn_option = print('''[red1]
+        no_valid_yn_option = c.print('''[red1]
 !!! You did not enter a valid option. The valid options are either 'y' OR \
 'n'. Please try again.''')
         return no_valid_yn_option
@@ -200,7 +199,7 @@ Your password must meet the following criteria\n
     def print_confirm_file_action(self,
                                   file_name: Path,
                                   text: str) -> None:
-        confirm = print(f'''[green3]
+        confirm = c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 {text} file name:
@@ -214,7 +213,7 @@ Your password must meet the following criteria\n
     def print_original_files_deleted(self,
                                      folder_path: Path,
                                      action: str) -> None:
-        confirm = print(f'''[green3]
+        confirm = c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 Files in the `{folder_path}` directory have been {action}\n
@@ -226,7 +225,7 @@ The original files HAVE BEEN DELETED
     def print_original_files_not_deleted(self,
                                          folder_path: Path,
                                          action: str) -> None:
-        confirm = print(f'''[green3]
+        confirm = c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 Files in the `{folder_path}` directory have been {action}\n
@@ -243,7 +242,7 @@ The original files were NOT DELETED
         with open(key_file_hash_file, 'w', encoding='utf-8') as f:
             f.write(f'''Key File Name: {key_file_path.name}\n
 Key File Hash Value (SHA-256): {key_file_hash_value}''')
-        print(f'''[bright_white]
+        c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Key File hashed successfully
 [{Functions.get_date_time(self)}] Key File Hash verification saved in \
 `{os.path.dirname(key_file_path)}` directory
@@ -264,13 +263,13 @@ Key File Hash Value (SHA-256): {key_file_hash_value}''')
 
 
     def get_xor_key(self) -> str:
-        xor_key = console.input('''[khaki3]
+        xor_key = c.input('''[khaki3]
 Enter the key you want to use for the encryption >>> ''')
         return xor_key
 
 
     def get_message_to_xor(self) -> str:
-        message = console.input('''[khaki3]
+        message = c.input('''[khaki3]
 Enter the message string you want to encrypt
 >>> ''')
         return message
@@ -283,7 +282,7 @@ Enter the message string you want to encrypt
 
 
     def get_xor_message_to_decrypt(self) -> str:
-        message = console.input('''[khaki3]
+        message = c.input('''[khaki3]
 Enter the message string you want to decrypt
 >>> ''')
         return message

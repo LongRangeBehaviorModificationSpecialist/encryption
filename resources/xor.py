@@ -1,13 +1,12 @@
 # !/usr/bin/env python3
 
 from rich.console import Console
-from rich import print
 from pathlib import Path
 
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 class XOREncryption:
 
@@ -27,7 +26,7 @@ class XOREncryption:
         with open(xor_enc_msg_file, 'w') as f:
             f.write(encrypted_text)
 
-        print(f'''[green3]
+        c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The encrypted message is:\n
@@ -54,7 +53,7 @@ The encrypted message is:\n
         with open(xor_enc_file, 'w', encoding='utf-8') as f:
             f.write(encrypted_data)
 
-        print('''[green3]
+        c.print('''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
   File Encrypted with XOR key
@@ -76,7 +75,7 @@ class XORDecryption:
             decrypted_message += chr(
                 ord(text_to_decrypt) ^ ord(key_to_decrypt))
 
-        print(f'''[green3]
+        c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The original message is:\n
@@ -106,7 +105,7 @@ The original message is:\n
         with open(decrypted_file, 'w') as f:
             f.write(decrypted_data)
 
-        print('''[green3]
+        c.print('''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
   File Decrypted with XOR key

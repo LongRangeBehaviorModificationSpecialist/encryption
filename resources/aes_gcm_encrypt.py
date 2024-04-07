@@ -5,13 +5,12 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
 from pathlib import Path
 from rich.console import Console
-from rich import print
 
 from resources.functions import Functions
 
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class AESGCMDataEncryptor:
@@ -43,7 +42,7 @@ class AESGCMDataEncryptor:
         with open(encrypted_file, 'wb') as f:
             f.write(iv + encryptor.tag + ciphertext)
 
-        print(f'''[green3]
+        c.print(f'''[green3]
 {file_path.name:34s}{'->':7s}{encrypted_file.name}
 {'':34s}{'':7s}iv: {iv.hex().upper()}
 {'':34s}{'':7s}tag: {encryptor.tag.hex().upper()}

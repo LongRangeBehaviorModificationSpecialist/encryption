@@ -6,12 +6,11 @@ import os
 from pathlib import Path
 import sys
 from rich.console import Console
-from rich import print
 
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class AESDecryptor:
@@ -22,7 +21,7 @@ class AESDecryptor:
                          password: str,
                          mode=AES.MODE_CBC) -> None:
 
-        print('''[dodger_blue1]
+        c.print('''[dodger_blue1]
 =================================================
 DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
 =================================================''')
@@ -102,7 +101,7 @@ DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
                                      folder_path: Path,
                                      password: str,
                                      mode=AES.MODE_CBC) -> None:
-        print('''[dodger_blue1]
+        c.print('''[dodger_blue1]
 =============================================
 DECRYPT FILES IN FOLDER USING PASSWORD (AES)
 =============================================''')

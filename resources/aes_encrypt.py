@@ -5,14 +5,13 @@ from Crypto.Util.Padding import pad
 
 import os
 from rich.console import Console
-from rich import print
 from pathlib import Path
 import shutil
 
 from resources.functions import Functions
 
 # Make the console object
-console = Console()
+c = Console()
 
 
 class AESEncryptor:
@@ -87,7 +86,7 @@ class AESEncryptor:
     def aes_encrypt_all_files_in_dir(self,
                                      folder_path: Path,
                                      password: str) -> None:
-        print('''[dodger_blue1]
+        c.print('''[dodger_blue1]
 ===========================================================
 ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
 ===========================================================''')
@@ -104,15 +103,15 @@ ENCRYPT FILES WITH A DIRECTORY WITH USER-PROVIDED PASSWORD
                     file_path=file,
                     password=password)
                 os.remove(file)
-            print(f'''[green3]
+            c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The following files in `{f}` were encrypted\n''' )
             for file in dirs:
-                print(
+                c.print(
 f'''[green3]{os.path.basename(
     file):34s}{'--->':7s}{os.path.basename(file)}.encrypted''')
-            print(f'''[green3]
+            c.print(f'''[green3]
 The original files HAVE BEEN DELETED
 ==========================================''')
 
@@ -121,15 +120,15 @@ The original files HAVE BEEN DELETED
                 AESEncryptor.aes_encrypt_multi_file(self,
                     file_path=file_to_encrypt,
                     password=password)
-            print(f'''[green3]
+            c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The following files in `{f}` were encrypted\n''')
             for file in dirs:
-                print(
+                c.print(
 f'''[green3]{os.path.basename(
     file):34s}{'--->':7s}{os.path.basename(file)}.encrypted''')
-            print(f'''[green3]
+            c.print(f'''[green3]
 The original files HAVE NOT BEEN DELETED
 ==========================================''')
 
@@ -141,7 +140,7 @@ The original files HAVE NOT BEEN DELETED
     def ask_delete_original_zip(self,
                                 file_path: Path) -> None:
 
-        delete_unencrypted_zip = console.input('''[khaki3]
+        delete_unencrypted_zip = c.input('''[khaki3]
 [-] Do you want to delete the unencrypted .zip file (y/n)? \
 [orange_red1][THIS ACTION CANNOT BE UNDONE!][khaki3] >>> ''')
 
@@ -201,7 +200,7 @@ The original files HAVE NOT BEEN DELETED
 
             shutil.make_archive(base_name=f, format='zip', root_dir=f)
             shutil.rmtree(f)
-            print(f'''[green3]
+            c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The files in the `{f}` directory have been encrypted
@@ -220,7 +219,7 @@ The directory and the original files HAVE BEEN DELETED
                     password=password)
 
             shutil.make_archive(base_name=f, format='zip', root_dir=f)
-            print(f'''[green3]
+            c.print(f'''[green3]
 ==========================================
 **ACTION SUCCESSFUL**\n
 The files in the `{f}` directory have been encrypted
