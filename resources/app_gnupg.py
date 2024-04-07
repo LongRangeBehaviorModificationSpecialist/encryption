@@ -36,7 +36,7 @@ class PGPClass:
 
     def pgp_export_public_key(self,
                               keyid: str) -> None:
-        '''Decrypts a file using a provided .key file
+        '''Decrypts a file using a provided .key file.
 
             Args:
                 keyid -> str: id of pgp key to export
@@ -48,15 +48,20 @@ class PGPClass:
             keyids=keyid,
             output=PGPClass.public_key_file)
 
+<<<<<<< HEAD
         c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Public key exported successfully''')
+=======
+        print(f'''[bright_white]
+[{Functions.get_date_time(self)}] Public key exported successfully.''')
+>>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
         return public_key
 
 
     def pgp_export_private_key(self,
                                keyid: str,
                                password: str) -> None:
-        '''Decrypts a file using a provided .key file
+        '''Decrypts a file using a provided .key file.
 
             Args:
                 keyid -> str: id of pgp key to export
@@ -71,8 +76,13 @@ class PGPClass:
             passphrase=password,
             output=PGPClass.private_key_file)
 
+<<<<<<< HEAD
         c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Private key exported successfully''')
+=======
+        print(f'''[bright_white]
+[{Functions.get_date_time(self)}] Private key exported successfully.''')
+>>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
 
         return private_key
 
@@ -80,7 +90,7 @@ class PGPClass:
     def generate_pgp_key(self,
                          password: str,
                          email_address: str) -> None:
-        '''Generates new pair of PGP keys
+        '''Generates new pair of PGP keys.
 
             Args:
                 password -> str: password to use to generate the pgp keys
@@ -102,8 +112,11 @@ class PGPClass:
         c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Generated Key ID: {keyid}''')
 
-        PGPClass.pgp_export_public_key(self, keyid=str(keyid))
-        PGPClass.pgp_export_private_key(self, keyid=str(keyid), password=password)
+        PGPClass.pgp_export_public_key(self,
+            keyid=str(keyid))
+        PGPClass.pgp_export_private_key(self,
+            keyid=str(keyid),
+            password=password)
 
 
     def pgp_encrypt_file(self,
@@ -115,7 +128,7 @@ class PGPClass:
         with open(file_path, 'rb') as f:
             status = PGPClass.gpg.encrypt_file(
                 f,
-                recipients=['mikespon@gmail.com'],
+                recipients=['test_email@gmail.com'],
                 output=encrypted_file)
 
         # Print status message to the terminal

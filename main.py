@@ -12,8 +12,13 @@ from resources import (AESDecryptor,
                        XORDecryption,
                        Functions)
 
+<<<<<<< HEAD
 __author__ = 'mikespon'
 __last_updated__ = '2024-04-07'
+=======
+__author__ = '[@mikespon]'
+__last_updated__ = '2024-03-01'
+>>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
 
 # Make the console object
 c = Console()
@@ -26,7 +31,7 @@ class App:
 
 
     def no_valid_option(self) -> None:
-        '''When a valid opetion is not entered, the user will be prompted to
+        '''When a valid option is not entered, the user will be prompted to
         try again and enter a valid option.
         '''
         c.print('''[red1]
@@ -35,15 +40,20 @@ You did not enter a valid option. Please try again.''')
 
 
     def return_to_main_menu(self) -> None:
-        '''Returns the user to the main application menu'''
+        '''Returns the user to the main application menu.'''
         Functions.clear_screen(self)
         App.main(self)
 
 
     def main(self) -> None:
         Functions.clear_screen(self)
+<<<<<<< HEAD
         '''Main function where the user can pick what option they want'''
         choice = c.input(f'''[dodger_blue1]
+=======
+        '''Main function where the user can pick what option they want.'''
+        choice = console.input(f'''[dodger_blue1]
+>>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
 =============================================[bright_white]\n
@@ -129,12 +139,6 @@ ENTER CHOICE >>> ''')
             Functions.clear_screen(self)
 
             option = option.strip()
-
-# I:\encryption\aaa\File_2_Folder_2_for_AES.txt
-
-# I:\encryption\aaa\txtfiles_AES
-# Mysecretpassword123!
-
 
             if option == '1':
                 file_path = Functions.get_file_path(self, text='ENCRYPTED')
