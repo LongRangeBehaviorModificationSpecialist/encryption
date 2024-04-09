@@ -110,8 +110,7 @@ class PGPClass:
             password=password)
 
 
-    def pgp_encrypt_file(self,
-                         file_path: Path) -> None:
+    def pgp_encrypt_file(self, file_path: Path) -> None:
 
         encrypted_file = Functions.get_encrypted_file_name(self,
             file_path=file_path)
