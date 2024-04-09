@@ -157,11 +157,8 @@ Your password must meet the following criteria\n
 ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |''')
             Functions.get_password(self)
         else:
-<<<<<<< HEAD
             c.print(f"Returned `password` = {password}")
-=======
-            print(f'Returned `password` = {password}')
->>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
+            
             return password
 
 
@@ -205,7 +202,7 @@ Your password must meet the following criteria\n
                                   text: str) -> None:
         confirm = c.print(f'''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
 {text} file name:
   {file_name.name}\n
 {text} file was saved in directory:
@@ -219,7 +216,7 @@ Your password must meet the following criteria\n
                                      action: str) -> None:
         confirm = c.print(f'''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
 Files in the `{folder_path}` directory have been {action}\n
 The original files HAVE BEEN DELETED
 ==========================================''')
@@ -231,7 +228,7 @@ The original files HAVE BEEN DELETED
                                          action: str) -> None:
         confirm = c.print(f'''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
 Files in the `{folder_path}` directory have been {action}\n
 The original files were NOT DELETED
 ==========================================''')
