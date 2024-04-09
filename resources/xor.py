@@ -28,7 +28,7 @@ class XOREncryption:
 
         c.print(f'''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
 The encrypted message is:\n
   [bright_white]{encrypted_text}[green3]\n
 ==========================================''')
@@ -55,7 +55,7 @@ The encrypted message is:\n
 
         c.print('''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
   File Encrypted with XOR key
 ==========================================''')
 
@@ -77,7 +77,7 @@ class XORDecryption:
 
         c.print(f'''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
 The original message is:\n
   [bright_white]{decrypted_message}[green3]\n
 ==========================================''')
@@ -107,6 +107,6 @@ The original message is:\n
 
         c.print('''[green3]
 ==========================================
-**ACTION SUCCESSFUL**\n
+** ACTION SUCCESSFUL **\n
   File Decrypted with XOR key
 ==========================================''')
