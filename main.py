@@ -12,13 +12,8 @@ from resources import (AESDecryptor,
                        XORDecryption,
                        Functions)
 
-<<<<<<< HEAD
-__author__ = 'mikespon'
-__last_updated__ = '2024-04-07'
-=======
 __author__ = '[@mikespon]'
-__last_updated__ = '2024-03-01'
->>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
+__last_updated__ = '2024-04-09
 
 # Make the console object
 c = Console()
@@ -28,7 +23,6 @@ email_address = 'testaddress@email.com'
 
 
 class App:
-
 
     def no_valid_option(self) -> None:
         '''When a valid option is not entered, the user will be prompted to
@@ -47,13 +41,8 @@ You did not enter a valid option. Please try again.''')
 
     def main(self) -> None:
         Functions.clear_screen(self)
-<<<<<<< HEAD
         '''Main function where the user can pick what option they want'''
         choice = c.input(f'''[dodger_blue1]
-=======
-        '''Main function where the user can pick what option they want.'''
-        choice = console.input(f'''[dodger_blue1]
->>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
 =============================================[bright_white]\n
