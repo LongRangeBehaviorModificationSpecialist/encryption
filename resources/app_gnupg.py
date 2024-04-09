@@ -48,13 +48,9 @@ class PGPClass:
             keyids=keyid,
             output=PGPClass.public_key_file)
 
-<<<<<<< HEAD
         c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Public key exported successfully''')
-=======
-        print(f'''[bright_white]
-[{Functions.get_date_time(self)}] Public key exported successfully.''')
->>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
+        
         return public_key
 
 
@@ -76,14 +72,9 @@ class PGPClass:
             passphrase=password,
             output=PGPClass.private_key_file)
 
-<<<<<<< HEAD
         c.print(f'''[bright_white]
 [{Functions.get_date_time(self)}] Private key exported successfully''')
-=======
-        print(f'''[bright_white]
-[{Functions.get_date_time(self)}] Private key exported successfully.''')
->>>>>>> 1503b9bc772601ae7213d5816e7b7da8d871e09c
-
+        
         return private_key
 
 
@@ -156,8 +147,7 @@ class PGPClass:
         PGPClass.print_status(self, status)
 
 
-    def pgp_encrypt_folder(self,
-                           folder_path: Path) -> None:
+    def pgp_encrypt_folder(self, folder_path: Path) -> None:
 
         delete_originals = c.input('''[khaki3]
 [-] Do you want to delete the original files after encryption (y/n)? >>> ''')
