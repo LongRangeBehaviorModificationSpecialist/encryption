@@ -65,7 +65,7 @@ ENTER CHOICE >>> """)
 
         choice = choice.strip().lower()
 
-        if choice == 'a':
+        if choice == "a":
             option = c.input("""[dodger_blue1]
 =======================================
 ENCRYPT FILE WITH PROVIDED .KEY FILE
