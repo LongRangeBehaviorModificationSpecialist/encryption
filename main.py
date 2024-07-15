@@ -12,37 +12,37 @@ from resources import (AESDecryptor,
                        XORDecryption,
                        Functions)
 
-__author__ = '[@mikespon]'
-__last_updated__ = '2024-04-09
+__author__ = "[@mikespon]"
+__last_updated__ = "2024-04-09"
 
 # Make the console object
 c = Console()
 
-# password = 'mysecretpassword34'
-email_address = 'testaddress@email.com'
+# password = "mysecretpassword34"
+email_address = "testaddress@email.com"
 
 
 class App:
 
     def no_valid_option(self) -> None:
-        '''When a valid option is not entered, the user will be prompted to
+        """When a valid option is not entered, the user will be prompted to
         try again and enter a valid option.
-        '''
-        c.print('''[red1]
-You did not enter a valid option. Please try again.''')
+        """
+        c.print("""[red1]
+You did not enter a valid option. Please try again.""")
         App.main(self)
 
 
     def return_to_main_menu(self) -> None:
-        '''Returns the user to the main application menu.'''
+        """Returns the user to the main application menu."""
         Functions.clear_screen(self)
         App.main(self)
 
 
     def main(self) -> None:
         Functions.clear_screen(self)
-        '''Main function where the user can pick what option they want'''
-        choice = c.input(f'''[dodger_blue1]
+        ""Main function where the user can pick what option they want."""
+        choice = c.input(f"""[dodger_blue1]
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
 =============================================[bright_white]\n
@@ -59,14 +59,14 @@ H)  Decrypt file/files using a password (AES-GCM Mode)
 I)  Decrypt file/files using a PGP key file
 J)  Decrypt message/file using XOR\n
 Q)  Quit the Application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
         Functions.clear_screen(self)
 
         choice = choice.strip().lower()
 
         if choice == 'a':
-            option = c.input('''[dodger_blue1]
+            option = c.input("""[dodger_blue1]
 =======================================
 ENCRYPT FILE WITH PROVIDED .KEY FILE
 =======================================[khaki3]\n
@@ -78,41 +78,41 @@ Choose an option
 3)  Encrypt all files in a directory using a .key file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 key_file = Functions.get_key_file_path(self)
                 file_path = Functions.get_file_path(self,
-                    text='ENCRYPT')
+                    text="ENCRYPT")
                 KeyFileEncryptor.get_key_data_to_encrypt_file(self,
                     key_file=key_file,
                     file_path=file_path)
-            elif option == '2':
+            elif option == "2":
                 file_path = Functions.get_file_path(self,
-                    text='ENCRYPT')
+                    text="ENCRYPT")
                 KeyFileEncryptor.encrypt_file_with_new_key(self,
                     file_path=file_path)
-            elif option == '3':
+            elif option == "3":
                 key_file = Functions.get_key_file_path(self)
                 folder_path = Functions.get_folder_path(self,
-                    text='ENCRYPT')
+                    text="ENCRYPT")
                 KeyFileEncryptor.encrypt_files_in_dir_with_key(self,
                     key_file=key_file,
                     folder_path=folder_path)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(App)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'b':
-            option = c.input('''[dodger_blue1]
+        elif choice == "b":
+            option = c.input("""[dodger_blue1]
 =======================================
 USE PASSWORD TO ENCRYPT FILE(S) [AES]
 =======================================[khaki3]\n
@@ -123,20 +123,19 @@ Choose an option
 2)  Encrypt all files in a directory using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
-
-            if option == '1':
-                file_path = Functions.get_file_path(self, text='ENCRYPTED')
+            if option == "1":
+                file_path = Functions.get_file_path(self, text="ENCRYPTED")
                 password = Functions.get_password(self)
                 AESEncryptor.aes_encrypt_single_file(self,
                     file_path=file_path,
                     password=password)
-            elif option == '2':
-                make_aes_dir_choice = c.input('''[khaki3]
+            elif option == "2":
+                make_aes_dir_choice = c.input("""[khaki3]
 -------------------
 Choose an option
 -------------------[bright_white]\n
@@ -146,44 +145,45 @@ Choose an option
 (file size may be larger)\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
                 Functions.clear_screen(self)
 
                 make_aes_dir_choice = make_aes_dir_choice.strip()
 
-                folder_path = Functions.get_folder_path(self, text='ENCRYPTED')
+                folder_path = Functions.get_folder_path(self,
+                    text="ENCRYPTED")
                 # password = Functions.get_password(self)
 
-                if make_aes_dir_choice== '1':
+                if make_aes_dir_choice== "1":
                     AESEncryptor.aes_encrypt_all_files_in_dir(self,
                         folder_path=folder_path,
                         password=password)
-                elif make_aes_dir_choice == '2':
+                elif make_aes_dir_choice == "2":
                     AESEncryptor.aes_zip_files_then_encrypt(self,
                         folder_path=folder_path,
                         password=password)
-                elif make_aes_dir_choice == '3':
+                elif make_aes_dir_choice == "3":
                     AESEncryptor.aes_encrypt_files_then_zip(self,
                         folder_path=folder_path,
                         password=password)
-                elif make_aes_dir_choice.lower() == 'r':
+                elif make_aes_dir_choice.lower() == "r":
                     App.return_to_main_menu(self)
-                elif make_aes_dir_choice.lower() == 'q':
+                elif make_aes_dir_choice.lower() == "q":
                     Functions.exit_application(self)
                 else:
                     App.no_valid_option(self)
 
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'c':
-            option = c.input('''[dodger_blue1]
+        elif choice == "c":
+            option = c.input("""[dodger_blue1]
 =======================================
 USE PASSWORD TO ENCRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
@@ -194,35 +194,35 @@ Choose an option
 2)  Encrypt all files in a directory using a password (AES-GCM)\n
 R)  Return to main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 file_path = Functions.get_file_path(self)
                 # password = Functions.get_password(self)
                 AESGCMDataEncryptor.aes_gcm_encrypt_file(self,
                     file_path=file_path,
                     password=password)
-            elif option == '2':
+            elif option == "2":
                 folder_path = Functions.get_folder_path(self,
-                    text='ENCRYPT')
+                    text="ENCRYPT")
                 # password = Functions.get_password(self)
                 AESGCMDataEncryptor.aes_gcm_encrypt_directory(self,
                     folder_path=folder_path,
                     password=password)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'd':
-            option = c.input('''[dodger_blue1]
+        elif choice == "d":
+            option = c.input("""[dodger_blue1]
 =======================================
 ENCRYPT FILE(S) USING PGP KEY
 =======================================[khaki3]\n
@@ -234,37 +234,37 @@ Choose an option
 3)  Encrypt all files in a directory using PGP keys\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 # password = Functions.get_password(self)
                 # email_address = Functions.get_email_address(self)
                 PGPClass.generate_pgp_key(self,
                     password=password,
                     email_address=email_address)
-            elif option == '2':
+            elif option == "2":
                 file_path = Functions.get_file_path(self)
                 PGPClass.pgp_encrypt_file(self,
                     file_path=file_path)
-            elif option == '3':
+            elif option == "3":
                 folder_path = Functions.get_folder_path(self,
-                    text='ENCRYPT')
+                    text="ENCRYPT")
                 PGPClass.pgp_encrypt_folder(self,
                     folder_path=folder_path)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'e':
-            option = c.input('''[dodger_blue1]
+        elif choice == "e":
+            option = c.input("""[dodger_blue1]
 =======================================
 ENCRYPT FILE(S) USING AN XOR KEY
 =======================================[khaki3]\n
@@ -275,27 +275,27 @@ Choose an option
 2)  Encrypt a file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 message = Functions.get_message_to_xor(self)
                 xor_key = Functions.get_xor_key(self)
                 XOREncryption.encrypt_msg_with_xor(self,
                     message=message,
                     xor_key=xor_key)
-            elif option == '2':
+            elif option == "2":
                 file_path = Functions.get_file_path(self)
                 xor_key = Functions.get_xor_key(self)
                 XOREncryption.encrypt_file_with_xor(self,
                     file_path=file_path,
                     xor_key=xor_key)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
@@ -306,8 +306,8 @@ ENTER CHOICE >>> ''')
 #! ====================
 
 
-        elif choice == 'f':
-            option = c.input('''[dodger_blue1]
+        elif choice == "f":
+            option = c.input("""[dodger_blue1]
 =======================================
 DECRYPT FILE WITH PROVIDED .KEY FILE
 =======================================[khaki3]\n
@@ -318,36 +318,36 @@ Choose an option
 2)  Decrypt all files in a folder using a .key file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 key_file = Functions.get_key_file_path(self)
                 file_path = Functions.get_file_path(self,
-                    text='DECRYPT')
+                    text="DECRYPT")
                 KeyFileDecryptor.decrypt_file_with_key(self,
                     key_file=key_file,
                     file_path=file_path)
-            elif option == '2':
+            elif option == "2":
                 key_file = Functions.get_key_file_path(self)
                 file_path = Functions.get_file_path(self,
-                    text='DECRYPT')
+                    text="DECRYPT")
                 KeyFileDecryptor.decrypt_files_in_folder_with_key(self,
                     key_file=key_file,
                     file_path=file_path)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'g':
-            option = c.input('''[dodger_blue1]
+        elif choice == "g":
+            option = c.input("""[dodger_blue1]
 =======================================
 USE PASSWORD TO DECRYPT FILE(S) [AES]
 =======================================[khaki3]\n
@@ -358,35 +358,35 @@ Choose an option
 2)  Decrypt all files in a folder using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 file_path = Functions.get_file_path(self)
                 # password = Functions.get_password(self)
                 AESDecryptor.aes_decrypt_file(self,
                     file_path=file_path,
                     password=password)
-            elif option == '2':
+            elif option == "2":
                 folder_path = Functions.get_folder_path(self,
-                    text='DECRYPT')
+                    text="DECRYPT")
                 # password = Functions.get_password(self)
                 AESDecryptor.aes_decrypt_all_files_in_dir(self,
                     folder_path=folder_path,
                     password=password)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu()
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'h':
-            option = c.input('''[dodger_blue1]
+        elif choice == "h":
+            option = c.input("""[dodger_blue1]
 =======================================
 USE PASSWORD TO DECRYPT FILE(S) [GCM]
 =======================================[khaki3]\n
@@ -397,34 +397,34 @@ Choose an option
 2)  Decrypt all files in a directory using a password\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if choice == '1':
+            if choice == "1":
                 file_path = Functions.get_file_path(self,
                     text='DECRYPTED')
                 # password = Functions.get_password(self)
                 AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
                     file_path=file_path,
                     password=password)
-            elif choice == '2':
+            elif choice == "2":
                 folder_path = Functions.get_folder_path(self,
                     text='DECRYPTED')
                 AESGCMDataDecryptor.aes_gcm_decrypt_directory(self,
                     folder_path=folder_path)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'i':
-            option = c.input('''[dodger_blue1]
+        elif choice == "i":
+            option = c.input("""[dodger_blue1]
 =======================================
 DECRYPT FILE(S) USING PGP KEY
 =======================================[khaki3]\n
@@ -435,30 +435,30 @@ Choose an option
 2)  -- Decrypt all files in a folder using PGP key --\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 file_path = Functions.get_file_path(self)
                 # password = Functions.get_password(self)
                 PGPClass.pgp_decrypt_file(self,
                     file_path=file_path,
                     password=password)
-            elif option == '2':
+            elif option == "2":
                 pass
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice == 'j':
-            option = c.input('''[dodger_blue1]
+        elif choice == "j":
+            option = c.input("""[dodger_blue1]
 =======================================
 DECRYPT FILE(S) USING AN XOR KEY
 =======================================[khaki3]\n
@@ -469,33 +469,33 @@ Choose an option
 2)  Decrypt a file\n
 R)  Return to the main menu
 Q)  Quit the application[khaki3]\n
-ENTER CHOICE >>> ''')
+ENTER CHOICE >>> """)
 
             Functions.clear_screen(self)
 
             option = option.strip()
 
-            if option == '1':
+            if option == "1":
                 message = Functions.get_xor_message_to_decrypt(self)
                 xor_key = Functions.get_xor_key(self)
                 XORDecryption.decrypt_msg_with_xor(self,
                     message=message,
                     xor_key=xor_key)
-            elif option == '2':
+            elif option == "2":
                 file_path = Functions.get_file_path(self)
                 xor_key = Functions.get_xor_key(self)
                 XORDecryption.decrypt_file_with_xor(self,
                     file_path=file_path,
                     xor_key=xor_key)
-            elif option.lower() == 'r':
+            elif option.lower() == "r":
                 App.return_to_main_menu(self)
-            elif option.lower() == 'q':
+            elif option.lower() == "q":
                 Functions.exit_application(self)
             else:
                 App.no_valid_option(self)
 
 
-        elif choice.lower() == 'q':
+        elif choice.lower() == "q":
            Functions.clear_screen(self)
            Functions.exit_application(self)
 
@@ -505,5 +505,5 @@ ENTER CHOICE >>> ''')
             App.no_valid_option(self)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     App.main(App)
