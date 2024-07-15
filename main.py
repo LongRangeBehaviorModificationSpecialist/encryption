@@ -405,14 +405,14 @@ ENTER CHOICE >>> """)
 
             if choice == "1":
                 file_path = Functions.get_file_path(self,
-                    text='DECRYPTED')
+                    text="DECRYPTED")
                 # password = Functions.get_password(self)
                 AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
                     file_path=file_path,
                     password=password)
             elif choice == "2":
                 folder_path = Functions.get_folder_path(self,
-                    text='DECRYPTED')
+                    text="DECRYPTED")
                 AESGCMDataDecryptor.aes_gcm_decrypt_directory(self,
                     folder_path=folder_path)
             elif option.lower() == "r":
