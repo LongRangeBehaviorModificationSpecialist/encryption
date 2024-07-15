@@ -41,7 +41,7 @@ You did not enter a valid option. Please try again.""")
 
     def main(self) -> None:
         Functions.clear_screen(self)
-        ""Main function where the user can pick what option they want."""
+        """Main function where the user can pick what option they want."""
         choice = c.input(f"""[dodger_blue1]
 =============================================\n
 ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
