@@ -21,10 +21,10 @@ class AESDecryptor:
                          password: str,
                          mode=AES.MODE_CBC) -> None:
 
-        c.print('''[dodger_blue1]
-=================================================
+        c.print("""[dodger_blue1]
+-------------------------------------------------
 DECRYPT A FILE WITH USER-PROVIDED PASSWORD (AES)
-=================================================''')
+-------------------------------------------------""")
 
         key = Functions.encode_key(self, password=password)
 
