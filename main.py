@@ -52,9 +52,10 @@ class App:
         Main function where the user can pick what option they want.
         """
         choice = Prompt.ask(f"""[dodger_blue1]
----------------------------------------------\n
-ENCRYPTION APPLICATION MENU, v.0.3.17076096\n
----------------------------------------------[bright_white]\n
+----------------------------
+ENCRYPTION APPLICATION MENU
+v.0.3.17076096
+----------------------------[bright_white]\n
 ENCRYPTION\n
 [A] Use a .key file to encrypt file/files
 [B] Use a password to encrypt file/files (AES-CBC Mode)
@@ -67,7 +68,7 @@ DECRYPTION\n
 [H] Decrypt file/files using a password (AES-GCM Mode)
 [I] Decrypt file/files using a PGP key file
 [J] Decrypt message/file using XOR\n
-[Q] Quit the Application[khaki3]\n
+[Q] Quit the Application[khaki3]\n\n
 ENTER CHOICE """)
 
         Functions.clear_screen(self)
@@ -79,13 +80,12 @@ ENTER CHOICE """)
 ---------------------------------------
 ENCRYPT FILE WITH PROVIDED .KEY FILE
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Encrypt a file using an existing .key file
 [2] Encrypt a file using a newly created .key file
 [3] Encrypt all files in a directory using a .key file\n
 [R] Return to the main menu
-[Q] Quit the application\n
+[Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """)
 
             Functions.clear_screen(self)
@@ -129,12 +129,11 @@ ENCRYPT FILE WITH PROVIDED .KEY FILE
 ---------------------------------------
 USE PASSWORD TO ENCRYPT FILE(S) [AES]
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Encrypt a single file using a password
 [2] Encrypt all files in a directory using a password\n
 [R] Return to the main menu
-[Q] Quit the application\n
+[Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """)
 
             Functions.clear_screen(self)
@@ -150,23 +149,20 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES]
 
             elif option == "2":
                 make_aes_dir_choice = Prompt.ask("""\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Encrypt all files in a directory
-[2] Place original files in .zip container then encrypt the .zip file
+[2] Place files in .zip container then encrypt the .zip file
 [3] Encrypt all files in directory then add to unencrypted .zip file \
 (file size may be larger)\n
 [R] Return to the main menu
-[Q] Quit the application\n
-[khaki3]ENTER CHOICE """)
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """).strip().lower()
 
                 Functions.clear_screen(self)
 
-                make_aes_dir_choice = make_aes_dir_choice.strip().lower()
-
                 folder_path = Functions.get_folder_path(self,
                     text="ENCRYPTED")
-                # password = Functions.get_password(self)
+                password = Functions.get_password(self)
 
                 if make_aes_dir_choice== "1":
                     AESEncryptor.aes_encrypt_all_files_in_dir(self,
@@ -207,17 +203,14 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES]
 ---------------------------------------
 USE PASSWORD TO ENCRYPT FILE(S) [GCM]
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Encrypt a single file using a password (AES-GCM)
 [2] Encrypt all files in a directory using a password (AES-GCM)\n
 [R] Return to main menu
-[Q] Quit the application\n
-[khaki3]ENTER CHOICE """)
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """).strip().lower()
 
             Functions.clear_screen(self)
-
-            option = option.strip().lower()
 
             if option == "1":
                 file_path = Functions.get_file_path(self)
@@ -249,13 +242,12 @@ USE PASSWORD TO ENCRYPT FILE(S) [GCM]
 ---------------------------------------
 ENCRYPT FILE(S) USING PGP KEY
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Generate new PGP key pair
 [2] Encrypt files using PGP encryption
 [3] Encrypt all files in a directory using PGP keys\n
 [R] Return to the main menu
-[Q] Quit the application\n
+[Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """)
 
             Functions.clear_screen(self)
@@ -295,12 +287,11 @@ ENCRYPT FILE(S) USING PGP KEY
 ---------------------------------------
 ENCRYPT FILE(S) USING AN XOR KEY
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1]  Encrypt a single message string
 [2]  Encrypt a file\n
 [R]  Return to the main menu
-[Q]  Quit the application\n
+[Q]  Quit the application\n\n
 [khaki3]ENTER CHOICE """)
 
             Functions.clear_screen(self)
@@ -341,17 +332,14 @@ ENCRYPT FILE(S) USING AN XOR KEY
 ---------------------------------------
 DECRYPT FILE WITH PROVIDED .KEY FILE
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Decrypt a file using a .key file
 [2] Decrypt all files in a folder using a .key file\n
 [R] Return to the main menu
-[Q] Quit the application\n
-[khaki3]ENTER CHOICE """)
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """).strip().lower()
 
             Functions.clear_screen(self)
-
-            option = option.strip().lower()
 
             if option == "1":
                 key_file = Functions.get_key_file_path(self)
@@ -384,17 +372,14 @@ DECRYPT FILE WITH PROVIDED .KEY FILE
 ---------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [AES]
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Decrypt a file using a password (AES encrypted)
 [2] Decrypt all files in a folder using a password\n
 [R] Return to the main menu
-[Q] Quit the application[khaki3]\n
-[khaki3]ENTER CHOICE """)
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """).strip().lower()
 
             Functions.clear_screen(self)
-
-            option = option.strip().lower()
 
             if option == "1":
                 file_path = Functions.get_file_path(self)
@@ -426,17 +411,14 @@ USE PASSWORD TO DECRYPT FILE(S) [AES]
 ---------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [GCM]
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Decrypt a single file using a password
 [2] Decrypt all files in a directory using a password\n
 [R] Return to the main menu
-[Q] Quit the application\n
-[khaki3]ENTER CHOICE """)
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """).strip().lower()
 
             Functions.clear_screen(self)
-
-            option = option.strip().lower()
 
             if choice == "1":
                 file_path = Functions.get_file_path(self,
@@ -467,17 +449,14 @@ USE PASSWORD TO DECRYPT FILE(S) [GCM]
 ---------------------------------------
 DECRYPT FILE(S) USING PGP KEY
 ---------------------------------------\n
-[khaki3]Choose an option ->
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Decrypt a file using PGP key
 [2] -- Decrypt all files in a folder using PGP key --\n
 [R] Return to the main menu
-[Q] Quit the application\n
-[khaki3]ENTER CHOICE """)
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """).strip().lower()
 
             Functions.clear_screen(self)
-
-            option = option.strip().lower()
 
             if option == "1":
                 file_path = Functions.get_file_path(self)
@@ -504,12 +483,11 @@ DECRYPT FILE(S) USING PGP KEY
 ---------------------------------------
 DECRYPT FILE(S) USING AN XOR KEY
 ---------------------------------------\n
-[khaki3]Choose an option ->\n
-[bright_white]
+[khaki3]Choose an option ->[bright_white]\n
 [1] Decrypt a single message
 [2] Decrypt a file\n
 [R] Return to the main menu
-[Q] Quit the application\n
+[Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """)
 
             Functions.clear_screen(self)
