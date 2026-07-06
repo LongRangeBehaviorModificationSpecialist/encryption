@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 
 import binascii
+from datetime import datetime
 from rich.console import Console
 from rich.prompt import Prompt
 from functools import wraps
@@ -34,22 +35,27 @@ Operation [ {func.__name__}() ] was completed in \
             return result
         return timeit_wrapper
 
-
-    def ask_delete_original_enc_files(self) -> str:
-        ask_delete_original_enc_files = Prompt.ask("""[khaki3]
+    @staticmethod
+    def ask_delete_original_enc_files() -> str:
+        ask_delete_original_enc_files = Prompt.ask("""[bright_white]
 [-] Do you want to delete the original encrypted files from the directory \
-after decryption (y/n)? """)
+after decryption? """, choices=["y", "n"], show_choices=True)
         return ask_delete_original_enc_files
 
 
-    def clear_screen(self) -> None:
+    @staticmethod
+    def clear_screen() -> None:
         os.system("cls" if os.name == "nt" else "clear")
 
 
-    def confirm_delete_original_files(self) -> str:
-        confirm_delete_originals = Prompt.ask("""[khaki3]
-[-] Do you want to delete the original files after they are encrypted (y/n)? \
-[orange_red1][THIS ACTION CANNOT BE UNDONE!] """)
+    @staticmethod
+    def confirm_delete_original_files() -> str:
+        confirm_delete_originals = Prompt.ask("""[bright_white]
+[-] Do you want to delete the original files after they are encrypted? \
+[orange_red1][THIS ACTION CANNOT BE UNDONE!] """,
+                choices=["y", "n"],
+                show_choices=True
+        )
         return confirm_delete_originals
 
 
@@ -61,8 +67,9 @@ after decryption (y/n)? """)
         return key
 
 
-    def exit_application(self) -> None:
-        c.print("""[dodger_blue1][-] Exiting the application. Goodbye...""")
+    @staticmethod
+    def exit_application() -> None:
+        c.print("""\n\n[Bright_white][-] Exiting the application. Goodbye...\n\n""")
         sys.exit(0)
 
 
@@ -71,18 +78,26 @@ after decryption (y/n)? """)
         return iv
 
 
-    def get_all_files(self, folder_path: Path) -> list[str]:
+    def get_all_files(self, dir_path: Path) -> list[str]:
         dirs = []
-        for dir_name, sub_dirs, file_list in os.walk(folder_path):
+        for dir_name, sub_dirs, file_list in os.walk(dir_path):
             for file in file_list:
                 dirs.append(dir_name + "\\" + file)
         return dirs
 
 
-    def get_date_time(self) -> str:
-        t = time.localtime()
-        current_time = time.strftime("%Y%m%d %H%M%S", t)
+    @staticmethod
+    def get_date_time() -> str:
+        local_time = datetime.now().astimezone()
+        offset = local_time.strftime("%z")
+        formatted_offset = f"UTC{offset[0]}{int(offset[1:3])}"
+        current_time = local_time.strftime(f"%d-%b-%Y %H:%M:%S.%f ({formatted_offset})")
         return current_time
+
+
+    def get_encrypted_file_name(self, file_path: Path) -> Path:
+        encrypted_file = f"{file_path}.encrypted"
+        return Path(encrypted_file)
 
 
     def get_decrypted_file_name(self, file_to_decrypt: Path) -> Path:
@@ -91,49 +106,38 @@ after decryption (y/n)? """)
 
 
     def get_email_address(self) -> str:
-        email_address = Prompt.ask("""[khaki3]
+        email_address = Prompt.ask("""[bright_white]
 [-] Enter email address of the PGP key owner """)
         return email_address
 
 
-    def get_encrypted_file_name(self, file_path: Path) -> Path:
-        encrypted_file = f"{file_path}.encrypted"
-        return Path(encrypted_file)
-
-
-    def get_file_path(self, text: str) -> Path:
-        file_path = Prompt.ask(f"""[khaki3]
+    @staticmethod
+    def get_file_path(text: str) -> Path:
+        file_path = Prompt.ask(f"""[bright_white]
 [-] Enter the path of the file to be {text} """)
         # file_path = "I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt"
         return Path(file_path)
 
 
-    def get_folder_path(self, text: str) -> Path:
-        folder_path = Prompt.ask(f"""[khaki3]
+    @staticmethod
+    def get_folder_path(text: str) -> Path:
+        folder_path = Prompt.ask(f"""[bright_white]
 [-] Enter the path of the directory containing the files to be {text} """)
         # folder_path = "I:\\encryption\\aaa\\txtfiles_AES"
         return Path(folder_path)
 
-
-    def get_key_file_path(self) -> Path:
-        key_file = Prompt.ask("""[khaki3]
-[-] Enter the path to the KEY FILE you want to use """)
-        # key_file = "I:\\encryption\\aaa\\2024-01-24_105425_key.key"
-        return Path(key_file)
-
-
     def get_password(self) -> str:
 
-        password = Prompt.ask(f"""[khaki3]
+        password = Prompt.ask(f"""[bright_white]
 [-] Enter the PASSWORD you want to use """)
-        valid = Functions.validate_password(self,
+        valid = Functions.validate_password(
             password=password)
 
         if valid != password:
-            c.print("""[blue]Please try again.\n""")
+            c.print("""[red]Please try again.\n""")
             Functions.get_password(self)
         else:
-            c.print("""[khaki3]Your password checks out. Continuing...""")
+            c.print("""[bright_white]Your password checks out. Continuing...""")
             return str(password)
 
 
@@ -169,10 +173,10 @@ Your password must meet the following criteria\n
         return password
 
 
-    def hash_new_key_file(self, new_key_file: Path) -> str:
+    def hash_new_key_file(self, key_file: Path) -> str:
 
         sha256_hash = hashlib.sha256()
-        kf = new_key_file
+        kf = key_file
 
         with open(kf, "rb") as f:
             for byte_block in iter(lambda: f.read(4096), b""):
@@ -199,12 +203,12 @@ Your password must meet the following criteria\n
         return no_valid_yn_option
 
 
-    def print_confirm_file_action(self,
-            file_name: Path,
-            text: str) -> None:
+    @staticmethod
+    def print_confirm_file_action(file_name: Path, text: str) -> None:
+        file_name = Path(file_name)
         confirm = c.print(f"""[green3]
 ------------------------------------------
-[{Functions.get_date_time(self)}]
+[{Functions.get_date_time()}]
 ** ACTION SUCCESSFUL **\n
 {text} file name:
     {file_name.name}\n
@@ -220,7 +224,7 @@ Your password must meet the following criteria\n
 
         confirm = c.print(f"""[green3]
 ------------------------------------------
-[{Functions.get_date_time(self)}]
+[{Functions.get_date_time()}]
 ** ACTION SUCCESSFUL **\n
 Files in the '{folder_path}' directory have been {action}\n
 The original files HAVE BEEN DELETED
@@ -234,7 +238,7 @@ The original files HAVE BEEN DELETED
 
         confirm = c.print(f"""[green3]
 ------------------------------------------
-[{Functions.get_date_time(self)}]
+[{Functions.get_date_time()}]
 ** ACTION SUCCESSFUL **\n
 Files in the '{folder_path}' directory have been {action}\n
 The original files were NOT DELETED
@@ -242,7 +246,7 @@ The original files were NOT DELETED
         return confirm
 
 
-    def write_hash_to_file(self,
+    def write_key_hash_to_file(self,
             key_file_path: Path,
             key_file_hash_value: str) -> None:
 
@@ -250,16 +254,16 @@ The original files were NOT DELETED
         key_file_hash_file = f"{key_file_path}.sha256"
 
         with open(key_file_hash_file, "w", encoding="utf-8") as f:
-            f.write(f"""[green3]
+            f.write(f"""
 ------------------------------------------
-[{Functions.get_date_time(self)}]
+[{Functions.get_date_time()}]
 Key File Name : {key_file_path.name}\n
 Key File Hash Value (SHA-256) : {key_file_hash_value}
 ------------------------------------------""")
 
         c.print(f"""[bright_white]
 ------------------------------------------
-[{Functions.get_date_time(self)}]
+[{Functions.get_date_time()}]
 [-] Key File hashed successfully
 [-] Key File Hash verification saved in : \
 '{os.path.dirname(key_file_path)}' directory

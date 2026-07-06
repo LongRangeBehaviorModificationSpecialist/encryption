@@ -1,9 +1,9 @@
 # !/usr/bin/env python3
 
-from cryptography.fernet import Fernet
-import os
+from cryptography.fernet import Fernet, InvalidToken
 from pathlib import Path
 from rich.console import Console
+from rich.prompt import Prompt
 
 from resources.functions import Functions
 
@@ -13,13 +13,33 @@ c = Console()
 
 
 class KeyFileDecryptor:
+    def __init__(self, app_instance) -> None:
+        """Store a reference to the main app loop controller."""
+        self.app = app_instance
+
+
+    def return_to_main_menu(self) -> None:
+        """Returns control cleanly back to the main menu processor."""
+        self.app.main()
+
+
+    def get_decryption_key_file_path(self) -> Path:
+        """Prompts for a key file path and loop-validates its existence."""
+        while True:
+            key_file = Prompt.ask("""[bright_white]
+[-] Enter the path to the .key file to use """)
+            path = Path(key_file)
+            if path.is_file():
+                return path
+
 
     @Functions.timeit
     def decrypt_file_with_key(self,
-            key_file: Path,
-            file_path: Path) -> None:
+            key_file_path: Path,
+            target_file_path: Path) -> None:
         """
-        Decrypts a file using a provided .key file.
+        Reads a key from key_file_path and decrypts target_file_path.
+        Removes the '.encrypted' extension from the file name.
 
             Args:
                 key_file: Path to the key_file
@@ -28,92 +48,138 @@ class KeyFileDecryptor:
             Returns:
                 file: Decrypted file in the same directory as the original file
         """
-        c.print("""[dodger_blue1]
-=======================================
-DECRYPT A FILE USING A KNOWN .KEY FILE
-=======================================""")
 
-        key_to_load = Functions.load_key(self, key_file=key_file)
-        f = Fernet(key_to_load)
+        # Validation checks
+        if not target_file_path.is_file():
+            c.print(f"\n[red][ERROR] Target file not found : {target_file_path}")
+            self.return_to_main_menu()
+            return
 
-        c.print(f"""[bright_white]
-[{Functions.get_date_time(self)}] Key file: \
-`{os.path.basename(key_file)}` loaded successfully""")
+        if not key_file_path.is_file():
+            c.print(f"\n[red][ERROR] Key file not found : {key_file_path}")
+            self.return_to_main_menu()
+            return
 
-        file_name, file_ext = os.path.splitext(file_path)
+        # Prevent decrypting a file that isn't marked as encrypted
+        if target_file_path.suffix != ".encrypted":
+            c.print(f"\n[red][ERROR] The target file does not appear to be \
+an .encrypted file.")
+            self.return_to_main_menu()
+            return
 
-        if file_ext == ".encrypted":
-            decrypted_file = Path(file_name)
-        else:
-            decrypted_file = Functions.get_decrypted_file_name(self,
-                file_path)
+        try:
+            # Load the key and initialize Fernet
+            fernet = Fernet(key_file_path.read_bytes())
+            c.print(f"\n[bright_white][-] Key file ({key_file_path.name}) \
+loaded successfully.")
 
-        with open(file_path, "rb") as ef:
-            encrypted_data = ef.read()
+            c.print(f"\n[bright_white][-] Reading encrypted file: \
+{target_file_path.name}...")
+            encrypted_data = target_file_path.read_bytes()
 
-        decrypted_data = f.decrypt(encrypted_data)
+            c.print("\n[bright_white][-] Decrypting data...")
+            # This will throw an InvalidToken exception if the key is wrong
+            decrypted_data = fernet.decrypt(encrypted_data)
 
-        with open(decrypted_file, "wb") as df:
-            Functions.write_to_file(self,
-                file=df,
-                message=decrypted_data)
+            # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
+            # `.with_suffix("")` strips away the LAST extension (.encrypted)
+            decrypted_file_path = target_file_path.with_suffix("")
 
-        Functions.print_confirm_file_action(self,
-            file_name=decrypted_file,
-            text="Decryption")
+            # Save the decrypted file
+            decrypted_file_path.write_bytes(decrypted_data)
+
+            Functions.print_confirm_file_action(self,
+                file_name=decrypted_file_path,
+                text="Decryption")
+
+        except InvalidToken:
+            c.print("\n[red][ERROR] Decryption Failed! The key provided is \
+invalid for this file.")
+        except Exception as e:
+            c.print(f"\n[red][ERROR] An error occurred during decryption: {e}")
 
 
     @Functions.timeit
-    def decrypt_files_in_folder_with_key(self,
-            key_file: Path,
-            folder_path: Path) -> None:
-        c.print("""[dodger_blue1]
-=====================================================
-DECRYPT FILES IN A DIRECTORY USING A KNOWN .KEY FILE
-=====================================================""")
+    def decrypt_files_in_dir_with_key(self,
+            key_file_path: Path,
+            target_dir_path: Path) -> None:
+        """Decrypts all discovered assets within a target directory directory."""
 
-        key_to_load = Functions.load_key(self, key_file=key_file)
-        f = Fernet(key_to_load)
+        # Validation checks
+        if not target_dir_path.is_dir():
+            c.print(f"\n[red][ERROR] Target directory not found : {target_dir_path}")
+            self.return_to_main_menu()
+            return
 
-        dirs = Functions.get_all_files(self, folder_path=folder_path)
+        if not key_file_path.is_file():
+            c.print(f"\n[red][ERROR] Key file not found : {key_file_path}")
+            self.return_to_main_menu()
+            return
 
-        for file in dirs:
-            file_name, file_ext = os.path.splitext(file)
+        try:
+            # Load the key and initialize Fernet
+            fernet = Fernet(key_file_path.read_bytes())
+            c.print(f"\n[bright_white][-] Key file ({key_file_path.name}) loaded successfully.")
 
-            if file_ext == ".encrypted":
-                decrypted_file_name = file_name
-            else:
-                decrypted_file_name = f"{file}.decrypted"
+            files = [f for f in target_dir_path.rglob('*') if f.is_file() and f.suffix == '.encrypted']
 
-            with open(file, "rb") as ef:
-                encrypted_data = ef.read()
+            for file in files:
+                c.print(f"\n[bright_white]Reading : {file.name}")
+                encrypted_data = file.read_bytes()
 
-            decrypted_data = f.decrypt(encrypted_data)
+                c.print(f"\n[bright_white][-] Decrypting {file.name} data...")
+                # This will throw an InvalidToken exception if the key is wrong
+                decrypted_data = fernet.decrypt(encrypted_data)
 
-            with open(decrypted_file_name, "wb") as df:
-                Functions.write_to_file(self,
-                    file=df,
-                    message=decrypted_data)
+                # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
+                # `.with_suffix("")` strips away the LAST extension (.encrypted)
+                decrypted_file_path = file.with_suffix("")
 
-        # Ask user if they want to delete the original encrypted files
-        delete_original_enc_files = Functions.ask_delete_original_enc_files(self)
+                # Save the decrypted file
+                decrypted_file_path.write_bytes(decrypted_data)
+                c.print(f"\n[bright_white][-] Decrypted {file.name} -> {decrypted_file_path.name}")
 
-        # If user chooses "no", the originals files **not** deleted
-        if delete_original_enc_files.lower().strip() == "n":
-            Functions.print_original_files_not_deleted(self,
-                folder_path,
-                action="decrypted")
+            c.print(f"\n[green][+] Successfully decrypted {len(files)} files.")
 
-        # If the user chooses "yes", this will delete original files
-        elif delete_original_enc_files.lower().strip() == "y":
-            for file in dirs:
-                if file_ext == ".encrypted":
-                    os.remove(file)
-            Functions.print_original_files_deleted(self,
-                folder_path,
-                action="decrypted")
+        except InvalidToken:
+            c.print(f"\n[red][ERROR] Decryption Failed! The key provided is invalid for {file.name}.")
+        except Exception as e:
+            c.print(f"\n[red][ERROR] Failed processing directory batch encryption: {e}")
 
-        # If the user did not choose either "y" or "n"
-        else:
-            Functions.no_valid_yn_option(self)
-            KeyFileDecryptor.decrypt_files_in_folder_with_key(self)
+
+    def get_target_choice(self) -> None:
+        """Main routing controller for decryption jobs."""
+        while True:
+            target_option = Prompt.ask("""[dodger_blue1]
+---------------------------------------
+    DECRYPT FILE WITH PROVIDED .KEY
+---------------------------------------\n
+[khaki3]Choose an option ->[bright_white]\n
+[1] Decrypt a file using a .key file
+[2] Decrypt files in a folder using a .key file\n
+[R] Return to the main menu
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """,
+                choices=["1", "2", "r", "q"],
+                show_choices=False).strip().lower()
+
+            key_file_path = self.get_decryption_key_file_path()
+
+            if target_option == "1":
+                target_file_path = Path(Functions.get_file_path(text="DECRYPT"))
+                self.decrypt_file_with_key(
+                    key_file_path=key_file_path,
+                    target_file_path=target_file_path
+                )
+            elif target_option == "2":
+                target_dir_path = Path(Functions.get_folder_path(text="DECRYPT"))
+                self.decrypt_files_in_dir_with_key(
+                    key_file_path=key_file_path,
+                    target_dir_path=target_dir_path
+                )
+            elif target_option == "r":
+                self.return_to_main_menu()
+                return
+            elif target_option == "q":
+                Functions.exit_application(self)
+                return
