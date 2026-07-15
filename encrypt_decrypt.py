@@ -3,6 +3,8 @@
 from rich.console import Console
 from rich.prompt import Prompt
 
+from pathlib import Path
+
 from resources import (AESDecryptor,
         AESEncryptor,
         AESGCMDataDecryptor,
@@ -15,7 +17,7 @@ from resources import (AESDecryptor,
         Functions)
 
 __author__ = "[@mikespon]"
-__last_updated__ = "06-Jul-2026"
+__last_updated__ = "15-Jul-2026"
 
 
 # Make the console object
@@ -42,20 +44,20 @@ class App:
         """
         Returns the user to the main application menu.
         """
-        Functions.clear_screen(self)
+        Functions.clear_screen()
         App.main(self)
 
 
     def main(self) -> None:
-        Functions.clear_screen(self)
+        Functions.clear_screen()
         """
         Main function where the user can pick what option they want.
         """
 
         choice = Prompt.ask(f"""[dodger_blue1]
 ----------------------------------------
-    ENCRYPT/DECRYPT APPLICATION MENU
-    v.0.3.17076096
+ENCRYPT/DECRYPT APPLICATION MENU
+v.0.3.17076096
 ----------------------------------------[bright_white]\n
 ENCRYPTION\n
 [A] Use a .key file to encrypt file/files
@@ -74,11 +76,13 @@ ENTER CHOICE """,
                 choices=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "q"],
                 show_choices=False).strip().lower()
 
-        Functions.clear_screen(self)
+        Functions.clear_screen()
+
 
         if choice == "a":
-            Functions.clear_screen(self)
+            Functions.clear_screen()
             KeyFileEncryptor(app_instance=self).get_target_choice()
+
 
         elif choice == "b":
             option = Prompt.ask("""[dodger_blue1]
@@ -94,63 +98,66 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES]
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                file_path = Functions.get_file_path(self, text="ENCRYPTED")
-                password = Functions.get_password(self)
-                AESEncryptor.aes_encrypt_single_file(self,
-                    file_path=file_path,
+                target_file_path = Functions.get_file_path(text="ENCRYPTED")
+                # target_file_path = Path(r"C:\Users\mikes\Desktop\test\OSHA.docx")
+                password = Functions.get_password()
+                # password = "Password1!"
+                AESEncryptor.aes_encrypt_single_file(
+                    target_file_path=target_file_path,
                     password=password)
 
             elif option == "2":
-                make_aes_dir_choice = Prompt.ask("""\n
-[khaki3]Choose an option ->[bright_white]\n
-[1] Encrypt all files in a directory
-[2] Place files in .zip container then encrypt the .zip file
-[3] Encrypt all files in directory then add to unencrypted .zip file \
-(file size may be larger)\n
-[R] Return to the main menu
-[Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
-                choices=["1", "2", "3", "r", "q"],
-                show_choices=False).strip().lower()
+                Functions.clear_screen()
 
-                Functions.clear_screen(self)
-
-                folder_path = Functions.get_folder_path(self,
-                    text="ENCRYPTED")
-                password = Functions.get_password(self)
-
-                if make_aes_dir_choice== "1":
-                    AESEncryptor.aes_encrypt_all_files_in_dir(self,
-                        folder_path=folder_path,
+                target_folder_path = Functions.get_folder_path(text="ENCRYPTED")
+                password = Functions.get_password()
+                AESEncryptor.aes_encrypt_all_files_in_dir(
+                        target_folder_path=target_folder_path,
                         password=password)
 
-                elif make_aes_dir_choice == "2":
-                    AESEncryptor.aes_zip_files_then_encrypt(self,
-                        folder_path=folder_path,
-                        password=password)
+#                 make_aes_dir_choice = Prompt.ask("""\n
+# [khaki3]Choose an option ->[bright_white]\n
+# [1] Encrypt all files in a directory
+# [2] Place files in .zip container then encrypt the .zip file
+# [3] Encrypt all files in directory then add to unencrypted .zip file \
+# (file size may be larger)\n
+# [R] Return to the main menu
+# [Q] Quit the application\n\n
+# [khaki3]ENTER CHOICE """,
+#                 choices=["1", "2", "3", "r", "q"],
+#                 show_choices=False).strip().lower()
 
-                elif make_aes_dir_choice == "3":
-                    AESEncryptor.aes_encrypt_files_then_zip(self,
-                        folder_path=folder_path,
-                        password=password)
 
-                elif make_aes_dir_choice == "r":
-                    App.return_to_main_menu(self)
+                # if make_aes_dir_choice== "1":
 
-                elif make_aes_dir_choice == "q":
-                    Functions.exit_application(self)
 
-                else:
-                    App.no_valid_option(self)
+                # elif make_aes_dir_choice == "2":
+                #     AESEncryptor.aes_zip_files_then_encrypt(self,
+                #         folder_path=folder_path,
+                #         password=password)
+
+                # elif make_aes_dir_choice == "3":
+                #     AESEncryptor.aes_encrypt_files_then_zip(self,
+                #         folder_path=folder_path,
+                #         password=password)
+
+                # elif make_aes_dir_choice == "r":
+                #     App.return_to_main_menu(self)
+
+                # elif make_aes_dir_choice == "q":
+                #     Functions.exit_application()
+
+                # else:
+                #     App.no_valid_option(self)
 
             elif option == "r":
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -170,19 +177,18 @@ USE PASSWORD TO ENCRYPT FILE(S) [GCM]
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                file_path = Functions.get_file_path(self)
-                # password = Functions.get_password(self)
+                file_path = Functions.get_file_path()
+                # password = Functions.get_password()
                 AESGCMDataEncryptor.aes_gcm_encrypt_file(self,
                     file_path=file_path,
                     password=password)
 
             elif option == "2":
-                folder_path = Functions.get_folder_path(self,
-                    text="ENCRYPT")
-                # password = Functions.get_password(self)
+                folder_path = Functions.get_folder_path(text="ENCRYPT")
+                # password = Functions.get_password()
                 AESGCMDataEncryptor.aes_gcm_encrypt_directory(self,
                     folder_path=folder_path,
                     password=password)
@@ -191,7 +197,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [GCM]
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -212,23 +218,22 @@ ENCRYPT FILE(S) USING PGP KEY
                 choices=["1", "2", "3", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                # password = Functions.get_password(self)
-                # email_address = Functions.get_email_address(self)
+                # password = Functions.get_password()
+                # email_address = Functions.get_email_address()
                 PGPClass.generate_pgp_key(self,
                     password=password,
                     email_address=email_address)
 
             elif option == "2":
-                file_path = Functions.get_file_path(self)
+                file_path = Functions.get_file_path()
                 PGPClass.pgp_encrypt_file(self,
                     file_path=file_path)
 
             elif option == "3":
-                folder_path = Functions.get_folder_path(self,
-                    text="ENCRYPT")
+                folder_path = Functions.get_folder_path(text="ENCRYPT")
                 PGPClass.pgp_encrypt_folder(self,
                     folder_path=folder_path)
 
@@ -236,7 +241,7 @@ ENCRYPT FILE(S) USING PGP KEY
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -256,18 +261,18 @@ ENCRYPT FILE(S) USING AN XOR KEY
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                message = Functions.get_message_to_xor(self)
-                xor_key = Functions.get_xor_key(self)
+                message = Functions.get_message_to_xor()
+                xor_key = Functions.get_xor_key()
                 XOREncryption.encrypt_msg_with_xor(self,
                     message=message,
                     xor_key=xor_key)
 
             elif option == "2":
-                file_path = Functions.get_file_path(self)
-                xor_key = Functions.get_xor_key(self)
+                file_path = Functions.get_file_path()
+                xor_key = Functions.get_xor_key()
                 XOREncryption.encrypt_file_with_xor(self,
                     file_path=file_path,
                     xor_key=xor_key)
@@ -276,7 +281,7 @@ ENCRYPT FILE(S) USING AN XOR KEY
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -288,7 +293,7 @@ ENCRYPT FILE(S) USING AN XOR KEY
 
 
         elif choice == "f":
-            Functions.clear_screen(self)
+            Functions.clear_screen()
             KeyFileDecryptor(app_instance=self).get_target_choice()
 
 
@@ -306,28 +311,29 @@ USE PASSWORD TO DECRYPT FILE(S) [AES]
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                file_path = Functions.get_file_path(self)
-                # password = Functions.get_password(self)
-                AESDecryptor.aes_decrypt_file(self,
-                    file_path=file_path,
+                target_file_path = Functions.get_file_path(text="decrypted")
+                password = Prompt.ask("\n[bright_white][-] Enter password to \
+decrypt the file ", password=True)
+                AESDecryptor.aes_decrypt_single_file(
+                    target_file_path=target_file_path,
                     password=password)
 
             elif option == "2":
-                folder_path = Functions.get_folder_path(self,
-                    text="DECRYPT")
-                # password = Functions.get_password(self)
+                target_folder_path = Functions.get_folder_path(text="decrypted")
+                password = Prompt.ask("\n[bright_white][-] Enter password to \
+decrypt the files ", password=True)
                 AESDecryptor.aes_decrypt_all_files_in_dir(self,
-                    folder_path=folder_path,
+                    target_folder_path=target_folder_path,
                     password=password)
 
             elif option == "r":
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -347,19 +353,17 @@ USE PASSWORD TO DECRYPT FILE(S) [GCM]
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if choice == "1":
-                file_path = Functions.get_file_path(self,
-                    text="DECRYPTED")
-                # password = Functions.get_password(self)
+                file_path = Functions.get_file_path(text="DECRYPTED")
+                # password = Functions.get_password()
                 AESGCMDataDecryptor.aes_gcm_decrypt_file(self,
                     file_path=file_path,
                     password=password)
 
             elif choice == "2":
-                folder_path = Functions.get_folder_path(self,
-                    text="DECRYPTED")
+                folder_path = Functions.get_folder_path(text="DECRYPTED")
                 AESGCMDataDecryptor.aes_gcm_decrypt_directory(self,
                     folder_path=folder_path)
 
@@ -367,7 +371,7 @@ USE PASSWORD TO DECRYPT FILE(S) [GCM]
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -387,11 +391,11 @@ DECRYPT FILE(S) USING PGP KEY
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                file_path = Functions.get_file_path(self)
-                # password = Functions.get_password(self)
+                file_path = Functions.get_file_path()
+                # password = Functions.get_password()
                 PGPClass.pgp_decrypt_file(self,
                     file_path=file_path,
                     password=password)
@@ -403,7 +407,7 @@ DECRYPT FILE(S) USING PGP KEY
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
@@ -423,18 +427,18 @@ DECRYPT FILE(S) USING AN XOR KEY
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen(self)
+            Functions.clear_screen()
 
             if option == "1":
-                message = Functions.get_xor_message_to_decrypt(self)
-                xor_key = Functions.get_xor_key(self)
+                message = Functions.get_xor_message_to_decrypt()
+                xor_key = Functions.get_xor_key()
                 XORDecryption.decrypt_msg_with_xor(self,
                     message=message,
                     xor_key=xor_key)
 
             elif option == "2":
-                file_path = Functions.get_file_path(self)
-                xor_key = Functions.get_xor_key(self)
+                file_path = Functions.get_file_path()
+                xor_key = Functions.get_xor_key()
                 XORDecryption.decrypt_file_with_xor(self,
                     file_path=file_path,
                     xor_key=xor_key)
@@ -443,19 +447,19 @@ DECRYPT FILE(S) USING AN XOR KEY
                 App.return_to_main_menu(self)
 
             elif option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
 
             else:
                 App.no_valid_option(self)
 
 
         elif choice.lower() == "q":
-            Functions.clear_screen(self)
-            Functions.exit_application(self)
+            Functions.clear_screen()
+            Functions.exit_application()
 
         else:
-            Functions.clear_screen(self)
-            App.no_valid_option(self)
+            Functions.clear_screen()
+            App.no_valid_option()
 
 
 if __name__ == "__main__":

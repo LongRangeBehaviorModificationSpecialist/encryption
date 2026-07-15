@@ -1,6 +1,8 @@
 # !/usr/bin/env python3
 
 import binascii
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Hash import SHA256
 from datetime import datetime
 from rich.console import Console
 from rich.prompt import Prompt
@@ -35,6 +37,36 @@ Operation [ {func.__name__}() ] was completed in \
             return result
         return timeit_wrapper
 
+
+    @staticmethod
+    def generate_salt() -> bytes:
+        """Generate a cryptographically secure random 16-byte salt."""
+        return os.urandom(16)
+
+
+    @staticmethod
+    def encode_key(password: str, salt: bytes) -> bytes:
+        """
+        Derive a secure 256-bit (32-byte) AES key from a password and salt
+        using PBKDF2 with SHA-256.
+        """
+        key = PBKDF2(
+            password=password,
+            salt=salt,
+            dkLen=32,
+            count=100000,
+            hmac_hash_module=SHA256
+        )
+        return key
+
+
+    @staticmethod
+    def get_aes_iv() -> bytes:
+        """Generate a cryptographically secure random 16-byte IV."""
+        return os.urandom(16)
+
+
+
     @staticmethod
     def ask_delete_original_enc_files() -> str:
         ask_delete_original_enc_files = Prompt.ask("""[bright_white]
@@ -59,28 +91,16 @@ after decryption? """, choices=["y", "n"], show_choices=True)
         return confirm_delete_originals
 
 
-    def encode_key(self, password: str) -> bytes:
-        pswd_hash = hashlib.sha256(
-            password.encode("utf-8")).hexdigest()
-        # Convert the sha-256 value of the password string to a byte string
-        key = binascii.unhexlify(pswd_hash)
-        return key
-
-
     @staticmethod
     def exit_application() -> None:
-        c.print("""\n\n[Bright_white][-] Exiting the application. Goodbye...\n\n""")
+        c.print("""\n\n[bright_white][-] Exiting the application. Goodbye...\n\n""")
         sys.exit(0)
 
 
-    def get_aes_iv(self) -> bytes:
-        iv = os.urandom(16)
-        return iv
-
-
-    def get_all_files(self, dir_path: Path) -> list[str]:
+    @staticmethod
+    def get_all_files(target_dir_path: Path) -> list[str]:
         dirs = []
-        for dir_name, sub_dirs, file_list in os.walk(dir_path):
+        for dir_name, sub_dirs, file_list in os.walk(target_dir_path):
             for file in file_list:
                 dirs.append(dir_name + "\\" + file)
         return dirs
@@ -113,10 +133,10 @@ after decryption? """, choices=["y", "n"], show_choices=True)
 
     @staticmethod
     def get_file_path(text: str) -> Path:
-        file_path = Prompt.ask(f"""[bright_white]
+        target_file_path = Prompt.ask(f"""[bright_white]
 [-] Enter the path of the file to be {text} """)
         # file_path = "I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt"
-        return Path(file_path)
+        return Path(target_file_path)
 
 
     @staticmethod
@@ -126,31 +146,40 @@ after decryption? """, choices=["y", "n"], show_choices=True)
         # folder_path = "I:\\encryption\\aaa\\txtfiles_AES"
         return Path(folder_path)
 
-    def get_password(self) -> str:
 
-        password = Prompt.ask(f"""[bright_white]
-[-] Enter the PASSWORD you want to use """)
-        valid = Functions.validate_password(
-            password=password)
+    @staticmethod
+    def get_password() -> str:
+        """
+        Prompts the user for a password until they provide one that
+        passes the strength validation.
+        """
+        while True:
+            password = Prompt.ask(
+                "\n[bright_white][-] Enter the PASSWORD you want to use ",
+                password=True
+            )
 
-        if valid != password:
-            c.print("""[red]Please try again.\n""")
-            Functions.get_password(self)
-        else:
-            c.print("""[bright_white]Your password checks out. Continuing...""")
-            return str(password)
+            # If the password passes validation, break the loop and return it
+            if Functions.validate_password(password):
+                return password
+
+            c.print("\n[red]Not a valid password. Please try again.\n")
 
 
-    def validate_password(self, password: str) -> str:
-        symbols = [
-            "!", "@", "#", "%", "&", "*", "(",
-            ")", "?", "<", ">", "-", "+", "=",
-            "[", "]", "~", "^", "|"
-        ]
-        if (len(password) < 10 or
-            re.search("[0-9]", password) is None or
-            re.search("[A-Z]", password) is None or
-            not any(char in symbols for char in password)):
+    @staticmethod
+    def validate_password(password: str) -> bool:
+        """
+        Validates if a password meets the strength requirements.
+        Returns True if valid, False otherwise.
+        """
+        symbols = "!@#%&*()?<>-+=[]~^|"
+
+        has_min_length = len(password) >= 10
+        has_digit = re.search(r"\d", password) is not None
+        has_upper = re.search(r"[A-Z]", password) is not None
+        has_symbol = any(char in symbols for char in password)
+
+        if not (has_min_length and has_digit and has_upper and has_symbol):
             c.print("""[red1]
 Your password did not meet the minimun requirements. Please try again.\n
 Your password must meet the following criteria\n
@@ -159,29 +188,27 @@ Your password must meet the following criteria\n
     [-] Contain at least one capital letter and
     [-] Contain at least one of the following symbols: \
 ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |""")
-            Functions.get_password(self)
+            return False
         else:
-            c.print(f"Returned `password` = {password}")
+            c.print(f"\n[bright_white]Your password meets the minimum \
+requirements. Continuing...")
+            return True
 
-            return password
 
 
     def get_pgp_password(self) -> str:
         password = Prompt.ask("""[khaki3]
 [-] Enter a password to use for the PGP private key """)
-        Functions.validate_password(self, password=password)
+        Functions.validate_password(password=password)
         return password
 
 
     def hash_new_key_file(self, key_file: Path) -> str:
-
         sha256_hash = hashlib.sha256()
         kf = key_file
-
         with open(kf, "rb") as f:
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(byte_block)
-
         return sha256_hash.hexdigest().upper()
 
 
@@ -197,7 +224,8 @@ Your password must meet the following criteria\n
         return key_to_load
 
 
-    def no_valid_yn_option(self) -> None:
+    @staticmethod
+    def no_valid_yn_option() -> None:
         no_valid_yn_option = c.print("""[red1]
 [!] You did not enter a valid option ("y" or "n"). Please try again.""")
         return no_valid_yn_option
@@ -207,14 +235,7 @@ Your password must meet the following criteria\n
     def print_confirm_file_action(file_name: Path, text: str) -> None:
         file_name = Path(file_name)
         confirm = c.print(f"""[green3]
-------------------------------------------
-[{Functions.get_date_time()}]
-** ACTION SUCCESSFUL **\n
-{text} file name:
-    {file_name.name}\n
-{text} file was saved in directory:
-    {file_name.parent}
-------------------------------------------""")
+[-] Action Successful. The {text} file was saved as {file_name}""")
         return confirm
 
 

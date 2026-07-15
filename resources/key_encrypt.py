@@ -127,7 +127,8 @@ file (w/o file extension) ").strip()
 
             Functions.print_confirm_file_action(self,
                 file_name=enc_file_path,
-                text="Encryption")
+                text="ENCRYPTED"
+            )
 
         except Exception as e:
             c.print(f"\n[red][ERROR] An error occured during encryption: {e}")
