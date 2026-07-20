@@ -86,9 +86,9 @@ ENTER CHOICE """,
 
         elif choice == "b":
             option = Prompt.ask("""[dodger_blue1]
----------------------------------------
-USE PASSWORD TO ENCRYPT FILE(S) [AES]
----------------------------------------\n
+-----------------------------------------
+USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC]
+-----------------------------------------\n
 [khaki3]Choose an option ->[bright_white]\n
 [1] Encrypt a single file using a password
 [2] Encrypt all files in a directory using a password\n
@@ -118,41 +118,6 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES]
                         target_folder_path=target_folder_path,
                         password=password)
 
-#                 make_aes_dir_choice = Prompt.ask("""\n
-# [khaki3]Choose an option ->[bright_white]\n
-# [1] Encrypt all files in a directory
-# [2] Place files in .zip container then encrypt the .zip file
-# [3] Encrypt all files in directory then add to unencrypted .zip file \
-# (file size may be larger)\n
-# [R] Return to the main menu
-# [Q] Quit the application\n\n
-# [khaki3]ENTER CHOICE """,
-#                 choices=["1", "2", "3", "r", "q"],
-#                 show_choices=False).strip().lower()
-
-
-                # if make_aes_dir_choice== "1":
-
-
-                # elif make_aes_dir_choice == "2":
-                #     AESEncryptor.aes_zip_files_then_encrypt(self,
-                #         folder_path=folder_path,
-                #         password=password)
-
-                # elif make_aes_dir_choice == "3":
-                #     AESEncryptor.aes_encrypt_files_then_zip(self,
-                #         folder_path=folder_path,
-                #         password=password)
-
-                # elif make_aes_dir_choice == "r":
-                #     App.return_to_main_menu(self)
-
-                # elif make_aes_dir_choice == "q":
-                #     Functions.exit_application()
-
-                # else:
-                #     App.no_valid_option(self)
-
             elif option == "r":
                 App.return_to_main_menu(self)
 
@@ -164,43 +129,8 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES]
 
 
         elif choice == "c":
-            option = Prompt.ask("""[dodger_blue1]
----------------------------------------
-USE PASSWORD TO ENCRYPT FILE(S) [GCM]
----------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
-[1] Encrypt a single file using a password (AES-GCM)
-[2] Encrypt all files in a directory using a password (AES-GCM)\n
-[R] Return to main menu
-[Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
-                choices=["1", "2", "r", "q"],
-                show_choices=False).strip().lower()
-
             Functions.clear_screen()
-
-            if option == "1":
-                file_path = Functions.get_file_path()
-                # password = Functions.get_password()
-                AESGCMDataEncryptor.aes_gcm_encrypt_file(self,
-                    file_path=file_path,
-                    password=password)
-
-            elif option == "2":
-                folder_path = Functions.get_folder_path(text="ENCRYPT")
-                # password = Functions.get_password()
-                AESGCMDataEncryptor.aes_gcm_encrypt_directory(self,
-                    folder_path=folder_path,
-                    password=password)
-
-            elif option == "r":
-                App.return_to_main_menu(self)
-
-            elif option == "q":
-                Functions.exit_application()
-
-            else:
-                App.no_valid_option(self)
+            AESGCMDataEncryptor(app_instance=self).get_target_choice()
 
 
         elif choice == "d":

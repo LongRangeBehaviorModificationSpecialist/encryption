@@ -3,7 +3,6 @@
 from cryptography.fernet import Fernet
 from datetime import datetime
 import hashlib
-import os
 from pathlib import Path
 
 from rich.console import Console
@@ -23,7 +22,7 @@ class KeyFileEncryptor:
 
     def return_to_main_menu(self) -> None:
         """Returns control cleanly back to the main menu processor."""
-        self.app.main()
+        self.app.main(self)
 
 
     def generate_and_save_key(self) -> bytes:
@@ -42,7 +41,7 @@ file (w/o file extension) ").strip()
         # Ensure target directory exists before writing
         key_file_dir.mkdir(parents=True, exist_ok=True)
 
-        dt = datetime.now().strftime("%Y%m%d_%H%M%S")
+        dt = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         full_key_path = key_file_dir / f"{dt}_{key_file_name}.key"
 
         key = Fernet.generate_key()
@@ -55,9 +54,9 @@ file (w/o file extension) ").strip()
 
             log_content = (
                 "------------------------------------------\n"
-                f"[{Functions.get_date_time(self)}]\n"
-                f"Key File Name : {full_key_path.name}\n"
-                f"Key File Hash Value (SHA-256) : {key_file_hash_value}\n"
+                f"[{Functions.get_date_time()}]\n"
+                f"Key file name : {full_key_path.name}\n"
+                f"Key file hash value (SHA-256) : {key_file_hash_value}\n"
                 "------------------------------------------"
             )
 
@@ -65,15 +64,15 @@ file (w/o file extension) ").strip()
 
             c.print(f"""[bright_white]
 ------------------------------------------\n
-[green3]Key File created successfully\n[bright_white]
-[-] Key File saved in : [khaki3]{key_file_dir}[bright_white]
-[-] Key File Name : [khaki3]{full_key_path.name}\n
-[green3]Key File hashed successfully\n[bright_white]
-[-] Key File Hash verification saved in : [khaki3]\
+[green3][-] Key file created\n[bright_white]
+[-] Key file saved in : [khaki3]{key_file_dir}[bright_white]
+[-] Key file name : [khaki3]{full_key_path.name}\n
+[green3][-] Key file hashed\n[bright_white]
+[-] Key file hash verification saved in : [khaki3]\
 {key_file_hash_file.parent}[bright_white]
-[-] Key File Hash File Name : [khaki3]\
+[-] Key file hash file name : [khaki3]\
 {key_file_hash_file.name}[bright_white]
-[-] Key File Hash value : [khaki3]{key_file_hash_value}
+[-] Key file hash value (SHA256) : [khaki3]{key_file_hash_value}
 ------------------------------------------""")
 
             return full_key_path
@@ -125,7 +124,7 @@ file (w/o file extension) ").strip()
             enc_file_path = target_file_path.with_name(f"{target_file_path.name}.encrypted")
             enc_file_path.write_bytes(encrypted_data)
 
-            Functions.print_confirm_file_action(self,
+            Functions.print_confirm_file_action(
                 file_name=enc_file_path,
                 text="ENCRYPTED"
             )
@@ -173,11 +172,12 @@ file (w/o file extension) ").strip()
 
     def ask_key_choice(self) -> str:
         """Prompts user for key lifecycle preferences using Rich validation rules."""
+        Functions.clear_screen()
         return Prompt.ask("""[dodger_blue1]
 ----------------------------------------
-    ENCRYPT A FILE USING A .KEY FILE
+ENCRYPT FILE(S) WITH A .KEY FILE
 ----------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
+[khaki3]Choose an option :[bright_white]\n
 [1] Create a **new** .key then encrypt
 [2] Use **existing** .key to encrypt\n
 [R] Return to the main menu
@@ -187,12 +187,13 @@ file (w/o file extension) ").strip()
 
     def get_target_choice(self) -> None:
         """Main routing controller for encryption jobs."""
+        Functions.clear_screen()
         while True:
             target_option = Prompt.ask("""[dodger_blue1]
 ---------------------------------
-    ENCRYPT FILE(S) WITH .KEY
+ENCRYPT FILE(S) WITH A .KEY FILE
 ---------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
+[khaki3]Choose an option :[bright_white]\n
 [1] Encrypt a single file using a .key file
 [2] Encrypt all files in a directory using a .key file\n
 [R] Return to the main menu
@@ -206,7 +207,7 @@ file (w/o file extension) ").strip()
                 self.return_to_main_menu()
                 return
             if target_option == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
                 return
 
             # If option 1 or 2, determine the workflow type
@@ -218,7 +219,7 @@ file (w/o file extension) ").strip()
             if key_choice == "r":
                 continue  # Drops back to target choice layout loop
             if key_choice == "q":
-                Functions.exit_application(self)
+                Functions.exit_application()
                 return
 
             # Resolve key dependency path
@@ -231,12 +232,14 @@ file (w/o file extension) ").strip()
                 target_file_path = Path(Functions.get_file_path(text="ENCRYPT"))
                 self.encrypt_file_with_key(
                     key_file_path=key_file_path,
-                    target_file_path=target_file_path)
+                    target_file_path=target_file_path
+                )
             else:
                 target_dir_path = Path(Functions.get_folder_path(text="ENCRYPT"))
                 self.encrypt_files_in_dir_with_key(
                     key_file_path=key_file_path,
-                    target_dir_path=target_dir_path)
+                    target_dir_path=target_dir_path
+                )
 
             # Clean work completion exit
             break

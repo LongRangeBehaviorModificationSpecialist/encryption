@@ -24,10 +24,18 @@ class AESGCMDataEncryptor:
     Make sure to have proper backups before running it.
     """
 
-    def __init__(self):
+    def __init__(self, app_instance):
+        """Store a reference to the main app loop controller."""
+        self.app = app_instance
         self.IV_LENGTH = 12
         self.TAG_LENGTH = 16
         self.SALT_LENGTH = 16
+
+
+    def return_to_main_menu(self) -> None:
+        """Returns control cleanly back to the main menu processor."""
+        self.app.main(self)
+
 
     def _derive_key(self, password: str, salt: bytes) -> bytes:
         """
@@ -36,6 +44,7 @@ class AESGCMDataEncryptor:
         """
         kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
         return kdf.derive(password.encode())
+
 
     def aes_gcm_encrypt_file(self,
             file_path: Union[str, Path],
@@ -120,3 +129,52 @@ successful encryption? (y/n)").strip().lower()
             c.print("[orange_red1]Original files cleanly purged from directory.")
         else:
             c.print("[green3]Encryption complete. Original files retained.")
+
+
+    def get_target_choice(self) -> None:
+            """Main routing controller for encryption jobs."""
+            Functions.clear_screen()
+            while True:
+                target_option = Prompt.ask("""[dodger_blue1]
+------------------------------------------
+USE PASSWORD TO ENCRYPT FILE(S) [AES-GCM]
+------------------------------------------\n
+[khaki3]Choose an option :[bright_white]\n
+[1] Encrypt a single file using a password
+[2] Encrypt all files in a directory using a password\n
+[R] Return to the main menu
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """,
+                choices=["1", "2", "r", "q"],
+                show_choices=False).strip().lower()
+
+                # Global exits
+                if target_option == "r":
+                    self.return_to_main_menu()
+                    return
+                if target_option == "q":
+                    Functions.exit_application()
+                    return
+
+                # If option 1 or 2, determine the workflow type
+                is_single_file = (target_option == "1")
+
+                if is_single_file:
+                    target_file_path = Path(Functions.get_file_path(text="ENCRYPTED"))
+                    # target_file_path = Path(r"C:\Users\mikes\Desktop\test\OSHA.docx")
+                    password = Functions.get_password()
+                    # password = "Password1!"
+                    self.aes_gcm_encrypt_file(
+                        target_file_path=target_file_path,
+                        password=password
+                    )
+                else:
+                    target_dir_path = Path(Functions.get_folder_path(text="ENCRYPT"))
+                    password = Functions.get_password()
+                    self.aes_gcm_encrypt_directory(
+                        folder_path=target_dir_path,
+                        password=password
+                    )
+
+                # Clean work completion exit
+                break

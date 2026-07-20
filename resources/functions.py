@@ -234,8 +234,8 @@ requirements. Continuing...")
     @staticmethod
     def print_confirm_file_action(file_name: Path, text: str) -> None:
         file_name = Path(file_name)
-        confirm = c.print(f"""[green3]
-[-] Action Successful. The {text} file was saved as {file_name}""")
+        confirm = c.print(f"\n[green3][-] Action Successful.[khaki3]\n\
+The {text} file was saved as : {file_name}")
         return confirm
 
 
@@ -245,7 +245,6 @@ requirements. Continuing...")
 
         confirm = c.print(f"""[green3]
 ------------------------------------------
-[{Functions.get_date_time()}]
 ** ACTION SUCCESSFUL **\n
 Files in the '{folder_path}' directory have been {action}\n
 The original files HAVE BEEN DELETED
@@ -259,7 +258,6 @@ The original files HAVE BEEN DELETED
 
         confirm = c.print(f"""[green3]
 ------------------------------------------
-[{Functions.get_date_time()}]
 ** ACTION SUCCESSFUL **\n
 Files in the '{folder_path}' directory have been {action}\n
 The original files were NOT DELETED
