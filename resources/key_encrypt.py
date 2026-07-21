@@ -97,7 +97,6 @@ file (w/o file extension) ").strip()
             target_file_path: Path) -> None:
         """Reads an existing key and encrypts a single target file."""
         target_file_path = Path(target_file_path)
-        # key_path = Path(key_file_path)
 
         # Validation checks
         if not target_file_path.is_file():

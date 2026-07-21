@@ -5,10 +5,9 @@ from rich.prompt import Prompt
 
 from pathlib import Path
 
-from resources import (AESDecryptor,
-        AESEncryptor,
+from resources import (AESEncryptor,
+        AESDecryptor,
         AESGCMDataDecryptor,
-        AESGCMDataEncryptor,
         KeyFileDecryptor,
         KeyFileEncryptor,
         PGPClass,
@@ -54,29 +53,37 @@ class App:
         Main function where the user can pick what option they want.
         """
 
-        choice = Prompt.ask(f"""[dodger_blue1]
+        choice = (
+            Prompt.ask(f"""[dodger_blue1]
 ----------------------------------------
 ENCRYPT/DECRYPT APPLICATION MENU
 v.0.3.17076096
-----------------------------------------[bright_white]\n
-ENCRYPTION\n
-[A] Use a .key file to encrypt file/files
-[B] Use a password to encrypt file/files (AES-CBC Mode)
-[C] Use a password to encrypt file/files (AES-GCM Mode)
-[D] Encrypt file/files using PGP
-[E] Encrypt message/file using XOR\n
-DECRYPTION\n
-[F] Decrypt file/files using a .key file
-[G] Decrypt file/files using a password (AES-CBC Mode)
-[H] Decrypt file/files using a password (AES-GCM Mode)
-[I] Decrypt file/files using a PGP key file
-[J] Decrypt message/file using XOR\n
-[Q] Quit the Application[khaki3]\n\n
-ENTER CHOICE """,
-                choices=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "q"],
-                show_choices=False).strip().lower()
+----------------------------------------[bright_white]
 
-        Functions.clear_screen()
+ENCRYPTION
+
+[A] Use a .key file to encrypt file/files
+[B] Use a password to encrypt file/files
+[C] Encrypt file/files using PGP
+[D] Encrypt message/file using XOR
+
+DECRYPTION
+
+[E] Decrypt file/files using a .key file
+[F] Decrypt file/files using a password (AES-CBC Mode)
+[H] Decrypt file/files using a password (AES-GCM Mode)
+[H] Decrypt file/files using a PGP key file
+[I] Decrypt message/file using XOR
+
+[Q] Quit the Application[khaki3]
+
+
+ENTER CHOICE """,
+                choices=["a", "b", "c", "d", "e", "f", "g", "h", "i", "q"],
+                show_choices=False)
+            .strip()
+            .lower()
+        )
 
 
         if choice == "a":
@@ -85,55 +92,11 @@ ENTER CHOICE """,
 
 
         elif choice == "b":
-            option = Prompt.ask("""[dodger_blue1]
------------------------------------------
-USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC]
------------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
-[1] Encrypt a single file using a password
-[2] Encrypt all files in a directory using a password\n
-[R] Return to the main menu
-[Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
-                choices=["1", "2", "r", "q"],
-                show_choices=False).strip().lower()
-
             Functions.clear_screen()
-
-            if option == "1":
-                target_file_path = Functions.get_file_path(text="ENCRYPTED")
-                # target_file_path = Path(r"C:\Users\mikes\Desktop\test\OSHA.docx")
-                password = Functions.get_password()
-                # password = "Password1!"
-                AESEncryptor.aes_encrypt_single_file(
-                    target_file_path=target_file_path,
-                    password=password)
-
-            elif option == "2":
-                Functions.clear_screen()
-
-                target_folder_path = Functions.get_folder_path(text="ENCRYPTED")
-                password = Functions.get_password()
-                AESEncryptor.aes_encrypt_all_files_in_dir(
-                        target_folder_path=target_folder_path,
-                        password=password)
-
-            elif option == "r":
-                App.return_to_main_menu(self)
-
-            elif option == "q":
-                Functions.exit_application()
-
-            else:
-                App.no_valid_option(self)
+            AESEncryptor(app_instance=self).get_target_choice()
 
 
         elif choice == "c":
-            Functions.clear_screen()
-            AESGCMDataEncryptor(app_instance=self).get_target_choice()
-
-
-        elif choice == "d":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 ENCRYPT FILE(S) USING PGP KEY
@@ -177,7 +140,7 @@ ENCRYPT FILE(S) USING PGP KEY
                 App.no_valid_option(self)
 
 
-        elif choice == "e":
+        elif choice == "d":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 ENCRYPT FILE(S) USING AN XOR KEY
@@ -222,12 +185,12 @@ ENCRYPT FILE(S) USING AN XOR KEY
 #! ====================
 
 
-        elif choice == "f":
+        elif choice == "e":
             Functions.clear_screen()
             KeyFileDecryptor(app_instance=self).get_target_choice()
 
 
-        elif choice == "g":
+        elif choice == "f":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [AES]
@@ -247,7 +210,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES]
                 target_file_path = Functions.get_file_path(text="decrypted")
                 password = Prompt.ask("\n[bright_white][-] Enter password to \
 decrypt the file ", password=True)
-                AESDecryptor.aes_decrypt_single_file(
+                AESDecryptor.aes_decrypt_file(
                     target_file_path=target_file_path,
                     password=password)
 
@@ -269,7 +232,7 @@ decrypt the files ", password=True)
                 App.no_valid_option(self)
 
 
-        elif choice == "h":
+        elif choice == "g":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [GCM]
@@ -307,7 +270,7 @@ USE PASSWORD TO DECRYPT FILE(S) [GCM]
                 App.no_valid_option(self)
 
 
-        elif choice == "i":
+        elif choice == "h":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 DECRYPT FILE(S) USING PGP KEY
@@ -343,7 +306,7 @@ DECRYPT FILE(S) USING PGP KEY
                 App.no_valid_option(self)
 
 
-        elif choice == "j":
+        elif choice == "i":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 DECRYPT FILE(S) USING AN XOR KEY
