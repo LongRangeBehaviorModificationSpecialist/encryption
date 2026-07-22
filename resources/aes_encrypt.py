@@ -1,8 +1,8 @@
 # !/usr/bin/env python3
+# DLU : 21-Jul-2026
 
 import logging
 import os
-import sys
 from pathlib import Path
 from typing import List, Union
 from cryptography.hazmat.primitives import padding
@@ -48,10 +48,9 @@ class AESEncryptor:
         return kdf.derive(password.encode())
 
 
-    def aes_encrypt_file(self,
-            target_file_path: Union[str, Path],
-            password: str,
-            mode: str) -> Path:
+    def aes_encrypt_file(
+        self, target_file_path: Union[str, Path], password: str, mode: str
+    ) -> Path:
         """
         Encrypts a single file safely using AES (GCM or CBC) and independent
         salt derivation.
@@ -76,7 +75,7 @@ class AESEncryptor:
         key = self._derive_key(password, salt)
 
         c.print(f"\n[bright_white]Encrypting data...")
-        enc_file_path = target_file_path.with_name(
+        encrypted_file_path = target_file_path.with_name(
             f"{target_file_path.name}.encrypted"
         )
 
@@ -105,11 +104,11 @@ class AESEncryptor:
             # Construct payload header: [ SALT ] [ IV ] [ TAG ] [ CIPHERTEXT ]
             combined_payload = salt + iv + tag + ciphertext
 
-        enc_file_path.write_bytes(combined_payload)
+        encrypted_file_path.write_bytes(combined_payload)
 
         # UI Output
         c.print(f"""[green3]
-{target_file_path.name:34s}{'->':7s}{enc_file_path.name}"""
+{target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
         )
         c.print(f"""[dim]
 {"":34s}{"":7s}Salt : {salt.hex().upper()}
@@ -119,16 +118,15 @@ class AESEncryptor:
         )
 
         Functions.print_confirm_file_action(
-            file_name=enc_file_path, text="ENCRYPTED"
+            file_name=encrypted_file_path, text="ENCRYPTED"
         )
 
-        return enc_file_path
+        return encrypted_file_path
 
 
-    def aes_encrypt_directory(self,
-            target_folder_path: Union[str, Path],
-            password: str,
-            mode: str) -> List[Path]:
+    def aes_encrypt_directory(
+        self, target_folder_path: Union[str, Path], password: str,  mode: str
+    ) -> List[Path]:
         """
         Encrypts all valid files in a given directory, skipping already
         encrypted files and gracefully handling individual file errors.
@@ -157,7 +155,7 @@ class AESEncryptor:
             return []
 
         files_to_encrypt = [
-            Path(f) for f in all_files if not str(f).endswith(".encrypted")
+            Path(f) for f in all_files if not Path(f).suffix.lower() == ".encrypted"
         ]
 
         if not files_to_encrypt:
@@ -284,13 +282,19 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                     )
 
                 # Pause after task completion so user can read output before screen clears
-                Prompt.ask("\n[bright_white]Press Enter to return to the menu...")
+                Prompt.ask(
+                    "\n[bright_white]Press Enter to return to the menu..."
+                )
 
             except KeyboardInterrupt:
-                c.print("\n[yellow]Operation cancelled by user.")
+                c.print(
+                    "\n[yellow]Operation cancelled by user."
+                )
                 break
             except Exception as e:
                 c.print(
                     f"[bright_red][!] An error occured during processing: {e}"
                 )
-                Prompt.ask("\n[bright_white]Press Enter to continue...")
+                Prompt.ask(
+                    "\n[bright_white]Press Enter to continue..."
+                )
