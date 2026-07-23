@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 21-Jul-2026
+# DLU : 23-Jul-2026
 
 import logging
 import os
@@ -20,8 +20,7 @@ c = Console()
 
 
 class AESEncryptor:
-    """
-    Keep the encryption key secure as it will be needed for decryption.
+    """Keep the encryption key secure as it will be needed for decryption.
     Also, this program overwrites the original files with encrypted content.
     Make sure to have proper backups before running it.
     """
@@ -40,8 +39,7 @@ class AESEncryptor:
 
 
     def _derive_key(self, password: str, salt: bytes) -> bytes:
-        """
-        Derives a cryptographically strong 256-bit key from a weak password
+        """Derives a cryptographically strong 256-bit key from a weak password
         using Scrypt.
         """
         kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1)
@@ -51,8 +49,7 @@ class AESEncryptor:
     def aes_encrypt_file(
         self, target_file_path: Union[str, Path], password: str, mode: str
     ) -> Path:
-        """
-        Encrypts a single file safely using AES (GCM or CBC) and independent
+        """Encrypts a single file safely using AES (GCM or CBC) and independent
         salt derivation.
         """
         target_file_path = Path(target_file_path)
@@ -65,7 +62,10 @@ class AESEncryptor:
                 f"Invalid mode: {mode}. Expected one of {valid_modes}"
             )
 
-        c.print(f"\n[bright_white]Reading file : {target_file_path.name}...")
+        c.print(
+            f"""[bright_white]
+[-] Reading file : {target_file_path.name}..."""
+        )
         # Read plaintext data
         plaintext = target_file_path.read_bytes()
 
@@ -74,7 +74,10 @@ class AESEncryptor:
         iv = os.urandom(self.IV_LENGTH)
         key = self._derive_key(password, salt)
 
-        c.print(f"\n[bright_white]Encrypting data...")
+        c.print(
+            f"""[bright_white]
+[-] Encrypting data..."""
+        )
         encrypted_file_path = target_file_path.with_name(
             f"{target_file_path.name}.encrypted"
         )
@@ -107,10 +110,12 @@ class AESEncryptor:
         encrypted_file_path.write_bytes(combined_payload)
 
         # UI Output
-        c.print(f"""[green3]
+        c.print(
+            f"""[green3]
 {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
         )
-        c.print(f"""[dim]
+        c.print(
+            f"""[dim]
 {"":34s}{"":7s}Salt : {salt.hex().upper()}
 {"":34s}{"":7s}IV   : {iv.hex().upper()}
 {"":34s}{"":7s}Tag  : {tag.hex().upper() if tag else 'N/A'}
@@ -125,10 +130,9 @@ class AESEncryptor:
 
 
     def aes_encrypt_directory(
-        self, target_folder_path: Union[str, Path], password: str,  mode: str
+        self, target_folder_path: Union[Path, str], password: str,  mode: str
     ) -> List[Path]:
-        """
-        Encrypts all valid files in a given directory, skipping already
+        """Encrypts all valid files in a given directory, skipping already
         encrypted files and gracefully handling individual file errors.
         """
 
@@ -149,8 +153,9 @@ class AESEncryptor:
         try:
             all_files = Functions.get_all_files(target_dir_path=target_dir)
         except Exception as e:
-            c.print(f"[bright_red][!] Failed to retrieve files from \
-{target_dir}: {e}"
+            c.print(
+                f"""[bright_red]
+[!] Failed to retrieve files from {target_dir}: {e}"""
             )
             return []
 
@@ -159,7 +164,10 @@ class AESEncryptor:
         ]
 
         if not files_to_encrypt:
-            c.print(f"[yellow][!] No valid files to encrypt in {target_dir}")
+            c.print(
+                f"""[yellow]
+[!] No valid files to encrypt in {target_dir}"""
+            )
             return []
 
         successful_encryptions: List[Path] = []
@@ -178,25 +186,33 @@ class AESEncryptor:
                     f"Failed to encrypt file: {file_path}", exc_info=True
                 )
                 c.print(
-                    f"[bright_red][!] Error encrypting {file_path.name}: {e}"
+                    f"""[bright_red]
+[!] Error encrypting {file_path.name}: {e}"""
                 )
                 failed_encryptions.append(file_path)
 
         if successful_encryptions:
             c.print(
-                f"\n[green]Successfully encrypted {len(successful_encryptions)} \
-files in {target_dir}:"
+                f"""[green]
+[-] Successfully encrypted {len(successful_encryptions)} files in \
+{target_dir}:"""
             )
             for enc_file in successful_encryptions:
-                c.print(f"[green]  {enc_file.name}")
+                c.print(
+                    f"""[green]
+    {enc_file.name}"""
+                )
 
         if failed_encryptions:
             c.print(
-                f"[bright_red]**WARNING**: Failed to encrypt \
-{len(failed_encryptions)} files:"
+                f"""[bright_red]
+[!] **WARNING**: Failed to encrypt {len(failed_encryptions)} files:"""
             )
             for failed_file in failed_encryptions:
-                c.print(f"[bright_red]  {failed_file.name}")
+                c.print(
+                    f"""[bright_red]
+    {failed_file.name}"""
+                )
 
         return successful_encryptions
 
@@ -207,7 +223,8 @@ files in {target_dir}:"
             try:
                 Functions.clear_screen()
                 target_option = (
-                    Prompt.ask("""[dodger_blue1]
+                    Prompt.ask(
+                        """[dodger_blue1]
 ----------------------------------------------------
 USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 ----------------------------------------------------\n
@@ -218,7 +235,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """,
                         choices=["1", "2", "r", "q"],
-                        show_choices=False
+                        show_choices=False,
                     )
                     .strip()
                     .lower()
@@ -233,10 +250,11 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                     return
 
                 enc_option = (
-                    Prompt.ask("""[bright_white]
+                    Prompt.ask(
+                        """[bright_white]
 [-] Select encryption method (1=AES-CBC, 2=AES-GCM, R=Back): """,
                         choices=["1", "2", "r"],
-                        show_choices=False
+                        show_choices=False,
                     )
                     .strip()
                     .lower()
@@ -283,18 +301,22 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 # Pause after task completion so user can read output before screen clears
                 Prompt.ask(
-                    "\n[bright_white]Press Enter to return to the menu..."
+                    """[bright_white]
+Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
                 c.print(
-                    "\n[yellow]Operation cancelled by user."
+                    """[yellow]
+[!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
                 c.print(
-                    f"[bright_red][!] An error occured during processing: {e}"
+                    f"""[bright_red]
+[!] An error occured during processing: {e}"""
                 )
                 Prompt.ask(
-                    "\n[bright_white]Press Enter to continue..."
+                    """[bright_white]
+Press Enter to continue..."""
                 )

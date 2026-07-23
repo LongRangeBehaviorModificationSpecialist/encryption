@@ -64,7 +64,7 @@ The encrypted message is:\n
 ==========================================""")
 
 
-class XORDecryption:
+class XORDecryptor:
 
 
     def decrypt_msg_with_xor(self,

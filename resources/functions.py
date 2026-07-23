@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
+# DLU : 23-Jul-2026
 
-import binascii
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA256
 from datetime import datetime
@@ -9,11 +9,13 @@ from rich.prompt import Prompt
 from functools import wraps
 import hashlib
 import os
+import subprocess
 from pathlib import Path
 import re
 import sys
 import time
 import typing
+from typing import Union
 
 
 # Make the console object
@@ -46,8 +48,7 @@ Operation [ {func.__name__}() ] was completed in \
 
     @staticmethod
     def encode_key(password: str, salt: bytes) -> bytes:
-        """
-        Derive a secure 256-bit (32-byte) AES key from a password and salt
+        """Derive a secure 256-bit (32-byte) AES key from a password and salt
         using PBKDF2 with SHA-256.
         """
         key = PBKDF2(
@@ -66,34 +67,50 @@ Operation [ {func.__name__}() ] was completed in \
         return os.urandom(16)
 
 
-
     @staticmethod
     def ask_delete_original_enc_files() -> str:
-        ask_delete_original_enc_files = Prompt.ask("""[bright_white]
+        delete_original_encrypted_files = (
+            Prompt.ask(
+            """[bright_white]
 [-] Do you want to delete the original encrypted files from the directory \
-after decryption? """, choices=["y", "n"], show_choices=True)
-        return ask_delete_original_enc_files
+after decryption? """,
+                choices=["y", "n"],
+                show_choices=True,
+            )
+            .strip()
+            .lower()
+        )
+        return delete_original_encrypted_files
 
 
     @staticmethod
     def clear_screen() -> None:
-        os.system("cls" if os.name == "nt" else "clear")
+        command = "cls" if os.name == "nt" else "clear"
+        subprocess.run(command, shell=True)
 
 
     @staticmethod
     def confirm_delete_original_files() -> str:
-        confirm_delete_originals = Prompt.ask("""[bright_white]
+        confirm_delete_originals = (
+            Prompt.ask(
+                """[bright_white]
 [-] Do you want to delete the original files after they are encrypted? \
 [orange_red1][THIS ACTION CANNOT BE UNDONE!] """,
                 choices=["y", "n"],
-                show_choices=True
+                show_choices=True,
+            )
+            .strip()
+            .lower()
         )
         return confirm_delete_originals
 
 
     @staticmethod
     def exit_application() -> None:
-        c.print("""\n\n[bright_white][-] Exiting the application. Goodbye...\n\n""")
+        c.print(
+            """\n\n[bright_white]
+[-] Exiting the application. Goodbye...\n\n"""
+        )
         sys.exit(0)
 
 
@@ -126,50 +143,66 @@ after decryption? """, choices=["y", "n"], show_choices=True)
 
 
     def get_email_address(self) -> str:
-        email_address = Prompt.ask("""[bright_white]
-[-] Enter email address of the PGP key owner """)
+        email_address = (
+            Prompt.ask(
+                """[bright_white]
+[-] Enter email address of the PGP key owner """
+            )
+            .strip()
+            .lower()
+        )
         return email_address
 
 
     @staticmethod
     def get_file_path(text: str) -> Path:
-        target_file_path = Prompt.ask(f"""[bright_white]
-[-] Enter the path of the file to be {text} """)
-        # file_path = "I:\\encryption\\aaa\\File_2_Folder_2_for_AES.txt"
+        target_file_path = (
+            Prompt.ask(
+                f"""[bright_white]
+[-] Enter the path of the file to be {text} """
+            )
+        )
         return Path(target_file_path)
 
 
     @staticmethod
     def get_folder_path(text: str) -> Path:
-        folder_path = Prompt.ask(f"""[bright_white]
-[-] Enter the path of the directory containing the files to be {text} """)
-        # folder_path = "I:\\encryption\\aaa\\txtfiles_AES"
+        folder_path = (
+            Prompt.ask(
+                f"""[bright_white]
+[-] Enter the path of the directory containing the files to be {text} """
+            )
+        )
         return Path(folder_path)
 
 
     @staticmethod
     def get_password() -> str:
-        """
-        Prompts the user for a password until they provide one that
+        """Prompts the user for a password until they provide one that
         passes the strength validation.
         """
         while True:
-            password = Prompt.ask(
-                "\n[bright_white][-] Enter the PASSWORD you want to use ",
+            password = (
+                Prompt.ask(
+                    """[bright_white]
+[-] Enter the PASSWORD you want to use """,
                 password=True
+                )
             )
 
             # If the password passes validation, break the loop and return it
             if Functions.validate_password(password):
                 return password
 
-            c.print("\n[red]Not a valid password. Please try again.\n")
+            c.print(
+                """[bright_red]
+[!] Not a valid password. Please try again.\n"""
+            )
 
 
     @staticmethod
     def validate_password(password: str) -> bool:
-        """
-        Validates if a password meets the strength requirements.
+        """Validates if a password meets the strength requirements.
         Returns True if valid, False otherwise.
         """
         symbols = "!@#%&*()?<>-+=[]~^|"
@@ -180,25 +213,30 @@ after decryption? """, choices=["y", "n"], show_choices=True)
         has_symbol = any(char in symbols for char in password)
 
         if not (has_min_length and has_digit and has_upper and has_symbol):
-            c.print("""[red1]
+            c.print(
+                """[red1]
 Your password did not meet the minimun requirements. Please try again.\n
 Your password must meet the following criteria\n
     [-] Is at least ten characters long
     [-] Contain at least one number
     [-] Contain at least one capital letter and
     [-] Contain at least one of the following symbols: \
-! @ # % & * ( ) ? < > - + = [ ] ~ ^ |""")
+! @ # % & * ( ) ? < > - + = [ ] ~ ^ |"""
+            )
             return False
         else:
-            c.print(f"\n[bright_white]Your password meets the minimum \
-requirements. Continuing...")
+            c.print(
+                f"""[bright_white]
+[-] Your password meets the minimum requirements. Continuing..."""
+            )
             return True
 
 
-
     def get_pgp_password(self) -> str:
-        password = Prompt.ask("""[khaki3]
-[-] Enter a password to use for the PGP private key """)
+        password = Prompt.ask(
+            """[khaki3]
+[-] Enter a password to use for the PGP private key """
+        )
         Functions.validate_password(password=password)
         return password
 
@@ -213,8 +251,7 @@ requirements. Continuing...")
 
 
     def load_key(self, key_file: Path) -> bytes:
-        """
-        Load the data from the .key file into memory to use it to either
+        """Load the data from the .key file into memory to use it to either
         encrypt or decrypt a file.
 
         Returns the value stored in the .key file.
@@ -225,49 +262,69 @@ requirements. Continuing...")
 
 
     @staticmethod
-    def no_valid_yn_option() -> None:
-        no_valid_yn_option = c.print("""[red1]
-[!] You did not enter a valid option ("y" or "n"). Please try again.""")
+    def no_valid_yn_option() -> str:
+        no_valid_yn_option = c.print(
+            """[red1]
+[!] You did not enter a valid option ("y" or "n"). Please try again."""
+        )
         return no_valid_yn_option
 
 
     @staticmethod
-    def print_confirm_file_action(file_name: Path, text: str) -> None:
+    def print_confirm_file_action(
+        file_name: Union[Path, str], text: str
+    ) -> None:
         file_name = Path(file_name)
-        confirm = c.print(f"\n[green3][-] Action Successful.[khaki3]\n\
-The {text} file was saved as : {file_name}")
+        confirm = (
+            c.print(
+                f"""[green3]
+[-] **Action Successful**[khaki3]
+The {text} file was saved as : {file_name}"""
+            )
+        )
         return confirm
 
 
-    def print_original_files_deleted(self,
-            folder_path: Path,
-            action: str) -> None:
+    @staticmethod
+    def print_original_files_deleted(
+        folder_path: Union[Path, str], action: str
+    ) -> None:
 
-        confirm = c.print(f"""[green3]
+        confirm = (
+            c.print(
+                f"""[green3]
 ------------------------------------------
 ** ACTION SUCCESSFUL **\n
 Files in the '{folder_path}' directory have been {action}\n
 The original files HAVE BEEN DELETED
-------------------------------------------""")
+------------------------------------------"""
+            )
+        )
         return confirm
 
 
-    def print_original_files_not_deleted(self,
-            folder_path: Path,
-            action: str) -> None:
+    @staticmethod
+    def print_original_files_not_deleted(
+        folder_path: Union[Path, str], action: str
+    ) -> None:
 
-        confirm = c.print(f"""[green3]
+        confirm = (
+            c.print(
+                f"""[green3]
 ------------------------------------------
 ** ACTION SUCCESSFUL **\n
 Files in the '{folder_path}' directory have been {action}\n
 The original files were NOT DELETED
-------------------------------------------""")
+------------------------------------------"""
+            )
+        )
         return confirm
 
 
-    def write_key_hash_to_file(self,
-            key_file_path: Path,
-            key_file_hash_value: str) -> None:
+    @staticmethod
+    def write_key_hash_to_file(
+        key_file_path: Path, key_file_hash_value: str
+    ) -> None:
 
         key_file_path = Path(key_file_path)
         key_file_hash_file = f"{key_file_path}.sha256"
@@ -280,7 +337,8 @@ Key File Name : {key_file_path.name}\n
 Key File Hash Value (SHA-256) : {key_file_hash_value}
 ------------------------------------------""")
 
-        c.print(f"""[bright_white]
+        c.print(
+            f"""[bright_white]
 ------------------------------------------
 [{Functions.get_date_time()}]
 [-] Key File hashed successfully
@@ -289,7 +347,8 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 [-] Key File Hash File Name : \
 '{os.path.basename(key_file_hash_file)}
 [-] Key File Hash value : {key_file_hash_value}
-------------------------------------------""")
+------------------------------------------"""
+        )
 
 
     def write_to_file(self, file: typing.TextIO, message: str) -> None:
@@ -300,28 +359,44 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 # XOR Functions
 # ==================================
 
-
-    def get_xor_key(self) -> str:
-        xor_key = Prompt.ask("""[khaki3]
-[-] Enter the key you want to use for the encryption """)
+    @staticmethod
+    def get_xor_key() -> str:
+        xor_key = (
+            Prompt.ask(
+                """[khaki3]
+[-] Enter the key you want to use for the encryption """
+            )
+        )
         return xor_key
 
 
-    def get_message_to_xor(self) -> str:
-        message = Prompt.ask("""[khaki3]
-[-] Enter the message string you want to encrypt """)
+    @staticmethod
+    def get_message_to_xor() -> str:
+        message = (
+            Prompt.ask(
+                """[khaki3]
+[-] Enter the message string you want to encrypt """
+            )
+        )
         return message
 
 
-    def get_file_to_xor(self) -> Path:
-        return Path(Functions.get_file_path(self, text="you want to encrypt"))
+    @staticmethod
+    def get_file_to_xor() -> Path:
+        return Path(Functions.get_file_path(text="you want to encrypt"))
 
 
-    def get_xor_message_to_decrypt(self) -> str:
-        message = Prompt.ask("""[khaki3]
-[-] Enter the message string you want to decrypt """)
+    @staticmethod
+    def get_xor_message_to_decrypt() -> str:
+        message = (
+            Prompt.ask(
+                """[khaki3]
+[-] Enter the message string you want to decrypt """
+            )
+        )
         return message
 
 
-    def get_xor_file_to_decrypt(self) -> Path:
-        return Path(Functions.get_file_path(self, text="you want to decrypt"))
+    @staticmethod
+    def get_xor_file_to_decrypt() -> Path:
+        return Path(Functions.get_file_path(text="you want to decrypt"))

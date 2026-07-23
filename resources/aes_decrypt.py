@@ -27,8 +27,7 @@ class AESDecryptor:
 
 
     def _derive_key(self, password: str, salt: bytes) -> bytes:
-        """
-        Derives a secure 256-bit key from a text password and binary salt.
+        """Derives a secure 256-bit key from a text password and binary salt.
 
         Args:
             password: The plain text password entered by the user.
@@ -58,8 +57,8 @@ class AESDecryptor:
     def aes_decrypt_file(
         self, target_file_path: Union[str, Path], password: str, mode: str
     ) -> Path:
-        """
-        Decrypts a single file using AES-GCM or AES-CBC and handles safe writing.
+        """Decrypts a single file using AES-GCM or AES-CBC and handles
+        safe writing.
 
         For AES-CBC, assumes the file structure is:
         [ 16 bytes Salt ] + [ 16 bytes IV ] + [ Encrypted Data ]
@@ -90,8 +89,8 @@ class AESDecryptor:
             )
 
         c.print(
-            f"\n[bright_white]Reading encrypted file : \
-{target_file_path.name}..."
+            f"""[bright_white]
+[-] Reading encrypted file : {target_file_path.name}..."""
         )
         encrypted_data = target_file_path.read_bytes()
 
@@ -108,7 +107,10 @@ Payload invalid or corrupted: file length ({len(encrypted_data)} bytes)
 is less than minimum required structure ({min_expected_size} bytes)."""
             )
 
-        c.print("\n[bright_white]Deriving key and decrypting...")
+        c.print(
+            """[bright_white]
+[!] Deriving key and decrypting..."""
+        )
 
         try:
             if mode == "AES.CBC":
@@ -167,7 +169,8 @@ file is corrupted."
         decrypted_file_path.write_bytes(plaintext)
 
         c.print(
-            "[green3]>>> File decrypted successfully. Thank you. Come again."
+            """[green3]
+[-] File decrypted successfully. Thank you. Come again."""
         )
 
         return decrypted_file_path
@@ -176,8 +179,7 @@ file is corrupted."
     def aes_decrypt_directory(
         self, target_folder_path: Union[Path, str], password: str, mode: str
     ) ->  List[Path]:
-        """
-        Decrypts all `.encrypted` files in a directory, returning a list
+        """Decrypts all `.encrypted` files in a directory, returning a list
         of successfully decrypted file paths.
         """
 
@@ -199,7 +201,8 @@ file is corrupted."
             all_files = Functions.get_all_files(target_dir_path=target_dir)
         except Exception as e:
             c.print(
-                f"[bright_red][!] Failed to retrieve files from {target_dir}: {e}"
+                f"""[bright_red]
+[!] Failed to retrieve files from {target_dir}: {e}"""
             )
             return []
 
@@ -209,7 +212,8 @@ file is corrupted."
 
         if not files_to_decrypt:
             c.print(
-                f"[yellow][!] No valid files to decrypt in {target_dir}"
+                f"""[yellow]
+[!] No valid files to decrypt in {target_dir}"""
             )
             return []
 
@@ -229,25 +233,33 @@ file is corrupted."
                     f"Failed to decrypt file: {file_path}", exc_info=True
                 )
                 c.print(
-                    f"[bright_red][!] Error decrypting {file_path.name}: {e}"
+                    f"""[bright_red]
+[!] Error decrypting {file_path.name}: {e}"""
                 )
                 failed_decryptions.append(file_path)
 
         if successful_decryptions:
             c.print(
-                f"\n[green]Successfully decrypted \
-{len(successful_decryptions)} files in {target_dir}:"
+                f"""[green]
+[-] Successfully decrypted {len(successful_decryptions)} files in \
+{target_dir}:"""
             )
             for decrypted_file in successful_decryptions:
-                c.print(f"[green]  {decrypted_file.name}")
+                c.print(
+                    f"""[green]
+    {decrypted_file.name}"""
+                )
 
         if failed_decryptions:
             c.print(
-                f"[bright_red]**WARNING**: Failed to decrypt \
-{len(failed_decryptions)} files:"
+                f"""[bright_red]
+**WARNING**: Failed to decrypt {len(failed_decryptions)} files:"""
             )
             for failed_file in failed_decryptions:
-                c.print(f"[bright_red]  {failed_file.name}")
+                c.print(
+                    f"""[bright_red]
+    {failed_file.name}"""
+                )
 
         return successful_decryptions
 
@@ -258,7 +270,8 @@ file is corrupted."
             try:
                 Functions.clear_screen()
                 target_option = (
-                    Prompt.ask("""[dodger_blue1]
+                    Prompt.ask(
+                        """[dodger_blue1]
 ----------------------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
 ----------------------------------------------------\n
@@ -269,7 +282,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """,
                         choices=["1", "2", "r", "q"],
-                        show_choices=False
+                        show_choices=False,
                     )
                     .strip()
                     .lower()
@@ -285,10 +298,10 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 decryption_option = (
                     Prompt.ask(
-"""[bright_white] [-] Select decryption method (1=AES-CBC, 2=AES-GCM, \
-R=Back): """,
+                        """[bright_white]
+[-] Select decryption method (1=AES-CBC, 2=AES-GCM, R=Back): """,
                         choices=["1", "2", "r"],
-                        show_choices=False
+                        show_choices=False,
                     )
                     .strip()
                     .lower()
@@ -336,19 +349,23 @@ R=Back): """,
                 # Pause after task completion so user can read output before
                 # screen clears
                 Prompt.ask(
-                    "\n[bright_white]Press Enter to return to the menu..."
+                    """[bright_white]
+Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
                 c.print(
-                    "\n[yellow]Operation cancelled by user."
+                    """[yellow]
+[!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
                 c.print(
-                    f"[bright_red][!] An error occured during processing: {e}"
+                    f"""[bright_red]
+[!] An error occured during processing: {e}"""
                 )
                 Prompt.ask(
-                    "\n[bright_white]Press Enter to continue..."
+                    """[bright_white]
+Press Enter to continue..."""
                 )
 

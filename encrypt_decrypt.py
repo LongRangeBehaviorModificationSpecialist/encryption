@@ -9,8 +9,8 @@ from resources import (AESEncryptor,
         KeyFileEncryptor,
         PGPEncrypt,
         PGPClass,
-        XOREncryption,
-        XORDecryption,
+        XOREncryptor,
+        XORDecryptor,
         Functions)
 
 __author__ = "[@mikespon]"
@@ -96,6 +96,11 @@ ENTER CHOICE """,
 
 
         elif choice == "d":
+            Functions.clear_screen()
+            XOREncryptor(app_instance=self).get_target_choice()
+
+
+
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 ENCRYPT FILE(S) USING AN XOR KEY
@@ -109,30 +114,6 @@ ENCRYPT FILE(S) USING AN XOR KEY
                 choices=["1", "2", "r", "q"],
                 show_choices=False).strip().lower()
 
-            Functions.clear_screen()
-
-            if option == "1":
-                message = Functions.get_message_to_xor()
-                xor_key = Functions.get_xor_key()
-                XOREncryption.encrypt_msg_with_xor(self,
-                    message=message,
-                    xor_key=xor_key)
-
-            elif option == "2":
-                file_path = Functions.get_file_path()
-                xor_key = Functions.get_xor_key()
-                XOREncryption.encrypt_file_with_xor(self,
-                    file_path=file_path,
-                    xor_key=xor_key)
-
-            elif option == "r":
-                App.return_to_main_menu(self)
-
-            elif option == "q":
-                Functions.exit_application()
-
-            else:
-                App.no_valid_option(self)
 
 
 #! ====================
