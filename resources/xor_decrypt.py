@@ -4,9 +4,9 @@
 from pathlib import Path
 import base64
 import logging
-import os
 from pathlib import Path
 from typing import Union
+
 from rich.console import Console
 
 from resources.functions import Functions
@@ -58,7 +58,8 @@ class XORDecryptor:
             raise ValueError("Invalid Base64-encoded message input.") from e
         except UnicodeDecodeError as e:
             logger.error(
-                f"Failed to decode decrypted bytes to UTF-8: {e}", exc_info=True
+                f"Failed to decode decrypted bytes to UTF-8: {e}",
+                exc_info=True
             )
             raise ValueError(
                 "Decryption failed or incorrect key provided (invalid output \
@@ -94,12 +95,10 @@ The original message is:
                 f"Provided path is a directory, not a file: {target_path}"
             )
 
-        # Derive output path cleanly using Path methods
-        if target_path.name.lower().endswith(".encrypted"):
-            # Strip trailing '.encrypted' extension
-            destination_path = target_path.with_name(
-                target_path.name[:-10]
-            )
+        # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
+        # `.with_suffix("")` strips away the LAST extension (.encrypted)
+        if target_path.suffix == ".encrypted":
+            destination_path = target_path.with_suffix("")
         else:
             destination_path = target_path.with_suffix(
                 target_path.suffix + ".decrypted"

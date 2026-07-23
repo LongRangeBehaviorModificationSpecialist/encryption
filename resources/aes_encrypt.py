@@ -25,6 +25,7 @@ class AESEncryptor:
     Make sure to have proper backups before running it.
     """
 
+
     def __init__(self, app_instance):
         """Store a reference to the main app loop controller."""
         self.app = app_instance
@@ -207,7 +208,7 @@ class AESEncryptor:
         if failed_encryptions:
             c.print(
                 f"""[bright_red]
-[!] **WARNING**: Failed to encrypt {len(failed_encryptions)} files:"""
+[!] ** Warning ** Failed to encrypt {len(failed_encryptions)} files:"""
             )
             for failed_file in failed_encryptions:
                 c.print(
@@ -253,7 +254,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                 encryption_option = (
                     Prompt.ask(
                         """[bright_white]
-[-] Select encryption method (1=AES-CBC, 2=AES-GCM, R=Back): """,
+[-] Select encryption method (1=AES-CBC, 2=AES-GCM, R=Back) """,
                         choices=["1", "2", "r"],
                         show_choices=False,
                     )
@@ -268,9 +269,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                 is_single_file = target_option == "1"
 
                 if is_single_file:
-                    target_file_path = Path(
-                        Functions.get_file_path(text="ENCRYPTED")
-                    )
+                    target_file_path = Functions.get_file_path(text="ENCRYPTED")
                     if not target_file_path:  # User cancelled input
                         continue
 
@@ -279,14 +278,12 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                         continue
 
                     self.aes_encrypt_file(
-                        target_file_path=target_file_path,
+                        target_file_path=Path(target_file_path),
                         password=password,
                         mode=mode
                     )
                 else:
-                    target_dir_path = Path(
-                        Functions.get_folder_path(text="ENCRYPT")
-                    )
+                    target_dir_path = Functions.get_folder_path(text="ENCRYPT")
                     if not target_dir_path:
                         continue
 
@@ -295,12 +292,13 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                         continue
 
                     self.aes_encrypt_directory(
-                        targer_folder_path=target_dir_path,
+                        targer_folder_path=Path(target_dir_path),
                         password=password,
                         mode=mode
                     )
 
-                # Pause after task completion so user can read output before screen clears
+                # Pause after task completion so user can read output before
+                # screen clears
                 Prompt.ask(
                     """[bright_white]
 Press Enter to return to the menu..."""

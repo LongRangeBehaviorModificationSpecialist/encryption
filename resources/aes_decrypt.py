@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 22-Jul-2026
+# DLU : 23-Jul-2026
 
 import logging
 from cryptography.exceptions import InvalidTag
@@ -20,6 +20,7 @@ c = Console()
 
 
 class AESDecryptor:
+
 
     def __init__(self, app_instance):
         """Store a reference to the main app loop controller."""
@@ -102,14 +103,14 @@ class AESDecryptor:
 
         if len(encrypted_data) < min_expected_size:
             raise ValueError(
-                f"""
-Payload invalid or corrupted: file length ({len(encrypted_data)} bytes)
-is less than minimum required structure ({min_expected_size} bytes)."""
+                f"""Payload invalid or corrupted: file length \
+({len(encrypted_data)} bytes) is less than minimum required structure \
+({min_expected_size} bytes)."""
             )
 
         c.print(
             """[bright_white]
-[!] Deriving key and decrypting..."""
+[-] Deriving key and decrypting..."""
         )
 
         try:
@@ -207,7 +208,8 @@ file is corrupted."
             return []
 
         files_to_decrypt = [
-            Path(f) for f in all_files if Path(f).suffix.lower() == ".encrypted"
+            Path(f) for f in all_files
+            if Path(f).suffix.lower() == ".encrypted"
         ]
 
         if not files_to_decrypt:
@@ -230,7 +232,8 @@ file is corrupted."
                 successful_decryptions.append(decrypted_path)
             except Exception as e:
                 logger.error(
-                    f"Failed to decrypt file: {file_path}", exc_info=True
+                    f"Failed to decrypt file: {file_path}",
+                    exc_info=True
                 )
                 c.print(
                     f"""[bright_red]
@@ -240,20 +243,20 @@ file is corrupted."
 
         if successful_decryptions:
             c.print(
-                f"""[green]
+                f"""[green3]
 [-] Successfully decrypted {len(successful_decryptions)} files in \
 {target_dir}:"""
             )
             for decrypted_file in successful_decryptions:
                 c.print(
-                    f"""[green]
+                    f"""[green3]
     {decrypted_file.name}"""
                 )
 
         if failed_decryptions:
             c.print(
                 f"""[bright_red]
-**WARNING**: Failed to decrypt {len(failed_decryptions)} files:"""
+[!] ** Warning** Failed to decrypt {len(failed_decryptions)} files:"""
             )
             for failed_file in failed_decryptions:
                 c.print(
@@ -299,7 +302,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
                 decryption_option = (
                     Prompt.ask(
                         """[bright_white]
-[-] Select decryption method (1=AES-CBC, 2=AES-GCM, R=Back): """,
+[-] Select decryption method (1=AES-CBC, 2=AES-GCM, R=Back) """,
                         choices=["1", "2", "r"],
                         show_choices=False,
                     )

@@ -1,4 +1,5 @@
 # !/usr/bin/env python3
+# DLU : 23-Jul-2026
 
 from cryptography.fernet import Fernet
 from datetime import datetime
@@ -8,6 +9,7 @@ from typing import Union
 
 from rich.console import Console
 from rich.prompt import Prompt
+
 from resources.functions import Functions
 
 
@@ -33,7 +35,7 @@ class KeyFileEncryptor:
         metadata log.
 
         Returns:
-        bytes: The generated key.
+            bytes: The generated key.
         """
         key_file_dir = Path(
             Prompt.ask(
@@ -76,7 +78,8 @@ class KeyFileEncryptor:
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
-            c.print(f"""[bright_white]
+            c.print(
+                f"""[bright_white]
 ------------------------------------------\n
 [green3][-] Key file created\n[bright_white]
 [-] Key file saved in : [khaki3]{key_file_dir}[bright_white]
@@ -87,29 +90,39 @@ class KeyFileEncryptor:
 [-] Key file hash file name : [khaki3]\
 {key_file_hash_file.name}[bright_white]
 [-] Key file hash value (SHA256) : [khaki3]{key_file_hash_value}
-------------------------------------------""")
+------------------------------------------"""
+            )
 
             return full_key_path
 
         except IOError as e:
-            c.print(f"[red][ERROR] Failed to write key data to file: {e}")
+            c.print(
+                f"""[bright_red]
+[!] Failed to write key data to file: {e}"""
+            )
             raise
 
 
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
+
         while True:
-            key_file = Prompt.ask("""[bright_white]
-[-] Enter the path to the .key file to use """)
+            key_file = (
+                Prompt.ask(
+                    """[bright_white]
+[-] Enter the path to the .key file to use """
+                )
+            )
             path = Path(key_file)
             if path.is_file():
                 return path
 
 
     def encrypt_file_with_key(
-        self, key_file_path: Path, target_file_path: Path
+        self, key_file_path: Union[str, Path], target_file_path: Union[str, Path]
     ) -> None:
         """Reads an existing key and encrypts a single target file."""
+
         target_file_path = Path(target_file_path)
 
         # Validation checks
@@ -214,7 +227,7 @@ class KeyFileEncryptor:
                 )
 
             c.print(
-                f"""[green]
+                f"""[green3]
 [+] Successfully encrypted {len(files)} files."""
             )
 
@@ -226,7 +239,8 @@ class KeyFileEncryptor:
 
 
     def ask_key_choice(self) -> str:
-        """Prompts user for key lifecycle preferences using Rich validation rules."""
+        """Prompts user for key lifecycle preferences using validation rules."""
+
         Functions.clear_screen()
         return (
             Prompt.ask(
@@ -250,6 +264,7 @@ ENCRYPT FILE(S) WITH A .KEY FILE
 
     def get_target_choice(self) -> None:
         """Main routing controller for encryption jobs."""
+
         Functions.clear_screen()
         while True:
             target_option = (

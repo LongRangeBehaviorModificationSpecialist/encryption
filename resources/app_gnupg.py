@@ -36,12 +36,10 @@ class PGPClass:
     def print_status(self, status):
         if status.ok == True:
             c.print(f"""[khaki3]
-[{Functions.get_date_time(self)}]
 [-] File encryption successful.
     {status.stderr}""")
         else:
             c.print(f"""[red1]
-[{Functions.get_date_time(self)}]
 [-] File encryption WAS NOT successful: {status.status}. Please try again.""")
 
 
@@ -60,7 +58,6 @@ class PGPClass:
             output=str(self.public_key_file)
         )
         c.print(f"""[bright_white]
-[{Functions.get_date_time(self)}]
 [-] Public key exported successfully""")
         return public_key
 
@@ -83,7 +80,6 @@ class PGPClass:
             output=str(self.private_key_file)
         )
         c.print(f"""[bright_white]
-[{Functions.get_date_time(self)}]
 [-] Private key exported successfully""")
         return private_key
 
@@ -110,7 +106,6 @@ class PGPClass:
         keyid = str(key)
 
         c.print(f"""[bright_white]
-[{Functions.get_date_time(self)}]
 [-] Generated Key ID: {keyid}""")
 
         self.pgp_export_public_key(keyid=keyid)
@@ -156,7 +151,6 @@ class PGPClass:
     def pgp_encrypt_folder(self, folder_path: Path) -> None:
         folder = Path(folder_path)
         delete_originals = Prompt.ask(f"""[khaki3]
-[{Functions.get_date_time(self)}]
 [-] Do you want to delete the original files after encryption (y/n)? """).strip().lower()
 
         if delete_originals not in ["y", "n"]:
@@ -166,7 +160,6 @@ option. Exiting...""")
 
         if delete_originals == "y":
             choice = Prompt.ask(f"""[khaki3]
-[{Functions.get_date_time(self)}]
 [-] All of the original files in this directory will be [orange_red1]\
 PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue (y/n)? """).strip().lower()
 

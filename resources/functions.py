@@ -1,8 +1,6 @@
 # !/usr/bin/env python3
 # DLU : 23-Jul-2026
 
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Hash import SHA256
 from datetime import datetime
 from rich.console import Console
 from rich.prompt import Prompt
@@ -14,7 +12,6 @@ from pathlib import Path
 import re
 import sys
 import time
-import typing
 from typing import Union
 
 
@@ -32,77 +29,20 @@ class Functions:
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
-            c.print(f"""[dodger_blue1]
+            c.print(
+                f"""[dodger_blue1]
 Operation [ {func.__name__}() ] was completed in \
-{total_time:.4f} seconds""")
+{total_time:.4f} seconds"""
+            )
             # c.print(f"\nFunction {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds")
             return result
         return timeit_wrapper
 
 
     @staticmethod
-    def generate_salt() -> bytes:
-        """Generate a cryptographically secure random 16-byte salt."""
-        return os.urandom(16)
-
-
-    @staticmethod
-    def encode_key(password: str, salt: bytes) -> bytes:
-        """Derive a secure 256-bit (32-byte) AES key from a password and salt
-        using PBKDF2 with SHA-256.
-        """
-        key = PBKDF2(
-            password=password,
-            salt=salt,
-            dkLen=32,
-            count=100000,
-            hmac_hash_module=SHA256
-        )
-        return key
-
-
-    @staticmethod
-    def get_aes_iv() -> bytes:
-        """Generate a cryptographically secure random 16-byte IV."""
-        return os.urandom(16)
-
-
-    @staticmethod
-    def ask_delete_original_enc_files() -> str:
-        delete_original_encrypted_files = (
-            Prompt.ask(
-            """[bright_white]
-[-] Do you want to delete the original encrypted files from the directory \
-after decryption? """,
-                choices=["y", "n"],
-                show_choices=True,
-            )
-            .strip()
-            .lower()
-        )
-        return delete_original_encrypted_files
-
-
-    @staticmethod
     def clear_screen() -> None:
         command = "cls" if os.name == "nt" else "clear"
         subprocess.run(command, shell=True)
-
-
-    @staticmethod
-    def confirm_delete_original_files() -> str:
-        confirm_delete_originals = (
-            Prompt.ask(
-                """[bright_white]
-[-] Do you want to delete the original files after they are encrypted? \
-[orange_red1][THIS ACTION CANNOT BE UNDONE!] """,
-                choices=["y", "n"],
-                show_choices=True,
-            )
-            .strip()
-            .lower()
-        )
-        return confirm_delete_originals
 
 
     @staticmethod
@@ -203,7 +143,12 @@ after decryption? """,
     @staticmethod
     def validate_password(password: str) -> bool:
         """Validates if a password meets the strength requirements.
-        Returns True if valid, False otherwise.
+
+        Args:
+            str -> password to be validated
+
+        Returns:
+            True if valid, False otherwise.
         """
         symbols = "!@#%&*()?<>-+=[]~^|"
 
@@ -264,7 +209,7 @@ Your password must meet the following criteria\n
     @staticmethod
     def no_valid_yn_option() -> str:
         no_valid_yn_option = c.print(
-            """[red1]
+            """[bright_red]
 [!] You did not enter a valid option ("y" or "n"). Please try again."""
         )
         return no_valid_yn_option
@@ -274,48 +219,13 @@ Your password must meet the following criteria\n
     def print_confirm_file_action(
         file_name: Union[Path, str], text: str
     ) -> None:
+
         file_name = Path(file_name)
         confirm = (
             c.print(
                 f"""[green3]
-[-] **Action Successful**[khaki3]
-The {text} file was saved as : {file_name}"""
-            )
-        )
-        return confirm
-
-
-    @staticmethod
-    def print_original_files_deleted(
-        folder_path: Union[Path, str], action: str
-    ) -> None:
-
-        confirm = (
-            c.print(
-                f"""[green3]
-------------------------------------------
-** ACTION SUCCESSFUL **\n
-Files in the '{folder_path}' directory have been {action}\n
-The original files HAVE BEEN DELETED
-------------------------------------------"""
-            )
-        )
-        return confirm
-
-
-    @staticmethod
-    def print_original_files_not_deleted(
-        folder_path: Union[Path, str], action: str
-    ) -> None:
-
-        confirm = (
-            c.print(
-                f"""[green3]
-------------------------------------------
-** ACTION SUCCESSFUL **\n
-Files in the '{folder_path}' directory have been {action}\n
-The original files were NOT DELETED
-------------------------------------------"""
+[-] ** Action Successful **
+[khaki3]The {text} file was saved as : {file_name}"""
             )
         )
         return confirm
@@ -332,7 +242,6 @@ The original files were NOT DELETED
         with open(key_file_hash_file, "w", encoding="utf-8") as f:
             f.write(f"""
 ------------------------------------------
-[{Functions.get_date_time()}]
 Key File Name : {key_file_path.name}\n
 Key File Hash Value (SHA-256) : {key_file_hash_value}
 ------------------------------------------""")
@@ -340,7 +249,6 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
         c.print(
             f"""[bright_white]
 ------------------------------------------
-[{Functions.get_date_time()}]
 [-] Key File hashed successfully
 [-] Key File Hash verification saved in : \
 '{os.path.dirname(key_file_path)}' directory
@@ -349,10 +257,6 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 [-] Key File Hash value : {key_file_hash_value}
 ------------------------------------------"""
         )
-
-
-    def write_to_file(self, file: typing.TextIO, message: str) -> None:
-        file.write(message)
 
 
 # ==================================

@@ -30,7 +30,6 @@ class XOREncryption:
 
         c.print(f"""[green3]
 ==========================================
-[{Functions.get_date_time(self)}]
 ** ACTION SUCCESSFUL **\n
 The encrypted message is:\n
     [bright_white]{encrypted_text}\n
@@ -58,7 +57,6 @@ The encrypted message is:\n
 
         c.print(f"""[green3]
 ==========================================
-[{Functions.get_date_time(self)}]
 ** ACTION SUCCESSFUL **\n
     File Encrypted with XOR key
 ==========================================""")
@@ -81,7 +79,6 @@ class XORDecryptor:
 
         c.print(f"""[green3]
 ==========================================
-[{Functions.get_date_time(self)}]
 ** ACTION SUCCESSFUL **\n
 The original message is:\n
     [bright_white]{decrypted_message}\n
@@ -112,7 +109,6 @@ The original message is:\n
 
         c.print(f"""[green3]
 ==========================================
-[{Functions.get_date_time(self)}]
 ** ACTION SUCCESSFUL **\n
     File Decrypted with XOR key
 ==========================================""")

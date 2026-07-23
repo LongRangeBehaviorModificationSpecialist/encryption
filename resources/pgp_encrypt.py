@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List, Optional, Union
 import os
 import shutil
-import sys
 
 from resources.functions import Functions
 
@@ -73,7 +72,7 @@ GnuPG."
         """Prints GPG action execution status to terminal."""
         if getattr(status, "ok", False):
             c.print(
-                f"""[green]
+                f"""[green3]
 [-] GPG operation successful.\n{status.stderr}"""
             )
         else:
@@ -227,7 +226,7 @@ Check keyid/passphrase."
 
         c.print(
             f"""[bright_white]
-Encrypting data..."""
+[-] Encrypting data..."""
         )
         encrypted_file_path = target_file_path.with_name(
             f"{target_file_path.name}.pgp"
@@ -282,38 +281,41 @@ GPG status: {error_msg}"
         always_trust: bool = True
     ) -> List[Path]:
         """Encrypts all non-PGP files in a directory using PGP/GPG."""
+
         # Set up logging for non-UI diagnostics
         logger = logging.getLogger(__name__)
 
-        target_dir = Path(target_folder_path)
+        target_dir_path = Path(target_folder_path)
 
-        if not target_dir.exists():
+        if not target_dir_path.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist: {target_dir}"
+                f"Target directory does not exist: {target_dir_path}"
             )
-        if not target_dir.is_dir():
+        if not target_dir_path.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory: {target_dir}"
+                f"The provided path is not a directory: {target_dir_path}"
             )
 
         try:
-            all_files = Functions.get_all_files(target_dir_path=target_dir)
+            files = [f for f in target_dir_path.rglob("*") if f.is_file()]
+
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to retrieve files from {target_dir}: {e}"""
+[!] Failed to retrieve files from {target_dir_path}: {e}"""
             )
             return []
 
         pgp_extensions = {".gpg", ".pgp", ".asc"}
         files_to_encrypt = [
-            Path(f) for f in all_files if not Path(f).suffix.lower() not in pgp_extensions
+            Path(f) for f in files
+            if not Path(f).suffix.lower() not in pgp_extensions
         ]
 
         if not files_to_encrypt:
             c.print(
                 f"""[yellow]
-[!] No valid files to encrypt in {target_dir}"""
+[!] No valid files to encrypt in {target_dir_path}"""
             )
             return []
 
@@ -330,7 +332,8 @@ GPG status: {error_msg}"
                 successful_encryptions.append(encrypted_path)
             except Exception as e:
                 logger.error(
-                    f"Failed to PGP-encrypt file: {file_path}", exc_info=True
+                    f"Failed to PGP-encrypt file: {file_path}",
+                    exc_info=True
                 )
                 c.print(
                     f"""[bright_red]
@@ -340,12 +343,16 @@ GPG status: {error_msg}"
 
         if successful_encryptions:
             c.print(
-                f"""[green]
+                f"""[green3]
 **ACTION COMPLETED**
-Successfully PGP-encrypted {len(successful_encryptions)} files in {target_dir}:"""
+Successfully PGP-encrypted {len(successful_encryptions)} files in \
+{target_dir_path}:"""
             )
             for encrypted_file in successful_encryptions:
-                c.print(f"[green]  {encrypted_file.name}")
+                c.print(
+                    f"""[green3]
+    {encrypted_file.name}"""
+                )
 
         if failed_encryptions:
             c.print(
@@ -353,7 +360,10 @@ Successfully PGP-encrypted {len(successful_encryptions)} files in {target_dir}:"
 **WARNING**: Failed to encrypt {len(failed_encryptions)} files:"""
             )
             for failed_file in failed_encryptions:
-                c.print(f"[bright_red]  {failed_file.name}")
+                c.print(
+                    f"""[bright_red]
+    {failed_file.name}"""
+                )
 
         return successful_encryptions
 
@@ -433,7 +443,8 @@ Press Enter to continue..."""
                         continue
 
                     self.pgp_encrypt_file(
-                        target_file_path=Path(raw_path), recipients=[recipient]
+                        target_file_path=Path(raw_path),
+                        recipients=[recipient]
                     )
 
                 # Option 3: Encrypt directory
@@ -458,10 +469,12 @@ Press Enter to continue..."""
                         continue
 
                     self.pgp_encrypt_directory(
-                        target_folder_path=Path(raw_dir), recipients=[recipient]
+                        target_folder_path=Path(raw_dir),
+                        recipients=[recipient]
                     )
 
-                # Pause after task completion so user can read output before screen clears
+                # Pause after task completion so user can read output
+                # before screen clears
                 Prompt.ask(
                     """[bright_white]
 Press Enter to return to the menu..."""
