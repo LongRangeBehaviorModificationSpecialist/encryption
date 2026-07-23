@@ -160,7 +160,8 @@ class AESEncryptor:
             return []
 
         files_to_encrypt = [
-            Path(f) for f in all_files if not Path(f).suffix.lower() == ".encrypted"
+            Path(f) for f in all_files
+            if not Path(f).suffix.lower() == ".encrypted"
         ]
 
         if not files_to_encrypt:
@@ -197,10 +198,10 @@ class AESEncryptor:
 [-] Successfully encrypted {len(successful_encryptions)} files in \
 {target_dir}:"""
             )
-            for enc_file in successful_encryptions:
+            for encrypted_file in successful_encryptions:
                 c.print(
                     f"""[green]
-    {enc_file.name}"""
+    {encrypted_file.name}"""
                 )
 
         if failed_encryptions:
@@ -249,7 +250,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                     Functions.exit_application()
                     return
 
-                enc_option = (
+                encryption_option = (
                     Prompt.ask(
                         """[bright_white]
 [-] Select encryption method (1=AES-CBC, 2=AES-GCM, R=Back): """,
@@ -260,10 +261,10 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                     .lower()
                 )
 
-                if enc_option == "r":
+                if encryption_option == "r":
                     continue
 
-                mode = "AES.CBC" if enc_option == "1" else "AES.GCM"
+                mode = "AES.CBC" if encryption_option == "1" else "AES.GCM"
                 is_single_file = target_option == "1"
 
                 if is_single_file:
