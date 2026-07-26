@@ -159,14 +159,14 @@ Operation [ {func.__name__}() ] was completed in \
 
         if not (has_min_length and has_digit and has_upper and has_symbol):
             c.print(
-                """[red1]
+                """[bright_red]
 Your password did not meet the minimun requirements. Please try again.\n
-Your password must meet the following criteria\n
+Your password must meet the following criteria :\n
     [-] Is at least ten characters long
     [-] Contain at least one number
     [-] Contain at least one capital letter and
-    [-] Contain at least one of the following symbols: \
-! @ # % & * ( ) ? < > - + = [ ] ~ ^ |"""
+    [-] Contain at least one of the following symbols :
+        ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |"""
             )
             return False
         else:
