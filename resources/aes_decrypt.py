@@ -105,7 +105,7 @@ class AESDecryptor:
         iv_size = getattr(self, "IV_LENGTH", 16)
         tag_size = getattr(self, "TAG_LENGTH", 16) if mode == "AES.GCM" else 0
 
-        min_expected_size = salt_size + iv_size + tag_size+ 16  # Block size
+        min_expected_size = salt_size + iv_size + tag_size + 16  # Block size
 
         if len(encrypted_data) < min_expected_size:
             raise ValueError(
@@ -371,7 +371,7 @@ Press Enter to return to the menu..."""
             except Exception as e:
                 c.print(
                     f"""[bright_red]
-[!] An error occured during processing: {e}."""
+[!] An error occured during processing : {e}."""
                 )
                 Prompt.ask(
                     """[bright_white]
