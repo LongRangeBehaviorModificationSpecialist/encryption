@@ -33,7 +33,7 @@ class App:
         try again and enter a valid option.
         """
         c.print(
-            """[red1]
+            """[bright_red]
 [!] You did not enter a valid option. Please try again."""
         )
         App.main(self)
