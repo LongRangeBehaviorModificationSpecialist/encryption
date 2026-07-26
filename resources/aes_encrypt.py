@@ -55,12 +55,14 @@ class AESEncryptor:
         """
         target_file_path = Path(target_file_path)
         if not target_file_path.is_file():
-            raise FileNotFoundError(f"Target file not found: {target_file_path}")
+            raise FileNotFoundError(
+                f"Target file not found : {target_file_path}"
+            )
 
         valid_modes = {"AES.GCM", "AES.CBC"}
         if mode not in valid_modes:
             raise ValueError(
-                f"Invalid mode: {mode}. Expected one of {valid_modes}"
+                f"Invalid mode : {mode}. Expected one of {valid_modes}"
             )
 
         c.print(
@@ -144,11 +146,11 @@ class AESEncryptor:
 
         if not target_dir.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist: {target_dir}"
+                f"Target directory does not exist : {target_dir}."
             )
         if not target_dir.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory: {target_dir}"
+                f"The provided path is not a directory : {target_dir}."
             )
 
         try:
@@ -156,7 +158,7 @@ class AESEncryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to retrieve files from {target_dir}: {e}."""
+[!] Failed to retrieve files from {target_dir} : {e}."""
             )
             return []
 
@@ -185,11 +187,12 @@ class AESEncryptor:
                 successful_encryptions.append(encrypted_path)
             except Exception as e:
                 logger.error(
-                    f"Failed to encrypt file: {file_path}", exc_info=True
+                    f"Failed to encrypt file : {file_path}",
+                    exc_info=True
                 )
                 c.print(
                     f"""[bright_red]
-[!] Error encrypting {file_path.name}: {e}."""
+[!] Error encrypting {file_path.name} : {e}."""
                 )
                 failed_encryptions.append(file_path)
 
@@ -197,7 +200,7 @@ class AESEncryptor:
             c.print(
                 f"""[green]
 [-] Successfully encrypted {len(successful_encryptions)} files in \
-{target_dir}:"""
+{target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
                 c.print(
@@ -208,7 +211,7 @@ class AESEncryptor:
         if failed_encryptions:
             c.print(
                 f"""[bright_red]
-[!] ** Warning ** Failed to encrypt {len(failed_encryptions)} files:"""
+[!] ** Warning ** Failed to encrypt {len(failed_encryptions)} files :"""
             )
             for failed_file in failed_encryptions:
                 c.print(
@@ -313,7 +316,7 @@ Press Enter to return to the menu..."""
             except Exception as e:
                 c.print(
                     f"""[bright_red]
-[!] An error occured during processing: {e}"""
+[!] An error occured during processing : {e}"""
                 )
                 Prompt.ask(
                     """[bright_white]
