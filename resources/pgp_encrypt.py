@@ -73,7 +73,7 @@ GnuPG."
         if getattr(status, "ok", False):
             c.print(
                 f"""[green3]
-[-] GPG operation successful.\n{status.stderr}"""
+[-] GPG operation successful.\n{status.stderr}."""
             )
         else:
             status_msg = getattr(
@@ -83,7 +83,7 @@ GnuPG."
             )
             c.print(
                 f"""[bright_red]
-[-] GPG operation WAS NOT successful: {status_msg}"""
+[-] GPG operation WAS NOT successful: {status_msg}."""
             )
 
 
@@ -107,7 +107,7 @@ GnuPG."
 
         c.print(
             f"""[bright_white]
-[-] Public key exported successfully to {self.public_key_file.name}"""
+[-] Public key exported successfully to {self.public_key_file.name}."""
         )
 
         return str(public_key_data)
@@ -138,7 +138,7 @@ Check keyid/passphrase."
             )
         c.print(
             f"""[bright_white]
-[-] Private key exported successfully to {self.private_key_file.name}"""
+[-] Private key exported successfully to {self.private_key_file.name}."""
         )
 
         return str(private_key_data)
@@ -159,7 +159,7 @@ Check keyid/passphrase."
         """
         if not email_address or "@" not in email_address:
             raise ValueError(
-                f"Invalid or missing email address provided: '{email_address}'"
+                f"Invalid or missing email address provided: '{email_address}'."
             )
 
         password = Functions.get_password()
@@ -175,13 +175,13 @@ Check keyid/passphrase."
 
         if not key.fingerprint:
             raise RuntimeError(
-                f"PGP key generation failed. Engine error output: {key.stderr}"
+                f"PGP key generation failed. Engine error output: {key.stderr}."
             )
 
         fingerprint = str(key.fingerprint)
         c.print(
             f"""[bright_white]
-[-] Generated Key Fingerprint: {fingerprint}"""
+[-] Generated Key Fingerprint: {fingerprint}."""
         )
 
         # Export keys upon successful generation
@@ -208,11 +208,11 @@ Check keyid/passphrase."
         # Path existence and file type checks
         if not target_file_path.exists():
             raise FileNotFoundError(
-                f"Target file not found: {target_file_path}"
+                f"Target file not found: {target_file_path}."
             )
         if not target_file_path.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file: {target_file_path}"
+                f"Provided path is a directory, not a file: {target_file_path}."
             )
 
         # Normalize recipients input to a list
@@ -242,7 +242,7 @@ Check keyid/passphrase."
                 )
         except Exception as e:
             logger.error(
-                f"GPG process invocation failed for {target_file_path}: {e}",
+                f"GPG process invocation failed for {target_file_path}: {e}.",
                 exc_info=True,
             )
             raise RuntimeError(f"Failed to execute GPG encryption: {e}") from e
@@ -260,7 +260,7 @@ Check keyid/passphrase."
             )
             raise RuntimeError(
                 f"PGP Encryption failed for '{target_file_path.name}'. \
-GPG status: {error_msg}"
+GPG status: {error_msg}."
             )
 
         if hasattr(self, "print_status"):
@@ -268,7 +268,7 @@ GPG status: {error_msg}"
 
         c.print(
             f"""[green3]
-[-] PGP file encrypted successfully: {encrypted_file_path.name}"""
+[-] PGP file encrypted successfully: {encrypted_file_path.name}."""
         )
 
         return encrypted_file_path
@@ -289,11 +289,11 @@ GPG status: {error_msg}"
 
         if not target_dir_path.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist: {target_dir_path}"
+                f"Target directory does not exist: {target_dir_path}."
             )
         if not target_dir_path.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory: {target_dir_path}"
+                f"The provided path is not a directory: {target_dir_path}."
             )
 
         try:
@@ -302,7 +302,7 @@ GPG status: {error_msg}"
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to retrieve files from {target_dir_path}: {e}"""
+[!] Failed to retrieve files from {target_dir_path}: {e}."""
             )
             return []
 
@@ -315,7 +315,7 @@ GPG status: {error_msg}"
         if not files_to_encrypt:
             c.print(
                 f"""[yellow]
-[!] No valid files to encrypt in {target_dir_path}"""
+[!] No valid files to encrypt in {target_dir_path}."""
             )
             return []
 
@@ -332,12 +332,12 @@ GPG status: {error_msg}"
                 successful_encryptions.append(encrypted_path)
             except Exception as e:
                 logger.error(
-                    f"Failed to PGP-encrypt file: {file_path}",
+                    f"Failed to PGP-encrypt file: {file_path}.",
                     exc_info=True
                 )
                 c.print(
                     f"""[bright_red]
-[!] Error encrypting {file_path.name}: {e}"""
+[!] Error encrypting {file_path.name}: {e}."""
                 )
                 failed_encryptions.append(file_path)
 
@@ -489,7 +489,7 @@ Press Enter to return to the menu..."""
             except Exception as e:
                 c.print(
                     f"""[bright_red]
-[!] An error occured during processing: {e}"""
+[!] An error occured during processing: {e}."""
                 )
                 Prompt.ask(
                     """[bright_white]
