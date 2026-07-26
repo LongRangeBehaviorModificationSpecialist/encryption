@@ -102,7 +102,7 @@ class KeyFileDecryptor:
             decrypted_data = fernet.decrypt(encrypted_data)
 
             # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
-            # `.with_suffix("")` strips away the LAST extension (.encrypted)
+            # '.with_suffix("")' strips away the LAST extension (.encrypted)
             decrypted_file_path = target_file_path.with_suffix("")
 
             # Save the decrypted file
@@ -157,14 +157,14 @@ class KeyFileDecryptor:
             )
 
             files = [
-                f for f in target_dir_path.rglob('*')
+                f for f in target_dir_path.rglob("*")
                 if f.is_file() and f.suffix == ".encrypted"
             ]
 
             for file in files:
                 c.print(
                     f"""[bright_white]
-[-] Reading file : {file.name}"""
+[-] Reading file : {file.name}."""
                 )
                 encrypted_data = file.read_bytes()
 
