@@ -59,7 +59,7 @@ class KeyFileDecryptor:
         if not target_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Target file not found : {target_file_path}"""
+[!] Target file not found : {target_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -67,7 +67,7 @@ class KeyFileDecryptor:
         if not key_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Key file not found : {key_file_path}"""
+[!] Key file not found : {key_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -121,7 +121,7 @@ class KeyFileDecryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] An error occurred during decryption: {e}"""
+[!] An error occurred during decryption: {e}."""
             )
 
 
@@ -135,7 +135,7 @@ class KeyFileDecryptor:
         if not target_dir_path.is_dir():
             c.print(
                 f"""[bright_red]
-[!] Target directory not found : {target_dir_path}"""
+[!] Target directory not found : {target_dir_path}."""
             )
             self.return_to_main_menu()
             return
@@ -143,7 +143,7 @@ class KeyFileDecryptor:
         if not key_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Key file not found : {key_file_path}"""
+[!] Key file not found : {key_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -183,7 +183,7 @@ class KeyFileDecryptor:
                 decrypted_file_path.write_bytes(decrypted_data)
                 c.print(
                     f"""[bright_white]
-[-] Decrypted {file.name} -> {decrypted_file_path.name}"""
+[-] Decrypted {file.name} -> {decrypted_file_path.name}."""
                 )
 
             c.print(
@@ -199,7 +199,7 @@ class KeyFileDecryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed processing directory batch encryption: {e}"""
+[!] Failed processing directory batch encryption: {e}."""
             )
 
 
