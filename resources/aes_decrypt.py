@@ -86,7 +86,7 @@ class AESDecryptor:
         valid_modes = {"AES.GCM", "AES.CBC"}
         if mode not in valid_modes:
             raise ValueError(
-                f"Invalid mode: {mode}. Expected one of {valid_modes}"
+                f"Invalid mode: {mode}. Expected one of {valid_modes}."
             )
 
         c.print(
@@ -180,7 +180,7 @@ file is corrupted."
     def aes_decrypt_directory(
         self, target_folder_path: Union[Path, str], password: str, mode: str
     ) ->  List[Path]:
-        """Decrypts all `.encrypted` files in a directory, returning a list
+        """Decrypts all '.encrypted' files in a directory, returning a list
         of successfully decrypted file paths.
         """
 
@@ -191,11 +191,11 @@ file is corrupted."
 
         if not target_dir.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist: {target_dir}"
+                f"Target directory does not exist: {target_dir}."
             )
         if not target_dir.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory: {target_dir}"
+                f"The provided path is not a directory: {target_dir}."
             )
 
         try:
@@ -203,7 +203,7 @@ file is corrupted."
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to retrieve files from {target_dir}: {e}"""
+[!] Failed to retrieve files from {target_dir}: {e}."""
             )
             return []
 
@@ -215,7 +215,7 @@ file is corrupted."
         if not files_to_decrypt:
             c.print(
                 f"""[yellow]
-[!] No valid files to decrypt in {target_dir}"""
+[!] No valid files to decrypt in {target_dir}."""
             )
             return []
 
@@ -237,7 +237,7 @@ file is corrupted."
                 )
                 c.print(
                     f"""[bright_red]
-[!] Error decrypting {file_path.name}: {e}"""
+[!] Error decrypting {file_path.name}: {e}."""
                 )
                 failed_decryptions.append(file_path)
 
@@ -365,7 +365,7 @@ Press Enter to return to the menu..."""
             except Exception as e:
                 c.print(
                     f"""[bright_red]
-[!] An error occured during processing: {e}"""
+[!] An error occured during processing: {e}."""
                 )
                 Prompt.ask(
                     """[bright_white]
