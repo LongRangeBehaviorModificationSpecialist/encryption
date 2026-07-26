@@ -38,9 +38,13 @@ class XORDecryptor:
 
         # Input validations
         if not message or not message.strip():
-            raise ValueError("Message to decrypt cannot be empty.")
+            raise ValueError(
+                "Message to decrypt cannot be empty."
+            )
         if not xor_key:
-            raise ValueError("XOR key cannot be empty.")
+            raise ValueError(
+                "XOR key cannot be empty."
+            )
 
         try:
             # Decode Base64 string back into raw encrypted bytes
@@ -55,7 +59,9 @@ class XORDecryptor:
             logger.error(
                 f"Invalid Base64 string supplied for decryption : {e}."
             )
-            raise ValueError("Invalid Base64-encoded message input.") from e
+            raise ValueError(
+                "Invalid Base64-encoded message input."
+            ) from e
         except UnicodeDecodeError as e:
             logger.error(
                 f"Failed to decode decrypted bytes to UTF-8 : {e}.",
@@ -87,16 +93,20 @@ The original message is:\n
 
         # Path & Key Validation
         if not xor_key:
-            raise ValueError("XOR key cannot be empty.")
+            raise ValueError(
+                "XOR key cannot be empty."
+            )
         if not target_path.exists():
-            raise FileNotFoundError(f"Target file not found : {target_path}.")
+            raise FileNotFoundError(
+                f"Target file not found : {target_path}."
+            )
         if not target_path.is_file():
             raise IsADirectoryError(
                 f"Provided path is a directory, not a file : {target_path}."
             )
 
         # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
-        # `.with_suffix("")` strips away the LAST extension (.encrypted)
+        # '.with_suffix("")' strips away the LAST extension (.encrypted)
         if target_path.suffix == ".encrypted":
             destination_path = target_path.with_suffix("")
         else:
@@ -121,7 +131,7 @@ The original message is:\n
             if destination_path.exists():
                 destination_path.unlink(missing_ok=True)
             raise RuntimeError(
-                f"""Error decrypting file "{target_path.name}" : {e}."
+                f"Error decrypting file {target_path.name} : {e}."
             ) from e
 
         c.print(
