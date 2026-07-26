@@ -39,9 +39,13 @@ class AESDecryptor:
         """
         # Validate input types
         if not isinstance(password, str):
-            raise TypeError("Password must be a string.")
+            raise TypeError(
+                "Password must be a string."
+            )
         if not isinstance(salt, bytes):
-            raise TypeError("Salt must be bytes.")
+            raise TypeError(
+                "Salt must be bytes."
+            )
 
         # Configure PBKDF2 Key Derivation Function
         kdf = PBKDF2HMAC(
@@ -76,17 +80,19 @@ class AESDecryptor:
         target_file_path = Path(target_file_path)
 
         if not target_file_path.exists():
-            raise FileNotFoundError(f"Target file not found: {target_file_path}")
+            raise FileNotFoundError(
+                f"Target file not found : {target_file_path}."
+            )
         if not target_file_path.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file: {target_file_path}"
+                f"Provided path is a directory, not a file : {target_file_path}."
             )
 
         # Mode validation
         valid_modes = {"AES.GCM", "AES.CBC"}
         if mode not in valid_modes:
             raise ValueError(
-                f"Invalid mode: {mode}. Expected one of {valid_modes}."
+                f"Invalid mode : {mode}. Expected one of {valid_modes}."
             )
 
         c.print(
@@ -103,9 +109,9 @@ class AESDecryptor:
 
         if len(encrypted_data) < min_expected_size:
             raise ValueError(
-                f"""Payload invalid or corrupted: file length \
+                f"Payload invalid or corrupted : file length \
 ({len(encrypted_data)} bytes) is less than minimum required structure \
-({min_expected_size} bytes)."""
+({min_expected_size} bytes)."
             )
 
         c.print(
@@ -191,11 +197,11 @@ file is corrupted."
 
         if not target_dir.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist: {target_dir}."
+                f"Target directory does not exist : {target_dir}."
             )
         if not target_dir.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory: {target_dir}."
+                f"The provided path is not a directory : {target_dir}."
             )
 
         try:
@@ -203,7 +209,7 @@ file is corrupted."
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to retrieve files from {target_dir}: {e}."""
+[!] Failed to retrieve files from {target_dir} : {e}."""
             )
             return []
 
@@ -232,12 +238,12 @@ file is corrupted."
                 successful_decryptions.append(decrypted_path)
             except Exception as e:
                 logger.error(
-                    f"Failed to decrypt file: {file_path}",
+                    f"Failed to decrypt file : {file_path}",
                     exc_info=True
                 )
                 c.print(
                     f"""[bright_red]
-[!] Error decrypting {file_path.name}: {e}."""
+[!] Error decrypting {file_path.name} : {e}."""
                 )
                 failed_decryptions.append(file_path)
 
@@ -245,7 +251,7 @@ file is corrupted."
             c.print(
                 f"""[green3]
 [-] Successfully decrypted {len(successful_decryptions)} files in \
-{target_dir}:"""
+{target_dir} :"""
             )
             for decrypted_file in successful_decryptions:
                 c.print(
@@ -256,7 +262,7 @@ file is corrupted."
         if failed_decryptions:
             c.print(
                 f"""[bright_red]
-[!] ** Warning** Failed to decrypt {len(failed_decryptions)} files:"""
+[!] ** Warning** Failed to decrypt {len(failed_decryptions)} files :"""
             )
             for failed_file in failed_decryptions:
                 c.print(
@@ -371,4 +377,3 @@ Press Enter to return to the menu..."""
                     """[bright_white]
 Press Enter to continue..."""
                 )
-
