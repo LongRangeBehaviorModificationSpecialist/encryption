@@ -71,7 +71,7 @@ class XOREncryptor:
                 exc_info=True
             )
             raise IOError(
-                f"""Could not write encrypted message to "{out_path}" : {e}."""
+                f"Could not write encrypted message to {out_path} : {e}."
             ) from e
 
         c.print(
@@ -96,9 +96,13 @@ The Base64-encoded encrypted message is:\n
 
         # 1. Path & Key Validation
         if not xor_key:
-            raise ValueError("XOR encryption key cannot be empty.")
+            raise ValueError(
+                "XOR encryption key cannot be empty."
+            )
         if not target_path.exists():
-            raise FileNotFoundError(f"Target file not found : {target_path}.")
+            raise FileNotFoundError(
+                f"Target file not found : {target_path}."
+            )
         if not target_path.is_file():
             raise IsADirectoryError(
                 f"Provided path is a directory, not a file : {target_path}."
@@ -121,18 +125,18 @@ The Base64-encoded encrypted message is:\n
 
         except Exception as e:
             logger.error(
-                f"Failed XOR file encryption on {target_path}: {e}",
+                f"Failed XOR file encryption on {target_path} : {e}",
                 exc_info=True,
             )
             c.print(
                 f"""[bright_red]
-[!] Error encrypting file "{target_path.name}": {e}."""
+[!] Error encrypting file "{target_path.name}" : {e}."""
             )
             # Clean up potentially broken destination output file
             if destination_path.exists():
                 destination_path.unlink(missing_ok=True)
             raise RuntimeError(
-                f"""Error encrypting file "{target_path.name}": {e}."""
+                f"Error encrypting file {target_path.name} : {e}."
             ) from e
 
         c.print(
