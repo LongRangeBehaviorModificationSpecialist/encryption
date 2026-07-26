@@ -156,7 +156,7 @@ class AESEncryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to retrieve files from {target_dir}: {e}"""
+[!] Failed to retrieve files from {target_dir}: {e}."""
             )
             return []
 
@@ -168,7 +168,7 @@ class AESEncryptor:
         if not files_to_encrypt:
             c.print(
                 f"""[yellow]
-[!] No valid files to encrypt in {target_dir}"""
+[!] No valid files to encrypt in {target_dir}."""
             )
             return []
 
@@ -189,7 +189,7 @@ class AESEncryptor:
                 )
                 c.print(
                     f"""[bright_red]
-[!] Error encrypting {file_path.name}: {e}"""
+[!] Error encrypting {file_path.name}: {e}."""
                 )
                 failed_encryptions.append(file_path)
 
