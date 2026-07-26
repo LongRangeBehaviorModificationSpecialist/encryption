@@ -91,7 +91,7 @@ class KeyFileDecryptor:
 
             c.print(
                 f"""[bright_white]
-[-] Reading encrypted file: {target_file_path.name}..."""
+[-] Reading encrypted file : {target_file_path.name}..."""
             )
             encrypted_data = target_file_path.read_bytes()
 
@@ -108,7 +108,8 @@ class KeyFileDecryptor:
             # Save the decrypted file
             decrypted_file_path.write_bytes(decrypted_data)
 
-            Functions.print_confirm_file_action(self,
+            Functions.print_confirm_file_action(
+                self,
                 file_name=decrypted_file_path,
                 text="Decryption"
             )
@@ -121,7 +122,7 @@ class KeyFileDecryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] An error occurred during decryption: {e}."""
+[!] An error occurred during decryption : {e}."""
             )
 
 
@@ -176,7 +177,7 @@ class KeyFileDecryptor:
                 decrypted_data = fernet.decrypt(encrypted_data)
 
                 # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
-                # `.with_suffix("")` strips away the LAST extension (.encrypted)
+                # '.with_suffix("")' strips away the LAST extension (.encrypted)
                 decrypted_file_path = file.with_suffix("")
 
                 # Save the decrypted file
@@ -199,7 +200,7 @@ class KeyFileDecryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed processing directory batch encryption: {e}."""
+[!] Failed processing directory batch encryption : {e}."""
             )
 
 
