@@ -59,7 +59,7 @@ class KeyFileDecryptor:
         if not target_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Target file not found : {target_file_path}"""
+[!] Target file not found : {target_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -67,7 +67,7 @@ class KeyFileDecryptor:
         if not key_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Key file not found : {key_file_path}"""
+[!] Key file not found : {key_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -91,7 +91,7 @@ class KeyFileDecryptor:
 
             c.print(
                 f"""[bright_white]
-[-] Reading encrypted file: {target_file_path.name}..."""
+[-] Reading encrypted file : {target_file_path.name}..."""
             )
             encrypted_data = target_file_path.read_bytes()
 
@@ -102,13 +102,14 @@ class KeyFileDecryptor:
             decrypted_data = fernet.decrypt(encrypted_data)
 
             # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
-            # `.with_suffix("")` strips away the LAST extension (.encrypted)
+            # '.with_suffix("")' strips away the LAST extension (.encrypted)
             decrypted_file_path = target_file_path.with_suffix("")
 
             # Save the decrypted file
             decrypted_file_path.write_bytes(decrypted_data)
 
-            Functions.print_confirm_file_action(self,
+            Functions.print_confirm_file_action(
+                self,
                 file_name=decrypted_file_path,
                 text="Decryption"
             )
@@ -121,7 +122,7 @@ class KeyFileDecryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] An error occurred during decryption: {e}"""
+[!] An error occurred during decryption : {e}."""
             )
 
 
@@ -135,7 +136,7 @@ class KeyFileDecryptor:
         if not target_dir_path.is_dir():
             c.print(
                 f"""[bright_red]
-[!] Target directory not found : {target_dir_path}"""
+[!] Target directory not found : {target_dir_path}."""
             )
             self.return_to_main_menu()
             return
@@ -143,7 +144,7 @@ class KeyFileDecryptor:
         if not key_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Key file not found : {key_file_path}"""
+[!] Key file not found : {key_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -157,14 +158,14 @@ class KeyFileDecryptor:
             )
 
             files = [
-                f for f in target_dir_path.rglob('*')
+                f for f in target_dir_path.rglob("*")
                 if f.is_file() and f.suffix == ".encrypted"
             ]
 
             for file in files:
                 c.print(
                     f"""[bright_white]
-[-] Reading file : {file.name}"""
+[-] Reading file : {file.name}."""
                 )
                 encrypted_data = file.read_bytes()
 
@@ -176,14 +177,14 @@ class KeyFileDecryptor:
                 decrypted_data = fernet.decrypt(encrypted_data)
 
                 # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
-                # `.with_suffix("")` strips away the LAST extension (.encrypted)
+                # '.with_suffix("")' strips away the LAST extension (.encrypted)
                 decrypted_file_path = file.with_suffix("")
 
                 # Save the decrypted file
                 decrypted_file_path.write_bytes(decrypted_data)
                 c.print(
                     f"""[bright_white]
-[-] Decrypted {file.name} -> {decrypted_file_path.name}"""
+[-] Decrypted {file.name} -> {decrypted_file_path.name}."""
                 )
 
             c.print(
@@ -199,7 +200,7 @@ class KeyFileDecryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed processing directory batch encryption: {e}"""
+[!] Failed processing directory batch encryption : {e}."""
             )
 
 

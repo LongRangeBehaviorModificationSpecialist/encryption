@@ -98,14 +98,13 @@ class KeyFileEncryptor:
         except IOError as e:
             c.print(
                 f"""[bright_red]
-[!] Failed to write key data to file: {e}"""
+[!] Failed to write key data to file: {e}."""
             )
             raise
 
 
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
-
         while True:
             key_file = (
                 Prompt.ask(
@@ -129,7 +128,7 @@ class KeyFileEncryptor:
         if not target_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Target file not found : {target_file_path}"""
+[!] Target file not found : {target_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -137,7 +136,7 @@ class KeyFileEncryptor:
         if not key_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Key file not found : {key_file_path}"""
+[!] Key file not found : {key_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -162,7 +161,9 @@ class KeyFileEncryptor:
             )
             encrypted_data = fernet.encrypt(file_data)
 
-            enc_file_path = target_file_path.with_name(f"{target_file_path.name}.encrypted")
+            enc_file_path = target_file_path.with_name(
+                f"{target_file_path.name}.encrypted"
+            )
             enc_file_path.write_bytes(encrypted_data)
 
             Functions.print_confirm_file_action(
@@ -173,7 +174,7 @@ class KeyFileEncryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] An error occured during encryption: {e}"""
+[!] An error occured during encryption: {e}."""
             )
 
 
@@ -185,7 +186,7 @@ class KeyFileEncryptor:
         if not key_file_path.is_file():
             c.print(
                 f"""[bright_red]
-[!] Key file not found : {key_file_path}"""
+[!] Key file not found : {key_file_path}."""
             )
             self.return_to_main_menu()
             return
@@ -193,7 +194,7 @@ class KeyFileEncryptor:
         if not target_dir_path.is_dir():
             c.print(
                 f"""[bright_red]
-[!] Target directory not found : {target_dir_path}"""
+[!] Target directory not found : {target_dir_path}."""
             )
             self.return_to_main_menu()
             return
@@ -207,14 +208,14 @@ class KeyFileEncryptor:
             )
 
             files = [
-                f for f in target_dir_path.rglob('*')\
-                if f.is_file() and not f.suffix == '.encrypted'
+                f for f in target_dir_path.rglob("*")\
+                if f.is_file() and not f.suffix == ".encrypted"
             ]
 
             for file in files:
                 c.print(
                     f"""[bright_white]
-[-] Processing : {file.name}"""
+[-] Processing : {file.name}."""
                 )
                 original_data = file.read()
                 encrypted_data = fernet.encrypt(original_data)
@@ -223,7 +224,7 @@ class KeyFileEncryptor:
                 enc_file_path.write_bytes(encrypted_data)
                 c.print(
                     f"""[bright_white]
-[-] Encrypted {file.name} -> {enc_file_path.name}"""
+[-] Encrypted {file.name} -> {enc_file_path.name}."""
                 )
 
             c.print(
@@ -234,7 +235,7 @@ class KeyFileEncryptor:
         except Exception as e:
             c.print(
                 f"""[bright_red]
-[!] Failed processing directory batch encryption: {e}"""
+[!] Failed processing directory batch encryption: {e}."""
             )
 
 
@@ -249,8 +250,8 @@ class KeyFileEncryptor:
 ENCRYPT FILE(S) WITH A .KEY FILE
 ----------------------------------------\n
 [khaki3]Choose an option :[bright_white]\n
-[1] Create a **new** .key then encrypt
-[2] Use **existing** .key to encrypt\n
+[1] Create a ** new ** .key then encrypt
+[2] Use ** existing ** .key to encrypt\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """,

@@ -1,4 +1,5 @@
 # !/usr/bin/env python3
+# DLU : 26-Jul-2026
 
 from rich.console import Console
 from rich.prompt import Prompt
@@ -28,12 +29,12 @@ email_address = "testaddress@email.com"
 class App:
 
     def no_valid_option(self) -> None:
-        """
-        When a valid option is not entered, the user will be prompted to
+        """When a valid option is not entered, the user will be prompted to
         try again and enter a valid option.
         """
         c.print(
-            "[red1][!] You did not enter a valid option. Please try again."
+            """[bright_red]
+[!] You did not enter a valid option. Please try again."""
         )
         App.main(self)
 
