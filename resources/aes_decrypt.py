@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 23-Jul-2026
+# DLU : 27-Jul-2026
 
 import logging
 from cryptography.exceptions import InvalidTag
@@ -81,11 +81,11 @@ class AESDecryptor:
 
         if not target_file_path.exists():
             raise FileNotFoundError(
-                f"Target file not found : {target_file_path}."
+                f"Target file not found : {target_file_path}"
             )
         if not target_file_path.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file : {target_file_path}."
+                f"Provided path is a directory, not a file : {target_file_path}"
             )
 
         # Mode validation
@@ -95,8 +95,7 @@ class AESDecryptor:
                 f"Invalid mode : {mode}. Expected one of {valid_modes}."
             )
 
-        c.print(
-            f"""[bright_white]
+        c.print(f"""[bright_white]
 [-] Reading encrypted file : {target_file_path.name}..."""
         )
         encrypted_data = target_file_path.read_bytes()
@@ -114,8 +113,7 @@ class AESDecryptor:
 ({min_expected_size} bytes)."
             )
 
-        c.print(
-            """[bright_white]
+        c.print("""[bright_white]
 [-] Deriving key and decrypting..."""
         )
 
@@ -175,9 +173,8 @@ file is corrupted."
 
         decrypted_file_path.write_bytes(plaintext)
 
-        c.print(
-            """[green3]
-[-] File decrypted successfully. Thank you. Come again."""
+        c.print("""[green3]
+[-] File decrypted successfully."""
         )
 
         return decrypted_file_path
@@ -207,9 +204,8 @@ file is corrupted."
         try:
             all_files = Functions.get_all_files(target_dir_path=target_dir)
         except Exception as e:
-            c.print(
-                f"""[bright_red]
-[!] Failed to retrieve files from {target_dir} : {e}."""
+            c.print(f"""[bright_red]
+[!] Failed to retrieve files from {target_dir} : {e}"""
             )
             return []
 
@@ -219,9 +215,8 @@ file is corrupted."
         ]
 
         if not files_to_decrypt:
-            c.print(
-                f"""[yellow]
-[!] No valid files to decrypt in {target_dir}."""
+            c.print(f"""[yellow]
+[!] No valid files to decrypt in {target_dir}"""
             )
             return []
 
@@ -241,32 +236,29 @@ file is corrupted."
                     f"Failed to decrypt file : {file_path}",
                     exc_info=True
                 )
-                c.print(
-                    f"""[bright_red]
-[!] Error decrypting {file_path.name} : {e}."""
+                c.print(f"""[bright_red]
+[!] Error decrypting {file_path.name} : {e}"""
                 )
                 failed_decryptions.append(file_path)
 
         if successful_decryptions:
-            c.print(
-                f"""[green3]
+            c.print(f"""[green3]
+** Action Completed **
 [-] Successfully decrypted {len(successful_decryptions)} files in \
 {target_dir} :"""
             )
             for decrypted_file in successful_decryptions:
-                c.print(
-                    f"""[green3]
+                c.print(f"""[green3]
     {decrypted_file.name}"""
                 )
 
         if failed_decryptions:
-            c.print(
-                f"""[bright_red]
-[!] ** Warning** Failed to decrypt {len(failed_decryptions)} files :"""
+            c.print(f"""[bright_red]
+** Warning **
+Failed to decrypt {len(failed_decryptions)} files :"""
             )
             for failed_file in failed_decryptions:
-                c.print(
-                    f"""[bright_red]
+                c.print(f"""[bright_red]
     {failed_file.name}"""
                 )
 
@@ -279,8 +271,7 @@ file is corrupted."
             try:
                 Functions.clear_screen()
                 target_option = (
-                    Prompt.ask(
-                        """[dodger_blue1]
+                    Prompt.ask("""[dodger_blue1]
 ----------------------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
 ----------------------------------------------------\n
@@ -306,11 +297,10 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
                     return
 
                 decryption_option = (
-                    Prompt.ask(
-                        """[bright_white]
-[-] Select decryption method (1=AES-CBC, 2=AES-GCM, R=Back) """,
-                        choices=["1", "2", "r"],
-                        show_choices=False,
+                    Prompt.ask("""[bright_white]
+[-] Select decryption method """,
+                        choices=["1=AES-CBC", "2=AES-GCM", "R-Back"],
+                        show_choices=True,
                     )
                     .strip()
                     .lower()
@@ -357,23 +347,19 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 # Pause after task completion so user can read output before
                 # screen clears
-                Prompt.ask(
-                    """[bright_white]
+                Prompt.ask("""[bright_white]
 Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
-                c.print(
-                    """[yellow]
+                c.print("""[yellow]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(
-                    f"""[bright_red]
-[!] An error occured during processing : {e}."""
+                c.print(f"""[bright_red]
+[!] An error occured during processing : {e}"""
                 )
-                Prompt.ask(
-                    """[bright_white]
+                Prompt.ask("""[bright_white]
 Press Enter to continue..."""
                 )

@@ -1,11 +1,12 @@
 # !/usr/bin/env python3
-# DLU : 23-Jul-2026
+# DLU : 27-Jul-2026
 
 from cryptography.fernet import Fernet
 from datetime import datetime
 import hashlib
+import logging
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 
 from rich.console import Console
 from rich.prompt import Prompt
@@ -30,6 +31,17 @@ class KeyFileEncryptor:
         self.app.main(self)
 
 
+    def _load_fernet(self, key_file_path: Union[Path, str]) -> bytes:
+
+        if not key_file_path.is_file():
+            c.print(f"""[bright_red]
+[!] Key file not found : {key_file_path}"""
+            )
+            self.return_to_main_menu()
+
+        return Fernet(key_file_path.read_bytes())
+
+
     def generate_and_save_key(self) -> bytes:
         """Generates a secure Fernet key, saves it, and generates a SHA-256
         metadata log.
@@ -38,8 +50,7 @@ class KeyFileEncryptor:
             bytes: The generated key.
         """
         key_file_dir = Path(
-            Prompt.ask(
-                """[bright_white]
+            Prompt.ask("""[bright_white]
 [-] Where do you want to save the key file? """
             )
             .strip()
@@ -47,8 +58,7 @@ class KeyFileEncryptor:
         )
 
         key_file_name = (
-            Prompt.ask(
-                """[bright_white]
+            Prompt.ask("""[bright_white]
 [-] Enter a name for the key file (w/o file extension) """
             )
             .strip()
@@ -78,8 +88,7 @@ class KeyFileEncryptor:
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
-            c.print(
-                f"""[bright_white]
+            c.print(f"""[bright_white]
 ------------------------------------------\n
 [green3][-] Key file created\n[bright_white]
 [-] Key file saved in : [khaki3]{key_file_dir}[bright_white]
@@ -96,9 +105,8 @@ class KeyFileEncryptor:
             return full_key_path
 
         except IOError as e:
-            c.print(
-                f"""[bright_red]
-[!] Failed to write key data to file: {e}."""
+            c.print(f"""[bright_red]
+[!] Failed to write key data to file : {e}"""
             )
             raise
 
@@ -107,9 +115,8 @@ class KeyFileEncryptor:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
             key_file = (
-                Prompt.ask(
-                    """[bright_white]
-[-] Enter the path to the .key file to use """
+                Prompt.ask("""[bright_white]
+[-] Enter the path to the .key file to use to encrypt the file """
                 )
             )
             path = Path(key_file)
@@ -118,7 +125,9 @@ class KeyFileEncryptor:
 
 
     def encrypt_file_with_key(
-        self, key_file_path: Union[str, Path], target_file_path: Union[str, Path]
+        self,
+        fernet: bytes,
+        target_file_path: Union[Path, str]
     ) -> None:
         """Reads an existing key and encrypts a single target file."""
 
@@ -126,132 +135,139 @@ class KeyFileEncryptor:
 
         # Validation checks
         if not target_file_path.is_file():
-            c.print(
-                f"""[bright_red]
-[!] Target file not found : {target_file_path}."""
-            )
-            self.return_to_main_menu()
-            return
-
-        if not key_file_path.is_file():
-            c.print(
-                f"""[bright_red]
-[!] Key file not found : {key_file_path}."""
+            c.print(f"""[bright_red]
+[!] Target file not found : {target_file_path}"""
             )
             self.return_to_main_menu()
             return
 
         try:
-            # Load the encryption key
-            fernet = Fernet(key_file_path.read_bytes())
-            c.print(
-                f"""[bright_white]
-[-] Key file ({key_file_path.name}) loaded successfully."""
-            )
-
-            c.print(
-                f"""[bright_white]
+            c.print(f"""[bright_white]
 [-] Reading file : {target_file_path.name}..."""
                 )
             file_data = target_file_path.read_bytes()
 
-            c.print(
-                f"""[bright_white]
-[-] Encrypting data..."""
+            c.print(f"""[bright_white]
+[-] Encrypting file data..."""
             )
             encrypted_data = fernet.encrypt(file_data)
 
-            enc_file_path = target_file_path.with_name(
+            encrypted_file_path = target_file_path.with_name(
                 f"{target_file_path.name}.encrypted"
             )
-            enc_file_path.write_bytes(encrypted_data)
 
-            Functions.print_confirm_file_action(
-                file_name=enc_file_path,
-                text="ENCRYPTED"
+            c.print("""[bright_white]
+[-] Writing encrypted data to file..."""
+            )
+            encrypted_file_path.write_bytes(encrypted_data)
+
+            c.print(f"""[bright_white]
+[-] Encrypted {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
             )
 
         except Exception as e:
-            c.print(
-                f"""[bright_red]
-[!] An error occured during encryption: {e}."""
+            c.print(f"""[bright_red]
+[!] An error occured during encryption : {e}"""
             )
 
 
     def encrypt_files_in_dir_with_key(
-        self, key_file_path: Union[str, Path], target_dir_path: Union[str, Path]
+        self,
+        fernet: bytes,
+        target_dir_path: Union[Path, str]
     ) -> None:
-        """Encrypts all discovered assets within a target directory directory."""
+        """Encrypts all discovered assets within a target directory."""
 
-        if not key_file_path.is_file():
-            c.print(
-                f"""[bright_red]
-[!] Key file not found : {key_file_path}."""
+        logger = logging.getLogger(__name__)
+
+        target_dir_path = Path(target_dir_path)
+
+        if not target_dir_path.exists():
+            raise FileNotFoundError(
+                f"[!] The target directory does not exist : {target_dir_path}"
             )
-            self.return_to_main_menu()
-            return
-
         if not target_dir_path.is_dir():
-            c.print(
-                f"""[bright_red]
-[!] Target directory not found : {target_dir_path}."""
+            raise NotADirectoryError(
+                f"[!] The provided path is not a directory : {target_dir_path}"
             )
-            self.return_to_main_menu()
-            return
 
         try:
-            # Load the encryption key
-            fernet = Fernet(key_file_path.read_bytes())
-            c.print(
-                f"""[bright_white]
-[-] Key file ({key_file_path.name}) loaded successfully."""
-            )
-
-            files = [
-                f for f in target_dir_path.rglob("*")\
+            all_files = [
+                f for f in target_dir_path.rglob("*")
                 if f.is_file() and not f.suffix == ".encrypted"
             ]
-
-            for file in files:
-                c.print(
-                    f"""[bright_white]
-[-] Processing : {file.name}."""
-                )
-                original_data = file.read()
-                encrypted_data = fernet.encrypt(original_data)
-
-                enc_file_path = file.with_name(f"{file.name}.encrypted")
-                enc_file_path.write_bytes(encrypted_data)
-                c.print(
-                    f"""[bright_white]
-[-] Encrypted {file.name} -> {enc_file_path.name}."""
-                )
-
-            c.print(
-                f"""[green3]
-[+] Successfully encrypted {len(files)} files."""
-            )
-
         except Exception as e:
-            c.print(
-                f"""[bright_red]
-[!] Failed processing directory batch encryption: {e}."""
+                c.print(f"""[bright_red]
+[!] Failed to retrieve files from {target_dir_path} : {e}"""
+                )
+                return []
+
+        if not all_files:
+            c.print(f"""[yellow]
+[!] No valid files to encrypt in {target_dir_path}"""
             )
+            return []
+
+        successful_encryptions: List[Path] = []
+        failed_encryptions: List[Path] = []
+
+        for file_path in all_files:
+            c.print(f"""[bright_white]
+[-] Reading file : {file_path.name}..."""
+                )
+            try:
+                encrypted_path = self.encrypt_file_with_key(
+                    fernet=fernet,
+                    target_file_path=file_path
+                )
+                successful_encryptions.append(encrypted_path)
+            except Exception as e:
+                logger.error(
+                    f"Failed to encrypt file : {file_path}",
+                    exc_info=True
+                )
+                c.print(f"""[bright_red]
+[!] Error encrypting {file_path.name} : {e}."""
+                )
+                failed_encryptions.append(file_path)
+
+        if successful_encryptions:
+            c.print(f"""[green]
+** Action Completed **
+Successfully encrypted {len(successful_encryptions)} files in \
+{target_dir_path} :"""
+            )
+            for encrypted_file in successful_encryptions:
+                c.print(f"""[green]
+    {encrypted_file.name}"""
+                )
+
+        if failed_encryptions:
+            c.print(f"""[bright_red]
+** Warning **
+Failed to encrypt {len(failed_encryptions)} files :"""
+            )
+            for failed_file in failed_encryptions:
+                c.print(
+                    f"""[bright_red]
+    {failed_file.name}"""
+                )
+
+        return successful_encryptions
 
 
     def ask_key_choice(self) -> str:
-        """Prompts user for key lifecycle preferences using validation rules."""
+        """Prompts user for key choice."""
 
         Functions.clear_screen()
         return (
-            Prompt.ask(
-                """[dodger_blue1]
+            Prompt.ask("""[dodger_blue1]
 ----------------------------------------
 ENCRYPT FILE(S) WITH A .KEY FILE
 ----------------------------------------\n
 [khaki3]Choose an option :[bright_white]\n
-[1] Create a ** new ** .key then encrypt
-[2] Use ** existing ** .key to encrypt\n
+[1] Create a [bold]new[/bold] .key then encrypt
+[2] Use [bold]existing[/bold] .key to encrypt\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """,
@@ -269,8 +285,7 @@ ENCRYPT FILE(S) WITH A .KEY FILE
         Functions.clear_screen()
         while True:
             target_option = (
-                Prompt.ask(
-                    """[dodger_blue1]
+                Prompt.ask("""[dodger_blue1]
 ---------------------------------
 ENCRYPT FILE(S) WITH A .KEY FILE
 ---------------------------------\n
@@ -314,16 +329,18 @@ ENCRYPT FILE(S) WITH A .KEY FILE
             else:
                 key_file_path = self.get_existing_key_file_path()
 
+            fernet = self._load_fernet(key_file_path=key_file_path)
+
             if is_single_file:
                 target_file_path = Functions.get_file_path(text="ENCRYPT")
                 self.encrypt_file_with_key(
-                    key_file_path=key_file_path,
+                    fernet=fernet,
                     target_file_path=Path(target_file_path)
                 )
             else:
                 target_dir_path = Functions.get_folder_path(text="ENCRYPT")
                 self.encrypt_files_in_dir_with_key(
-                    key_file_path=key_file_path,
+                    fernet=fernet,
                     target_dir_path=Path(target_dir_path)
                 )
 

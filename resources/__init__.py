@@ -7,3 +7,7 @@ from resources.app_gnupg import PGPClass
 from resources.xor_encrypt import XOREncryptor
 from resources.xor_decrypt import XORDecryptor
 from resources.functions import Functions
+
+from resources._aes import AESClass
+from resources._pgp import PGPClass
+from resources._key import KEYClass

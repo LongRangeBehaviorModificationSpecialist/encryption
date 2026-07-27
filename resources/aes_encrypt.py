@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 23-Jul-2026
+# DLU : 27-Jul-2026
 
 import logging
 import os
@@ -65,8 +65,7 @@ class AESEncryptor:
                 f"Invalid mode : {mode}. Expected one of {valid_modes}"
             )
 
-        c.print(
-            f"""[bright_white]
+        c.print(f"""[bright_white]
 [-] Reading file : {target_file_path.name}..."""
         )
         # Read plaintext data
@@ -77,9 +76,8 @@ class AESEncryptor:
         iv = os.urandom(self.IV_LENGTH)
         key = self._derive_key(password, salt)
 
-        c.print(
-            f"""[bright_white]
-[-] Encrypting data..."""
+        c.print(f"""[bright_white]
+[-] Encrypting file data..."""
         )
         encrypted_file_path = target_file_path.with_name(
             f"{target_file_path.name}.encrypted"
@@ -113,9 +111,8 @@ class AESEncryptor:
         encrypted_file_path.write_bytes(combined_payload)
 
         # UI Output
-        c.print(
-            f"""[green3]
-{target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
+        c.print(f"""[green3]
+[-] Encrypted {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
         )
         c.print(
             f"""[dim]
@@ -146,19 +143,18 @@ class AESEncryptor:
 
         if not target_dir.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist : {target_dir}."
+                f"Target directory does not exist : {target_dir}"
             )
         if not target_dir.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory : {target_dir}."
+                f"The provided path is not a directory : {target_dir}"
             )
 
         try:
             all_files = Functions.get_all_files(target_dir_path=target_dir)
         except Exception as e:
-            c.print(
-                f"""[bright_red]
-[!] Failed to retrieve files from {target_dir} : {e}."""
+            c.print(f"""[bright_red]
+[!] Failed to retrieve files from {target_dir} : {e}"""
             )
             return []
 
@@ -168,9 +164,8 @@ class AESEncryptor:
         ]
 
         if not files_to_encrypt:
-            c.print(
-                f"""[yellow]
-[!] No valid files to encrypt in {target_dir}."""
+            c.print(f"""[yellow]
+[!] No valid files to encrypt in {target_dir}"""
             )
             return []
 
@@ -190,28 +185,26 @@ class AESEncryptor:
                     f"Failed to encrypt file : {file_path}",
                     exc_info=True
                 )
-                c.print(
-                    f"""[bright_red]
+                c.print(f"""[bright_red]
 [!] Error encrypting {file_path.name} : {e}."""
                 )
                 failed_encryptions.append(file_path)
 
         if successful_encryptions:
-            c.print(
-                f"""[green]
-[-] Successfully encrypted {len(successful_encryptions)} files in \
+            c.print(f"""[green]
+** Action Completed **
+Successfully encrypted {len(successful_encryptions)} files in \
 {target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
-                c.print(
-                    f"""[green]
+                c.print(f"""[green]
     {encrypted_file.name}"""
                 )
 
         if failed_encryptions:
-            c.print(
-                f"""[bright_red]
-[!] ** Warning ** Failed to encrypt {len(failed_encryptions)} files :"""
+            c.print(f"""[bright_red]
+** Warning **
+Failed to encrypt {len(failed_encryptions)} files :"""
             )
             for failed_file in failed_encryptions:
                 c.print(
@@ -228,8 +221,7 @@ class AESEncryptor:
             try:
                 Functions.clear_screen()
                 target_option = (
-                    Prompt.ask(
-                        """[dodger_blue1]
+                    Prompt.ask("""[dodger_blue1]
 ----------------------------------------------------
 USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 ----------------------------------------------------\n
@@ -255,11 +247,10 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                     return
 
                 encryption_option = (
-                    Prompt.ask(
-                        """[bright_white]
-[-] Select encryption method (1=AES-CBC, 2=AES-GCM, R=Back) """,
-                        choices=["1", "2", "r"],
-                        show_choices=False,
+                    Prompt.ask("""[bright_white]
+[-] Select encryption method """,
+                        choices=["1=AES-CBC", "2=AES-GCM", "R=Back"],
+                        show_choices=True,
                     )
                     .strip()
                     .lower()
@@ -273,11 +264,13 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 if is_single_file:
                     target_file_path = Functions.get_file_path(text="ENCRYPTED")
-                    if not target_file_path:  # User cancelled input
+                    # User cancelled input
+                    if not target_file_path:
                         continue
 
                     password = Functions.get_password()
-                    if not password:  # User cancelled password entry
+                    # User cancelled password entry
+                    if not password:
                         continue
 
                     self.aes_encrypt_file(
@@ -302,23 +295,19 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 # Pause after task completion so user can read output before
                 # screen clears
-                Prompt.ask(
-                    """[bright_white]
+                Prompt.ask("""[bright_white]
 Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
-                c.print(
-                    """[yellow]
+                c.print("""[yellow]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(
-                    f"""[bright_red]
+                c.print(f"""[bright_red]
 [!] An error occured during processing : {e}"""
                 )
-                Prompt.ask(
-                    """[bright_white]
+                Prompt.ask("""[bright_white]
 Press Enter to continue..."""
                 )

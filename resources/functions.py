@@ -29,16 +29,13 @@ class Functions:
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
-            c.print(
-                f"""[dodger_blue1]
+            c.print(f"""[dodger_blue1]
 Operation [ {func.__name__}() ] was completed in \
 {total_time:.4f} seconds"""
             )
             # c.print(f"\nFunction {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds")
             return result
         return timeit_wrapper
-
-
 
 
     @staticmethod
@@ -49,9 +46,9 @@ Operation [ {func.__name__}() ] was completed in \
 
     @staticmethod
     def exit_application() -> None:
-        c.print(
-            """\n\n[bright_white]
-[-] Exiting the application. Goodbye...\n\n"""
+        c.print("""\n[bright_white]
+[!] Exiting the application. Goodbye...
+"""
         )
         sys.exit(0)
 
@@ -70,7 +67,9 @@ Operation [ {func.__name__}() ] was completed in \
         local_time = datetime.now().astimezone()
         offset = local_time.strftime("%z")
         formatted_offset = f"UTC{offset[0]}{int(offset[1:3])}"
-        current_time = local_time.strftime(f"%d-%b-%Y %H:%M:%S.%f ({formatted_offset})")
+        current_time = local_time.strftime(
+            f"%d-%b-%Y %H:%M:%S.%f ({formatted_offset})"
+        )
         return current_time
 
 
@@ -85,35 +84,27 @@ Operation [ {func.__name__}() ] was completed in \
 
 
     def get_email_address(self) -> str:
-        email_address = (
-            Prompt.ask(
-                """[bright_white]
+        return (
+            Prompt.ask("""[bright_white]
 [-] Enter email address of the PGP key owner """
             )
             .strip()
             .lower()
         )
-        return email_address
 
 
     @staticmethod
     def get_file_path(text: str) -> Path:
-        target_file_path = (
-            Prompt.ask(
-                f"""[bright_white]
+        target_file_path = Prompt.ask(f"""[bright_white]
 [-] Enter the path of the file to be {text} """
-            )
         )
         return Path(target_file_path)
 
 
     @staticmethod
     def get_folder_path(text: str) -> Path:
-        folder_path = (
-            Prompt.ask(
-                f"""[bright_white]
+        folder_path = Prompt.ask(f"""[bright_white]
 [-] Enter the path of the directory containing the files to be {text} """
-            )
         )
         return Path(folder_path)
 
@@ -124,21 +115,18 @@ Operation [ {func.__name__}() ] was completed in \
         passes the strength validation.
         """
         while True:
-            password = (
-                Prompt.ask(
-                    """[bright_white]
+            password = Prompt.ask("""[bright_white]
 [-] Enter the PASSWORD you want to use """,
                 password=True
-                )
             )
 
             # If the password passes validation, break the loop and return it
             if Functions.validate_password(password):
                 return password
 
-            c.print(
-                """[bright_red]
-[!] Not a valid password. Please try again.\n"""
+            c.print("""[bright_red]
+[!] Not a valid password. Please try again.
+"""
             )
 
 
@@ -160,8 +148,7 @@ Operation [ {func.__name__}() ] was completed in \
         has_symbol = any(char in symbols for char in password)
 
         if not (has_min_length and has_digit and has_upper and has_symbol):
-            c.print(
-                """[bright_red]
+            c.print("""[bright_red]
 Your password did not meet the minimun requirements. Please try again.\n
 Your password must meet the following criteria :\n
     [-] Is at least ten characters long
@@ -172,16 +159,14 @@ Your password must meet the following criteria :\n
             )
             return False
         else:
-            c.print(
-                f"""[bright_white]
+            c.print(f"""[bright_white]
 [-] Your password meets the minimum requirements. Continuing..."""
             )
             return True
 
 
     def get_pgp_password(self) -> str:
-        password = Prompt.ask(
-            """[khaki3]
+        password = Prompt.ask("""[khaki3]
 [-] Enter a password to use for the PGP private key """
         )
         Functions.validate_password(password=password)
@@ -210,8 +195,7 @@ Your password must meet the following criteria :\n
 
     @staticmethod
     def no_valid_yn_option() -> str:
-        no_valid_yn_option = c.print(
-            """[bright_red]
+        no_valid_yn_option = c.print("""[bright_red]
 [!] You did not enter a valid option ("y" or "n"). Please try again."""
         )
         return no_valid_yn_option
@@ -224,8 +208,7 @@ Your password must meet the following criteria :\n
 
         file_name = Path(file_name)
         confirm = (
-            c.print(
-                f"""[green3]
+            c.print(f"""[green3]
 [-] ** Action Successful **
 [khaki3]The {text} file was saved as : {file_name}"""
             )
@@ -246,10 +229,10 @@ Your password must meet the following criteria :\n
 ------------------------------------------
 Key File Name : {key_file_path.name}\n
 Key File Hash Value (SHA-256) : {key_file_hash_value}
-------------------------------------------""")
+------------------------------------------"""
+            )
 
-        c.print(
-            f"""[bright_white]
+        c.print(f"""[bright_white]
 ------------------------------------------
 [-] Key File hashed successfully
 [-] Key File Hash verification saved in : \
@@ -267,22 +250,13 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 
     @staticmethod
     def get_xor_key() -> str:
-        return (
-            Prompt.ask(
-                """[khaki3]
+        return Prompt.ask("""[khaki3]
 [-] Enter the key you want to use for the encryption """
-            )
         )
 
 
     @staticmethod
-    def get_message_to_xor() -> str:
-        return (
-            Prompt.ask(
-                """[khaki3]
-[-] Enter the message string you want to encrypt """
-            )
-        )
+
 
 
     @staticmethod
@@ -292,11 +266,8 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 
     @staticmethod
     def get_xor_message_to_decrypt() -> str:
-        return (
-            Prompt.ask(
-                """[khaki3]
+        return Prompt.ask("""[khaki3]
 [-] Enter the message string you want to decrypt """
-            )
         )
 
 

@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 23-Jul-2026
+# DLU : 27-Jul-2026
 
 from pathlib import Path
 import base64
@@ -8,8 +8,6 @@ from pathlib import Path
 from typing import Union
 
 from rich.console import Console
-
-from resources.functions import Functions
 
 
 # Make the console object
@@ -57,14 +55,14 @@ class XORDecryptor:
 
         except base64.binascii.Error as e:
             logger.error(
-                f"Invalid Base64 string supplied for decryption : {e}."
+                f"Invalid Base64 string supplied for decryption : {e}"
             )
             raise ValueError(
                 "Invalid Base64-encoded message input."
             ) from e
         except UnicodeDecodeError as e:
             logger.error(
-                f"Failed to decode decrypted bytes to UTF-8 : {e}.",
+                f"Failed to decode decrypted bytes to UTF-8 : {e}",
                 exc_info=True
             )
             raise ValueError(
@@ -72,8 +70,7 @@ class XORDecryptor:
 encoding)."
             ) from e
 
-        c.print(
-            f"""[green3]
+        c.print(f"""[green3]
 [-] ** Action successful **\n
 The original message is:\n
     [bright_white]{decrypted_text}"""
@@ -85,7 +82,7 @@ The original message is:\n
     def decrypt_file_with_xor(
         self, file_path: Union[str, Path], xor_key: str
     ) -> Path:
-        """Decrypts an XOR-encrypted file safely using binary path operations."""
+        """Decrypts an XOR-encrypted file using binary path operations."""
 
         logger = logging.getLogger(__name__)
 
@@ -98,11 +95,11 @@ The original message is:\n
             )
         if not target_path.exists():
             raise FileNotFoundError(
-                f"Target file not found : {target_path}."
+                f"Target file not found : {target_path}"
             )
         if not target_path.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file : {target_path}."
+                f"Provided path is a directory, not a file : {target_path}"
             )
 
         # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
@@ -125,19 +122,18 @@ The original message is:\n
 
         except Exception as e:
             logger.error(
-                f"Failed XOR file decryption on {target_path} : {e}.",
+                f"Failed XOR file decryption on {target_path} : {e}",
                 exc_info=True,
             )
             if destination_path.exists():
                 destination_path.unlink(missing_ok=True)
             raise RuntimeError(
-                f"Error decrypting file {target_path.name} : {e}."
+                f"Error decrypting file {target_path.name} : {e}"
             ) from e
 
-        c.print(
-            f"""[green3]
+        c.print(f"""[green3]
 [-] ** Action successful ** File Decrypted with XOR key.
-[bright_white][-] Output saved to: {destination_path.name}."""
+[bright_white][-] Output saved to: {destination_path.name}"""
         )
 
         return destination_path

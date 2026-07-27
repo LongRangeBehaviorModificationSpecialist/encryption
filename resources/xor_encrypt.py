@@ -1,7 +1,6 @@
 # !/usr/bin/env python3
-# DLU : 23-Jul-2026
+# DLU : 27-Jul-2026
 
-from pathlib import Path
 import base64
 import logging
 from pathlib import Path
@@ -21,8 +20,8 @@ class XOREncryptor:
 
 
     def __init__(self, app_instance):
-            """Store a reference to the main app loop controller."""
-            self.app = app_instance
+        """Store a reference to the main app loop controller."""
+        self.app = app_instance
 
 
     @staticmethod
@@ -46,9 +45,13 @@ class XOREncryptor:
 
         # Validation checks
         if not message:
-            raise ValueError("Message to encrypt cannot be empty.")
+            raise ValueError(
+                "Message to encrypt cannot be empty."
+            )
         if not xor_key:
-            raise ValueError("XOR encryption key cannot be empty.")
+            raise ValueError(
+                "XOR encryption key cannot be empty."
+            )
 
         message_bytes = message.encode("utf-8")
         key_bytes = xor_key.encode("utf-8")
@@ -67,15 +70,14 @@ class XOREncryptor:
                 f.write(encrypted_bytes)
         except Exception as e:
             logger.error(
-                f"Failed to write encrypted message file : {e}.",
+                f"Failed to write encrypted message file : {e}",
                 exc_info=True
             )
             raise IOError(
-                f"Could not write encrypted message to {out_path} : {e}."
+                f"Could not write encrypted message to {out_path} : {e}"
             ) from e
 
-        c.print(
-            f"""[green3]
+        c.print(f"""[green3]
 [-] ** Action successful **\n
 The Base64-encoded encrypted message is:\n
     [bright_white]{b64_encoded_msg}\n
@@ -101,11 +103,11 @@ The Base64-encoded encrypted message is:\n
             )
         if not target_path.exists():
             raise FileNotFoundError(
-                f"Target file not found : {target_path}."
+                f"Target file not found : {target_path}"
             )
         if not target_path.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file : {target_path}."
+                f"Provided path is a directory, not a file : {target_path}"
             )
 
         key_bytes = xor_key.encode("utf-8")
@@ -128,19 +130,17 @@ The Base64-encoded encrypted message is:\n
                 f"Failed XOR file encryption on {target_path} : {e}",
                 exc_info=True,
             )
-            c.print(
-                f"""[bright_red]
-[!] Error encrypting file "{target_path.name}" : {e}."""
+            c.print(f"""[bright_red]
+[!] Error encrypting file "{target_path.name}" : {e}"""
             )
             # Clean up potentially broken destination output file
             if destination_path.exists():
                 destination_path.unlink(missing_ok=True)
             raise RuntimeError(
-                f"Error encrypting file {target_path.name} : {e}."
+                f"Error encrypting file {target_path.name} : {e}"
             ) from e
 
-        c.print(
-            f"""[green3]
+        c.print(f"""[green3]
 [-] ** Action successful ** File Encrypted with XOR key.\n
 [dim]Output saved to: {destination_path.name}"""
         )
@@ -153,9 +153,7 @@ The Base64-encoded encrypted message is:\n
         while True:
             try:
                 Functions.clear_screen()
-                target_option = (
-                    Prompt.ask(
-                        """[dodger_blue1]
+                target_option = (Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 ENCRYPT FILE(S) USING AN XOR KEY
 ---------------------------------------\n
@@ -190,17 +188,14 @@ ENCRYPT FILE(S) USING AN XOR KEY
                     pass
 
             except KeyboardInterrupt:
-                c.print(
-                    """[yellow]
+                c.print("""[yellow]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(
-                    f"""[bright_red]
+                c.print(f"""[bright_red]
 [!] An error occured during processing: {e}"""
                 )
-                Prompt.ask(
-                    """[bright_white]
+                Prompt.ask("""[bright_white]
 Press Enter to continue..."""
                 )
