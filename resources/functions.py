@@ -220,7 +220,7 @@ Your password must meet the following criteria :\n
     @staticmethod
     def print_confirm_file_action(
         file_name: Union[Path, str], text: str
-    ) -> None:
+    ) -> str:
 
         file_name = Path(file_name)
         confirm = (
