@@ -39,6 +39,8 @@ Operation [ {func.__name__}() ] was completed in \
         return timeit_wrapper
 
 
+
+
     @staticmethod
     def clear_screen() -> None:
         command = "cls" if os.name == "nt" else "clear"
@@ -265,24 +267,22 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 
     @staticmethod
     def get_xor_key() -> str:
-        xor_key = (
+        return (
             Prompt.ask(
                 """[khaki3]
 [-] Enter the key you want to use for the encryption """
             )
         )
-        return xor_key
 
 
     @staticmethod
     def get_message_to_xor() -> str:
-        message = (
+        return (
             Prompt.ask(
                 """[khaki3]
 [-] Enter the message string you want to encrypt """
             )
         )
-        return message
 
 
     @staticmethod
@@ -292,13 +292,12 @@ Key File Hash Value (SHA-256) : {key_file_hash_value}
 
     @staticmethod
     def get_xor_message_to_decrypt() -> str:
-        message = (
+        return (
             Prompt.ask(
                 """[khaki3]
 [-] Enter the message string you want to decrypt """
             )
         )
-        return message
 
 
     @staticmethod
