@@ -1,25 +1,28 @@
 # !/usr/bin/env python3
-# DLU : 26-Jul-2026
+# DLU : 29-Jul-2026
 
-from rich.console import Console
 from rich.prompt import Prompt
 
-from resources import (AESEncryptor,
-        AESDecryptor,
-        KeyFileDecryptor,
-        KeyFileEncryptor,
-        PGPEncrypt,
-        PGPClass,
-        XOREncryptor,
-        XORDecryptor,
-        Functions)
+# Import the console object from the __init__.py file
+from . import console
+from resources import (
+    DataEncryptor,
+    KEYClass,
+    AESClass,
+    PGPClass,
+    XORClass,
+    AESDecryptor,
+    KeyFileDecryptor,
+    Functions,
+    INITIAL_MENU_PROMPT,
+    TOP_LEVEL_ENCRYPTION_MENU_PROMPT,
+    PASSWORD_ENCRYPTION_PROMPT,
+    PGP_ENCRYPTION_PROMPT,
+    XOR_ENCRYPTION_PROMPT,
+)
 
 __author__ = "[@mikespon]"
-__last_updated__ = "15-Jul-2026"
-
-
-# Make the console object
-c = Console()
+__last_updated__ = "29-Jul-2026"
 
 
 # password = "mysecretpassword34"
@@ -32,10 +35,8 @@ class App:
         """When a valid option is not entered, the user will be prompted to
         try again and enter a valid option.
         """
-        c.print(
-            """[bright_red]
-[!] You did not enter a valid option. Please try again."""
-        )
+        console.print("""[bright_red]
+[!] You did not enter a valid option. Please try again.""")
         App.main(self)
 
 
@@ -49,71 +50,144 @@ class App:
         Functions.clear_screen()
         """Main function where the user can pick what option they want."""
 
-        choice = (
-            Prompt.ask(f"""[dodger_blue1]
-----------------------------------------
-ENCRYPT/DECRYPT APPLICATION MENU
-v.0.3.17076096
-----------------------------------------[bright_white]
-
-ENCRYPTION
-
-[A] Use a .key file to encrypt file/files
-[B] Use a password to encrypt file/files
-[C] Encrypt file/files using PGP
-[D] Encrypt message/file using XOR
-
-DECRYPTION
-
-[E] Decrypt file/files using a .key file
-[F] Decrypt file/files using a password
-[G] Decrypt file/files using a PGP key file
-[H] Decrypt message/file using XOR
-
-[Q] Quit the Application[khaki3]
-
-
-ENTER CHOICE """,
-                choices=["a", "b", "c", "d", "e", "f", "g", "h", "q"],
-                show_choices=False)
+        initial_choice = (
+            Prompt.ask(
+                INITIAL_MENU_PROMPT,
+                choices=["1", "2", "q"],
+                show_choices=False
+            )
             .strip()
             .lower()
         )
 
+        if initial_choice == "q":
+            Functions.exit_application()
+            return
 
-        if choice == "a":
-            Functions.clear_screen()
-            KeyFileEncryptor(app_instance=self).get_target_choice()
-
-
-        elif choice == "b":
-            Functions.clear_screen()
-            AESEncryptor(app_instance=self).get_target_choice()
-
-
-        elif choice == "c":
-            Functions.clear_screen()
-            PGPEncrypt(app_instance=self).get_target_choice()
+        if initial_choice == "1":
+            encryption_choice = (
+                Prompt.ask(
+                    TOP_LEVEL_ENCRYPTION_MENU_PROMPT,
+                    choices=["a", "b", "c", "d", "q"],
+                    show_choices=False,
+                )
+            ).strip().lower()
 
 
-        elif choice == "d":
-            Functions.clear_screen()
-            XOREncryptor(app_instance=self).get_target_choice()
+            if encryption_choice == "q":
+                Functions.exit_application()
+                return
+
+            if encryption_choice == "a":
+                Functions.clear_screen()
+                XORClass.get_key_target_choice()
+
+            elif encryption_choice == "b":
+                Functions.clear_screen()
+                #TODO -- create this function and move logic into it
+                AESClass.get_aes_target_choice()
+
+            elif encryption_choice == "c":
+                Functions.clear_screen()
+                #TODO -- create this function and move logic into it
+                PGPClass.get_pgp_target_choice()
+
+            elif encryption_choice == "d":
+                Functions.clear_screen()
+                #TODO -- create this function and move logic into it
+                XORClass.get_xor_target_choice()
 
 
 
-            option = Prompt.ask("""[dodger_blue1]
----------------------------------------
-ENCRYPT FILE(S) USING AN XOR KEY
----------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
-[1] Encrypt a single message string
-[2] Encrypt a file\n
-[R] Return to the main menu
-[Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
-                choices=["1", "2", "r", "q"],
-                show_choices=False).strip().lower()
+#!
+#! LEFT OFF HERE -- FIX THINGS BELOW THIS LINE
+#!
+
+            elif encryption_choice == "b":
+                Functions.clear_screen()
+                password_encryption_choice = (
+                    Prompt.ask(
+                        PASSWORD_ENCRYPTION_PROMPT,
+                        choices=["1", "2", "3", "4", "r", "q"],
+                        show_choices=False,
+                    )
+                    .strip()
+                    .lower()
+                )
+
+            elif encryption_choice == "c":
+                Functions.clear_screen()
+                pgp_encryption_choice = (
+                    Prompt.ask(
+                        PGP_ENCRYPTION_PROMPT,
+                        choices=["1", "2", "3", "r", "q"],
+                        show_choices=False,
+                    )
+                    .strip()
+                    .lower()
+                )
+
+            elif encryption_choice == "d":
+                Functions.clear_screen()
+                xor_encryption_choice = (
+                    Prompt.ask(
+                        XOR_ENCRYPTION_PROMPT,
+                        choices=["1", "2", "3", "r", "q"],
+                        show_choices=False,
+                    )
+                    .strip()
+                    .lower()
+                )
+
+
+
+
+
+
+
+
+
+        elif initial_choice == "2":
+            pass
+
+
+#
+
+
+
+
+
+
+
+
+
+        # if choice == "a":
+        #     Functions.clear_screen()
+        #     DataEncryptor(app_instance=self).run_single_file_encryption(encryption_type=)
+        #     # KeyFileEncryptor(app_instance=self).get_target_choice()
+
+
+        # elif choice == "b":
+        #     Functions.clear_screen()
+        #     AESEncryptor(app_instance=self).get_target_choice()
+
+        # elif choice == "c":
+        #     pass
+
+
+        # elif choice == "d":
+        #     Functions.clear_screen()
+        #     PGPEncrypt(app_instance=self).get_target_choice()
+
+
+        # elif choice == "e":
+        #     Functions.clear_screen()
+        #     XOREncryptor(app_instance=self).get_target_choice()
+
+            # option = Prompt.ask(
+            #     XOR_PROMPT,
+            #     choices=["1", "2", "r", "q"],
+            #     show_choices=False).strip().lower()
 
 
 
@@ -122,18 +196,18 @@ ENCRYPT FILE(S) USING AN XOR KEY
 #! ====================
 
 
-        elif choice == "e":
+        elif choice == "f":
             Functions.clear_screen()
             KeyFileDecryptor(app_instance=self).get_target_choice()
 
 
-        elif choice == "f":
+        elif choice == "g":
             Functions.clear_screen()
             AESDecryptor(app_instance=self).get_target_choice()
 
 
 
-        elif choice == "g":
+        elif choice == "h":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 DECRYPT FILE(S) USING PGP KEY
@@ -169,7 +243,7 @@ DECRYPT FILE(S) USING PGP KEY
                 App.no_valid_option(self)
 
 
-        elif choice == "h":
+        elif choice == "i":
             option = Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 DECRYPT FILE(S) USING AN XOR KEY
@@ -187,14 +261,14 @@ DECRYPT FILE(S) USING AN XOR KEY
 
             if option == "1":
                 message = Functions.get_xor_message_to_decrypt()
-                xor_key = Functions.get_xor_key()
+                xor_key = Functions.get_xor_key_prompt()
                 XORDecryption.decrypt_msg_with_xor(self,
                     message=message,
                     xor_key=xor_key)
 
             elif option == "2":
                 file_path = Functions.get_file_path()
-                xor_key = Functions.get_xor_key()
+                xor_key = Functions.get_xor_key_prompt()
                 XORDecryption.decrypt_file_with_xor(self,
                     file_path=file_path,
                     xor_key=xor_key)

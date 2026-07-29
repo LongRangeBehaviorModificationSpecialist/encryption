@@ -12,14 +12,13 @@ from resources.functions import Functions
 
 class AESClass:
 
-
-    def __init__(self) -> None:
-        self.IV_LENGTH = 12
-        self.TAG_LENGTH = 16
-        self.SALT_LENGTH = 16
+    IV_LENGTH = 12
+    TAG_LENGTH = 16
+    SALT_LENGTH = 16
 
 
-    def _derive_key(self, password: str, salt: bytes) -> bytes:
+    @staticmethod
+    def _derive_key(password: str, salt: bytes) -> bytes:
         """Derives a cryptographically strong 256-bit key from a weak password
         using Scrypt.
         """
@@ -28,13 +27,12 @@ class AESClass:
 
 
     def encrypt_with_aes(self, plaintext: str, mode: str) -> str:
-
         password = Functions.get_password()
 
         # Generate fresh, random cryptographic parameters
         salt = os.urandom(self.SALT_LENGTH)
         iv = os.urandom(self.IV_LENGTH)
-        key = AESClass._derive_key(password, salt)
+        key = self._derive_key(password, salt)
 
         # Default tag for non-authenticated modes like CBC
         tag = b""

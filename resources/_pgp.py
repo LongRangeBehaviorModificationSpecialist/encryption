@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 27-Jul-2026
+# DLU : 29-Jul-2026
 
 
 import gnupg
@@ -9,13 +9,12 @@ from pathlib import Path
 import shutil
 from typing import List, Optional, Union
 
-from rich.console import Console
 from rich.prompt import Prompt
 
+# Import the console object from the main __init__.py file
+from .. import console
 from resources.functions import Functions
-
-
-c = Console()
+from resources.prompts import GET_PGP_KEY_CHOICE_TEXT
 
 
 logger = logging.getLogger(__name__)
@@ -66,25 +65,76 @@ class PGPClass:
         self.public_key_file = self.script_path / "mas_public_key.asc"
 
 
-    def ask_pgp_key_choice(self) -> str:
+    def return_to_main_menu(self) -> None:
+        """Returns control cleanly back to the main menu processor."""
+        self.app.main(self)
+
+
+    def get_pgp_key_choice(self) -> str:
         Functions.clear_screen()
         return (
-            Prompt.ask("""[dodger_blue1]
----------------------------------------
-ENCRYPT FILE(S) USING PGP KEY
----------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
-[1] Generate new PGP key pair
-[2] Encrypt files using PGP encryption
-[R] Return to the main menu
-[Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+            Prompt.ask(
+                GET_PGP_KEY_CHOICE_TEXT,
                 choices=["1", "2", "r", "q"],
                 show_choices=False,
             )
             .strip()
             .lower()
         )
+
+
+    def pgp_export_public_key(self, keyid: str) -> str:
+        """Exports an armored public key by Key ID to the designated file path.
+
+        Args:
+            keyid: ID or fingerprint of the PGP key to export.
+
+        Returns:
+            str: The exported ASCII-armored public key block.
+        """
+        public_key_data = self.gpg.export_keys(
+            keyids=keyid, output=str(self.public_key_file)
+        )
+
+        if not public_key_data or not self.public_key_file.exists():
+            raise RuntimeError(
+                f"Failed to export public key for Key ID '{keyid}'"
+            )
+
+        console.print(f"""[bright_white]
+[-] Public key exported successfully to {self.public_key_file.name}""")
+
+        return str(public_key_data)
+
+
+    def pgp_export_private_key(self, keyid: str, password: str) -> str:
+        """Exports an armored private key by Key ID and passphrase to the
+        designated file path.
+
+        Args:
+            keyid: ID or fingerprint of the PGP key to export.
+            password: Passphrase protecting the private key.
+
+        Returns:
+            str: The exported ASCII-armored secret key block.
+        """
+        private_key_data = self.gpg.export_keys(
+            keyids=keyid,
+            secret=True,
+            passphrase=password,
+            output=str(self.private_key_file)
+        )
+
+        if not private_key_data or not self.private_key_file.exists():
+            raise RuntimeError(
+                f"Failed to export private key for Key ID : {keyid}. \
+Check keyid/passphrase."
+            )
+
+        console.print(f"""[bright_white]
+[-] Private key exported successfully to {self.private_key_file.name}""")
+
+        return str(private_key_data)
 
 
     def generate_pgp_key(
@@ -102,10 +152,8 @@ ENCRYPT FILE(S) USING PGP KEY
         """
         if not email_address or "@" not in email_address:
             raise ValueError(
-                f"Invalid or missing email address provided : '{email_address}'"
+                f"Invalid or missing email address provided : {email_address}"
             )
-
-        password = Functions.get_password()
 
         input_data = self.gpg.gen_key_input(
             name_email=email_address,
@@ -118,32 +166,18 @@ ENCRYPT FILE(S) USING PGP KEY
 
         if not key.fingerprint:
             raise RuntimeError(
-                f"PGP key generation failed. Engine error output: {key.stderr}."
+                f"PGP key generation failed. Engine error output : {key.stderr}"
             )
 
         fingerprint = str(key.fingerprint)
-        c.print(f"""[bright_white]
-[-] Generated Key Fingerprint: {fingerprint}."""
-        )
+        console.print(f"""[bright_white]
+[-] Generated Key Fingerprint : {fingerprint}""")
 
         # Export keys upon successful generation
         self.pgp_export_public_key(keyid=fingerprint)
         self.pgp_export_private_key(keyid=fingerprint, password=password)
 
         return fingerprint
-
-
-    def get_existing_key_file_path(self) -> Path:
-        """Prompts for a key file path and loop-validates its existence."""
-        while True:
-            key_file = (
-                Prompt.ask("""[bright_white]
-[-] Enter the path to the .key file to use to encrypt the file """
-                )
-            )
-            path = Path(key_file)
-            if path.is_file():
-                return path
 
 
     def pgp_encrypt_file(
@@ -185,28 +219,75 @@ ENCRYPT FILE(S) USING PGP KEY
             raise RuntimeError(
                 f"Failed to execute GPG encryption: {e}"
             ) from e
-        
+
         if not status.ok:
             # Clean up partial/empty output file if created
             if encrypted_file_path.exists():
                 encrypted_file_path.unlink(missing_ok=True)
 
             error_msg = getattr(
-                status, "status", getattr(status, "stderr", "Unknown GPG error")
-            )
+                status, "status", getattr(status, "stderr", "Unknown GPG error"))
             logger.error(
-                f"PGP encryption failed for {target_file_path.name} : {error_msg}"
-            )
+                f"PGP encryption failed for {target_file_path.name} : {error_msg}")
             raise RuntimeError(
                 f"PGP Encryption failed for '{target_file_path.name}'. \
-GPG status: {error_msg}"
-            )
+GPG status: {error_msg}")
 
         if hasattr(self, "print_status"):
             self.print_status(status)
 
-        c.print(f"""[green3]
-[-] PGP file encrypted successfully : {encrypted_file_path.name}"""
-                )
+        console.print(f"""[green3]
+[-] PGP file encrypted successfully : {encrypted_file_path.name}""")
 
         return encrypted_file_path
+
+
+    def pgp_encryption_workflow(self) -> None:
+        pgp_key_choice = self.get_pgp_key_choice()
+
+        if pgp_key_choice == "r":
+            self.return_to_main_menu()
+            return
+
+        if pgp_key_choice == "q":
+            Functions.exit_application()
+            return
+
+        if pgp_key_choice == "1":
+            # Get password and an email address in order to generate
+            # a new pgp key pair
+            password = Functions.get_password()
+            email_address = Functions.get_email_address()
+
+            if not password.strip() or not email_address.strip():
+                console.print("""[yellow]
+[!] Key generation cancelled : Missing password or email.""")
+                Prompt.ask("""[bright_white]
+Press Enter to return to menu...""")
+                return
+
+            self.generate_pgp_key(
+                password=password, email_address=email_address
+            )
+
+        #TODO -- Add option to return to menu to use the new keys to encrypt a file
+
+        elif pgp_key_choice == "2":
+            raw_path = Functions.get_file_path(text="ENCRYPTED")
+            # User cancelled input
+            if not raw_path or not raw_path.strip():
+                return
+
+            recipient = Prompt.ask("""[bright_white]
+[-] Enter recipient email or Key ID """).strip()
+            if not recipient:
+                console.print("""[yellow]
+[!] Encryption cancelled : No recipient specified""")
+                Prompt.ask("""[bright_white]
+Press Enter to continue...""")
+                return
+
+            self.pgp_encrypt_file(
+                target_file_path=Path(raw_path),
+                recipients=[recipient]
+            )

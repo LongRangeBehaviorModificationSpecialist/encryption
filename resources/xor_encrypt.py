@@ -179,7 +179,7 @@ ENCRYPT FILE(S) USING AN XOR KEY
                     return
 
                 if target_option == "1":
-                    xor_key = Functions.get_xor_key()
+                    xor_key = Functions.get_xor_key_prompt()
                     message = Functions.get_message_to_xor()
                     self.encrypt_msg_with_xor(
                         xor_key=xor_key, message=message

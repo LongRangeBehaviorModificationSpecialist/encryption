@@ -178,8 +178,6 @@ class KeyFileEncryptor:
     ) -> None:
         """Encrypts all discovered assets within a target directory."""
 
-        logger = logging.getLogger(__name__)
-
         target_dir_path = Path(target_dir_path)
 
         if not target_dir_path.exists():
@@ -215,21 +213,17 @@ class KeyFileEncryptor:
             c.print(f"""[bright_white]
 [-] Reading file : {file_path.name}..."""
                 )
-            try:
-                encrypted_path = self.encrypt_file_with_key(
-                    fernet=fernet,
-                    target_file_path=file_path
-                )
-                successful_encryptions.append(encrypted_path)
-            except Exception as e:
-                logger.error(
-                    f"Failed to encrypt file : {file_path}",
-                    exc_info=True
-                )
-                c.print(f"""[bright_red]
+
+            encrypted_path = self.encrypt_file_with_key(
+                fernet=fernet,
+                target_file_path=file_path
+            )
+            successful_encryptions.append(encrypted_path)
+
+            c.print(f"""[bright_red]
 [!] Error encrypting {file_path.name} : {e}."""
-                )
-                failed_encryptions.append(file_path)
+            )
+            failed_encryptions.append(file_path)
 
         if successful_encryptions:
             c.print(f"""[green]
