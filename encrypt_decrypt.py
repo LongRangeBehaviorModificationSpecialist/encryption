@@ -2,31 +2,24 @@
 # DLU : 29-Jul-2026
 
 from rich.prompt import Prompt
+from rich.console import Console
 
-# Import the console object from the __init__.py file
-from . import console
-from resources import (
-    DataEncryptor,
-    KEYClass,
-    AESClass,
-    PGPClass,
-    XORClass,
-    AESDecryptor,
-    KeyFileDecryptor,
-    Functions,
+from resources.functions import Functions
+from resources._aes import AESClass
+from resources._pgp import PGPClass
+from resources._key import KEYClass
+from resources._xor import XORClass
+
+from resources.prompts import (
     INITIAL_MENU_PROMPT,
     TOP_LEVEL_ENCRYPTION_MENU_PROMPT,
-    PASSWORD_ENCRYPTION_PROMPT,
-    PGP_ENCRYPTION_PROMPT,
-    XOR_ENCRYPTION_PROMPT,
 )
 
 __author__ = "[@mikespon]"
 __last_updated__ = "29-Jul-2026"
 
 
-# password = "mysecretpassword34"
-email_address = "testaddress@email.com"
+console = Console()
 
 
 class App:
@@ -65,6 +58,7 @@ class App:
             return
 
         if initial_choice == "1":
+            Functions.clear_screen()
             encryption_choice = (
                 Prompt.ask(
                     TOP_LEVEL_ENCRYPTION_MENU_PROMPT,
@@ -80,22 +74,20 @@ class App:
 
             if encryption_choice == "a":
                 Functions.clear_screen()
-                XORClass.get_key_target_choice()
+                KEYClass.get_key_encryption_choice(self)
 
             elif encryption_choice == "b":
                 Functions.clear_screen()
-                #TODO -- create this function and move logic into it
-                AESClass.get_aes_target_choice()
+                AESClass.get_aes_encryption_choice(self)
 
             elif encryption_choice == "c":
                 Functions.clear_screen()
                 #TODO -- create this function and move logic into it
-                PGPClass.get_pgp_target_choice()
+                PGPClass.get_pgp_encryption_choice(self)
 
             elif encryption_choice == "d":
                 Functions.clear_screen()
-                #TODO -- create this function and move logic into it
-                XORClass.get_xor_target_choice()
+                XORClass.get_xor_encryption_choice(self)
 
 
 
@@ -107,7 +99,7 @@ class App:
                 Functions.clear_screen()
                 password_encryption_choice = (
                     Prompt.ask(
-                        PASSWORD_ENCRYPTION_PROMPT,
+                        AES_ENCRYPTION_PROMPT,
                         choices=["1", "2", "3", "4", "r", "q"],
                         show_choices=False,
                     )

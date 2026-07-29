@@ -3,7 +3,6 @@
 
 
 import gnupg
-import logging
 import os
 from pathlib import Path
 import shutil
@@ -12,12 +11,9 @@ from typing import List, Optional, Union
 from rich.prompt import Prompt
 
 # Import the console object from the main __init__.py file
-from .. import console
+from . import console
 from resources.functions import Functions
-from resources.prompts import GET_PGP_KEY_CHOICE_TEXT
-
-
-logger = logging.getLogger(__name__)
+from resources.prompts import PGP_ENCRYPTION_PROMPT
 
 
 class PGPClass:
@@ -74,7 +70,7 @@ class PGPClass:
         Functions.clear_screen()
         return (
             Prompt.ask(
-                GET_PGP_KEY_CHOICE_TEXT,
+                PGP_ENCRYPTION_PROMPT,
                 choices=["1", "2", "r", "q"],
                 show_choices=False,
             )
@@ -128,8 +124,7 @@ class PGPClass:
         if not private_key_data or not self.private_key_file.exists():
             raise RuntimeError(
                 f"Failed to export private key for Key ID : {keyid}. \
-Check keyid/passphrase."
-            )
+Check keyid/passphrase.")
 
         console.print(f"""[bright_white]
 [-] Private key exported successfully to {self.private_key_file.name}""")
@@ -174,8 +169,8 @@ Check keyid/passphrase."
 [-] Generated Key Fingerprint : {fingerprint}""")
 
         # Export keys upon successful generation
-        self.pgp_export_public_key(keyid=fingerprint)
-        self.pgp_export_private_key(keyid=fingerprint, password=password)
+        PGPClass.pgp_export_public_key(self, keyid=fingerprint)
+        PGPClass.pgp_export_private_key(self, keyid=fingerprint, password=password)
 
         return fingerprint
 
@@ -196,12 +191,10 @@ Check keyid/passphrase."
 
         if not recipients:
             raise ValueError(
-                "At least one recipient email or key ID must be provided."
-            )
+                "At least one recipient email or key ID must be provided.")
 
         encrypted_file_path = target_file_path.with_name(
-            f"{target_file_path.name}.pgp"
-        )
+            f"{target_file_path.name}.pgp")
 
         try:
             with open(target_file_path, "rb") as f:
@@ -212,13 +205,8 @@ Check keyid/passphrase."
                     output=str(encrypted_file_path)
                 )
         except Exception as e:
-            logger.error(
-                f"GPG process invocation failed for {target_file_path}: {e}",
-                exc_info=True,
-            )
             raise RuntimeError(
-                f"Failed to execute GPG encryption: {e}"
-            ) from e
+                f"Failed to execute GPG encryption: {e}") from e
 
         if not status.ok:
             # Clean up partial/empty output file if created
@@ -226,12 +214,15 @@ Check keyid/passphrase."
                 encrypted_file_path.unlink(missing_ok=True)
 
             error_msg = getattr(
-                status, "status", getattr(status, "stderr", "Unknown GPG error"))
-            logger.error(
-                f"PGP encryption failed for {target_file_path.name} : {error_msg}")
+                status, "status", getattr(
+                    status,
+                    "stderr",
+                    "Unknown GPG error"
+                )
+            )
             raise RuntimeError(
                 f"PGP Encryption failed for '{target_file_path.name}'. \
-GPG status: {error_msg}")
+GPG status : {error_msg}")
 
         if hasattr(self, "print_status"):
             self.print_status(status)
@@ -243,7 +234,7 @@ GPG status: {error_msg}")
 
 
     def pgp_encryption_workflow(self) -> None:
-        pgp_key_choice = self.get_pgp_key_choice()
+        pgp_key_choice = PGPClass.get_pgp_key_choice(self)
 
         if pgp_key_choice == "r":
             self.return_to_main_menu()
@@ -266,8 +257,10 @@ GPG status: {error_msg}")
 Press Enter to return to menu...""")
                 return
 
-            self.generate_pgp_key(
-                password=password, email_address=email_address
+            PGPClass.generate_pgp_key(
+                self,
+                password=password,
+                email_address=email_address
             )
 
         #TODO -- Add option to return to menu to use the new keys to encrypt a file
@@ -287,7 +280,8 @@ Press Enter to return to menu...""")
 Press Enter to continue...""")
                 return
 
-            self.pgp_encrypt_file(
+            PGPClass.pgp_encrypt_file(
+                self,
                 target_file_path=Path(raw_path),
                 recipients=[recipient]
             )

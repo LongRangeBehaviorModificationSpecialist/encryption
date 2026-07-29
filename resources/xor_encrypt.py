@@ -31,7 +31,7 @@ class XOREncryptor:
         return bytes(b ^ key[i % key_len] for i, b in enumerate(data))
 
 
-    def encrypt_msg_with_xor(
+    def xor_encrypt_msg(
         self,
         message: str,
         xor_key: str,
@@ -87,7 +87,7 @@ The Base64-encoded encrypted message is:\n
         return b64_encoded_msg
 
 
-    def encrypt_file_with_xor(
+    def xor_encrypt_single_file(
         self, file_path: Union[str, Path], xor_key: str
     ) -> None:
         """XOR encrypts a file by reading/writing raw binary streams."""
@@ -181,7 +181,7 @@ ENCRYPT FILE(S) USING AN XOR KEY
                 if target_option == "1":
                     xor_key = Functions.get_xor_key_prompt()
                     message = Functions.get_message_to_xor()
-                    self.encrypt_msg_with_xor(
+                    self.xor_encrypt_msg(
                         xor_key=xor_key, message=message
                     )
                 else:

@@ -7,7 +7,7 @@ from typing import Union
 from rich.prompt import Prompt
 
 # Import the console object from the primary __init__.py file
-from .. import console
+from . import console
 from resources.functions import Functions
 from resources._aes import AESClass
 from resources._key import KEYClass
@@ -82,12 +82,12 @@ class DataEncryptor:
                         )
 
                     elif "AES.CBC" in encryption_type:
-                        encrypted_data = AESClass.encrypt_with_aes(
+                        encrypted_data = AESClass.aes_encrypt_single_file(
                             plaintext=plaintext, mode="AES.CBC"
                         )
 
                     elif "AES.GCM" in encryption_type:
-                        encrypted_data = AESClass.encrypt_with_aes(
+                        encrypted_data = AESClass.aes_encrypt_single_file(
                             plaintext=plaintext, mode="AES.GCM"
                         )
 

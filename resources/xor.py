@@ -13,7 +13,7 @@ c = Console()
 class XOREncryption:
 
 
-    def encrypt_msg_with_xor(self,
+    def xor_encrypt_msg(self,
             message: str,
             xor_key: str) -> None:
         encrypted_text = ""
@@ -36,7 +36,7 @@ The encrypted message is:\n
 ==========================================""")
 
 
-    def encrypt_file_with_xor(self,
+    def xor_encrypt_single_file(self,
             file_path: Path,
             xor_key: str) -> None:
 

@@ -4,16 +4,11 @@ INITIAL_MENU_PROMPT = f"""[dodger_blue1]
 ----------------------------------------
 ENCRYPT/DECRYPT APPLICATION MENU
 v.{VERSION}
-----------------------------------------[bright_white]
-
-What do you want to do? (select one):
-
+----------------------------------------\n
+[khaki3]What do you want to do? (select one) :[bright_white]\n
 [1] Run ENCRYPTION
-[2] Run DECRYPTION
-
-[Q] Quit the Application[khaki3]
-
-
+[2] Run DECRYPTION\n
+[Q] Quit the Application[khaki3]\n\n
 ENTER CHOICE """
 
 
@@ -35,7 +30,7 @@ KEY_ENCRYPTION_PROMPT = """[dodger_blue1]
 ----------------------------------------
 ENCRYPT FILE(S) WITH A .KEY FILE
 ----------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[khaki3]Options :[bright_white]\n
 [1] Create a [bold]new[/bold] .key file
 [2] Encrypt a single file using a .key
 [3] Erypt all files in a folder using a .key\n
@@ -44,11 +39,11 @@ ENCRYPT FILE(S) WITH A .KEY FILE
 [khaki3]ENTER CHOICE """
 
 
-PASSWORD_ENCRYPTION_PROMPT = """[dodger_blue1]
+AES_ENCRYPTION_PROMPT = """[dodger_blue1]
 ----------------------------------------------------
 USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 ----------------------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[khaki3]Options :[bright_white]\n
 [AES.CBC mode]\n
 [1] Encrypt a single file
 [2] Encrypt all files in a folder\n
@@ -64,7 +59,7 @@ PGP_ENCRYPTION_PROMPT = """[dodger_blue1]
 ---------------------------------------
 ENCRYPT FILE(S) USING PGP KEY
 ---------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
+[khaki3]Options :[bright_white]\n
 [1] Create new PGP key pair
 [2] Encrypt a file using PGP
 [3] Encrypt all files in a folder using PGP\n
@@ -77,7 +72,7 @@ XOR_ENCRYPTION_PROMPT = """[dodger_blue1]
 --------------------------------------------
 ENCRYPT MESSAGE OR FILE(S) USING AN XOR KEY
 --------------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[khaki3]Options :[bright_white]\n
 [1] Encrypt a single message string
 [2] Encrypt a file
 [3] Encrypt all files in a folder\n
@@ -90,14 +85,14 @@ DECRYPTION_MENU_PROMPT = f"""[dodger_blue1]
 ----------------------------------------
 DECRYPTION MENU
 v.{VERSION}
-----------------------------------------[bright_white]\n
-DECRYPTION\n
+----------------------------------------\n
+[khaki3]Select the ENCRYPTION method you want to use :[bright_white]\n
 [F] Decrypt file/files using a .key file
 [G] Decrypt file/files using a password
 [H] Decrypt file/files using a PGP key file
 [I] Decrypt message/file using XOR\n
-[Q] Quit the Application[khaki3]\n\n
-ENTER CHOICE """
+[Q] Quit the Application\n\n
+[khaki3]ENTER CHOICE """
 
 
 def format_key_file_log(key_path, hash_value, timestamp) -> str:

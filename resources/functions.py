@@ -4,7 +4,6 @@
 from datetime import datetime
 from rich.prompt import Prompt
 from functools import wraps
-import hashlib
 import os
 import subprocess
 from pathlib import Path
@@ -14,7 +13,7 @@ import time
 from typing import Union
 
 # Import the console object from the main __init__.py file
-from .. import console
+from . import console
 
 
 class Functions:
@@ -44,8 +43,8 @@ class Functions:
 
     @staticmethod
     def exit_application() -> None:
-        console.print("""[bright_white]
-[!] Exiting the application. Goodbye...""")
+        console.print("""[green3]
+[!] Exiting the application. Goodbye...\n""")
         sys.exit(0)
 
 

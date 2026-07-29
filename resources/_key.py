@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet
 from rich.prompt import Prompt
 
 # Import the console object from the main __init__.py file
-from .. import console
+from . import console
 from resources.functions import Functions
 from resources.prompts import (
     KEY_ENCRYPTION_PROMPT,
@@ -53,19 +53,15 @@ class KEYClass:
             bytes: The generated key.
         """
         key_file_dir = Path(
-            Prompt.ask(
-                """[bright_white]
-[-] Where do you want to save the key file? """
-            )
+            Prompt.ask("""[bright_white]
+[-] Where do you want to save the key file? """)
             .strip()
             .strip('"\'')
         )
 
         key_file_name = (
-            Prompt.ask(
-                """[bright_white]
-[-] Enter a name for the key file (w/o file extension) """
-            )
+            Prompt.ask("""[bright_white]
+[-] Enter a name for the key file (w/o file extension) """)
             .strip()
         )
 
@@ -86,8 +82,8 @@ class KEYClass:
             log_content = format_key_file_log(
                 key_path=full_key_path,
                 hash_value=key_file_hash_value,
-                timestamp=Functions.get_date_time(),
-)
+                timestamp=Functions.get_date_time()
+            )
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
@@ -96,7 +92,7 @@ class KEYClass:
                     key_file_dir=key_file_dir,
                     full_key_path=full_key_path,
                     key_file_hash_file=key_file_hash_file,
-                    key_file_hash_value=key_file_hash_value,
+                    key_file_hash_value=key_file_hash_value
                 )
             )
 
@@ -104,8 +100,7 @@ class KEYClass:
 
         except IOError as e:
             console.print(f"""[bright_red]
-[!] Failed to write key data to file : {e}"""
-            )
+[!] Failed to write key data to file : {e}""")
             raise
 
 
@@ -113,10 +108,8 @@ class KEYClass:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
             key_file = (
-                Prompt.ask(
-                    """[bright_white]
-[-] Enter the path to the .key file to use for file encryption """
-                )
+                Prompt.ask("""[bright_white]
+[-] Enter the path of the .key file to use for file encryption """)
             )
             path = Path(key_file)
             if path.is_file():
@@ -179,13 +172,14 @@ class KEYClass:
 [!] {target_dir_path} does not exist or is not a valid directory.""")
             return []
 
-        console.print(f"""[bright_white]
+        console.print(f"""[green3]
 [-] {target_dir_path} validated. Fetching targets...""")
 
         try:
             all_files = [
                 f for f in target_dir_path.rglob("*")
-                if f.is_file() and f.suffix != ".encrypted"]
+                if f.is_file() and f.suffix != ".encrypted"
+            ]
         except Exception as e:
             console.print(f"""[bright_red]
 [!] Failed to retrieve files from {target_dir_path} : {e}""")
@@ -201,7 +195,8 @@ class KEYClass:
 
         for file_path in all_files:
             try:
-                encrypted_path = self.key_encrypt_single_file(
+                encrypted_path = KEYClass.key_encrypt_single_file(
+                    self,
                     fernet=fernet,
                     target_file_path=file_path)
                 successful_encryptions.append(encrypted_path)
@@ -230,7 +225,7 @@ Failed to encrypt {len(failed_encryptions)} files :""")
             return successful_encryptions
 
 
-    def get_key_target_choice(self) -> None:
+    def get_key_encryption_choice(self) -> None:
         """Gets input from the user on what action to start next."""
         key_encryption_choice = (
             Prompt.ask(
@@ -249,19 +244,21 @@ Failed to encrypt {len(failed_encryptions)} files :""")
             return
 
         if key_encryption_choice == "1":
-            self.generate_and_save_key()
+            KEYClass.generate_and_save_key(self)
 
-        key_file_path = self.get_existing_key_file_path()
-        fernet = self._load_fernet(key_file_path=key_file_path)
+        key_file_path = KEYClass.get_existing_key_file_path(self)
+        fernet = KEYClass._load_fernet(self, key_file_path=key_file_path)
 
         if key_encryption_choice == "2":
             target_file_path = Functions.get_file_path(text="encrypted")
-            self.key_encrypt_single_file(
+            KEYClass.key_encrypt_single_file(
+                self,
                 target_file_path=target_file_path,
                 fernet=fernet,)
 
         elif key_encryption_choice == "3":
             target_dir_path = Functions.get_folder_path(text="encrypted")
-            self.key_encrypt_files_in_folder(
+            KEYClass.key_encrypt_files_in_folder(
+                self,
                 target_dir_path=target_dir_path,
                 fernet=fernet,)

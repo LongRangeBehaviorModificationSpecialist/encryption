@@ -66,9 +66,7 @@ class AESEncryptor:
             )
 
         c.print(f"""[bright_white]
-[-] Reading file : {target_file_path.name}..."""
-        )
-        # Read plaintext data
+[-] Reading file : {target_file_path.name}...""")
         plaintext = target_file_path.read_bytes()
 
         # Generate fresh, random cryptographic parameters
@@ -263,7 +261,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                 is_single_file = target_option == "1"
 
                 if is_single_file:
-                    target_file_path = Functions.get_file_path(text="ENCRYPTED")
+                    target_file_path = Functions.get_file_path(text="encrypted")
                     # User cancelled input
                     if not target_file_path:
                         continue
@@ -279,7 +277,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                         mode=mode
                     )
                 else:
-                    target_dir_path = Functions.get_folder_path(text="ENCRYPT")
+                    target_dir_path = Functions.get_folder_path(text="encrypted")
                     if not target_dir_path:
                         continue
 
