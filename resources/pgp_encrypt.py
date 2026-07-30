@@ -140,7 +140,7 @@ Check keyid/passphrase."
         return str(private_key_data)
 
 
-    def generate_pgp_key(
+    def generate_pgp_key_pair(
         self, password: str, email_address: str, key_length: int = 2048
     ) -> str:
         """Generates a new RSA PGP key pair and exports public/private keys.
@@ -188,7 +188,7 @@ Check keyid/passphrase."
 
     def pgp_encrypt_file(
         self,
-        target_file_path: Union[Path, str],
+        target_file_path: Path | str,
         recipients: Union[str, List[str]],
         always_trust: bool = True
     ) -> None:
@@ -403,7 +403,7 @@ Press Enter to return to menu..."""
                         )
                         continue
 
-                    self.generate_pgp_key(
+                    self.generate_pgp_key_pair(
                         password=password, email_address=email_address
                     )
 

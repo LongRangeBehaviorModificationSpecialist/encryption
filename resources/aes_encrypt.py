@@ -128,7 +128,7 @@ class AESEncryptor:
 
 
     def aes_encrypt_directory(
-        self, target_folder_path: Union[Path, str], password: str,  mode: str
+        self, target_folder_path: Path | str, password: str,  mode: str
     ) -> List[Path]:
         """Encrypts all valid files in a given directory, skipping already
         encrypted files and gracefully handling individual file errors.

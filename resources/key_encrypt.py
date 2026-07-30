@@ -31,7 +31,7 @@ class KeyFileEncryptor:
         self.app.main(self)
 
 
-    def _load_fernet(self, key_file_path: Union[Path, str]) -> bytes:
+    def _load_fernet(self, key_file_path: Path | str) -> bytes:
 
         if not key_file_path.is_file():
             c.print(f"""[bright_red]
@@ -127,7 +127,7 @@ class KeyFileEncryptor:
     def encrypt_file_with_key(
         self,
         fernet: bytes,
-        target_file_path: Union[Path, str]
+        target_file_path: Path | str
     ) -> None:
         """Reads an existing key and encrypts a single target file."""
 
@@ -174,7 +174,7 @@ class KeyFileEncryptor:
     def encrypt_files_in_dir_with_key(
         self,
         fernet: bytes,
-        target_dir_path: Union[Path, str]
+        target_dir_path: Path | str
     ) -> None:
         """Encrypts all discovered assets within a target directory."""
 

@@ -4,3 +4,4 @@ temp
 *.asc
 vars.py
 .vscode
+hold.py

@@ -84,7 +84,7 @@ class PGPClass:
         return private_key
 
 
-    def generate_pgp_key(self, password: str, email_address: str) -> None:
+    def generate_pgp_key_pair(self, password: str, email_address: str) -> None:
         """
         Generates new pair of PGP keys.
 

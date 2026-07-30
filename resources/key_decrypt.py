@@ -28,7 +28,7 @@ class KeyFileDecryptor:
         self.app.main()
 
 
-    def get_decryption_key_file_path(self) -> Path:
+    def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
             key_file = Prompt.ask("""[bright_white]
@@ -215,7 +215,7 @@ DECRYPT FILE WITH PROVIDED .KEY
                 Functions.exit_application()
                 return
 
-            key_file_path = self.get_decryption_key_file_path()
+            key_file_path = self.get_existing_key_file_path()
 
             is_single_file = (target_option == "1")
 

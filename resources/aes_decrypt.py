@@ -1,16 +1,16 @@
 # !/usr/bin/env python3
-# DLU : 27-Jul-2026
+# DLU : 30-Jul-2026
 
-import logging
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives import padding, hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import logging
 from pathlib import Path
-from typing import List, Union
-
 from rich.console import Console
 from rich.prompt import Prompt
+import textwrap
+from typing import List, Union
 
 from resources.functions import Functions
 
@@ -181,7 +181,7 @@ file is corrupted."
 
 
     def aes_decrypt_directory(
-        self, target_folder_path: Union[Path, str], password: str, mode: str
+        self, target_folder_path: Path | str, password: str, mode: str
     ) ->  List[Path]:
         """Decrypts all '.encrypted' files in a directory, returning a list
         of successfully decrypted file paths.
@@ -271,16 +271,16 @@ Failed to decrypt {len(failed_decryptions)} files :"""
             try:
                 Functions.clear_screen()
                 target_option = (
-                    Prompt.ask("""[dodger_blue1]
+                    Prompt.ask(textwrap.dedent("""[dodger_blue1]
 ----------------------------------------------------
-USE PASSWORD TO DECRYPT FILE(S) [AES-CBC / AES-GCM]
+USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
 ----------------------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[khaki3]Options :[bright_white]\n
 [1] Decrypt a single file using a password
 [2] Decrypt all files in a directory using a password\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[khaki3]ENTER CHOICE """),
                         choices=["1", "2", "r", "q"],
                         show_choices=False,
                     )
