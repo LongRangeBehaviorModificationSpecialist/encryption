@@ -1,10 +1,11 @@
 VERSION = "0.3.17076096"
 
 INITIAL_MENU_PROMPT = f"""[dodger_blue1]
---------------------------------------------
-ENCRYPT/DECRYPT APPLICATION MENU
+----------------------------
+ENCRYPT/DECRYPT
+APPLICATION MENU
 v.{VERSION}
---------------------------------------------\n
+----------------------------\n
 [khaki3]What do you want to do? (select one) :[bright_white]\n
 [1] Run ENCRYPTION
 [2] Run DECRYPTION\n
@@ -13,23 +14,24 @@ v.{VERSION}
 
 
 TOP_LEVEL_ENCRYPTION_MENU_PROMPT = f"""[dodger_blue1]
---------------------------------------------
-ENCRYPTION MENU
+----------------------------
+MAIN ENCRYPTION MENU
 v.{VERSION}
---------------------------------------------\n
+----------------------------\n
 [khaki3]Select the ENCRYPTION method you want to use :[bright_white]\n
-[A] Use a .key file
-[B] Use a password
-[C] Use PGP keys
-[D] Use XOR\n
+[1] Use a .key file
+[2] Use a password
+[3] Use PGP keys
+[4] Use XOR\n
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
 
 
 KEY_ENCRYPTION_PROMPT = """[dodger_blue1]
---------------------------------------------
-ENCRYPT FILE(S) WITH A .KEY FILE
---------------------------------------------\n
+----------------------------
+ENCRYPT FILE(S)
+WITH A .KEY FILE
+----------------------------\n
 [khaki3]Options :[bright_white]\n
 [1] Create a [bold]new[/bold] .key file
 [2] Encrypt a single file using a .key
@@ -40,9 +42,10 @@ ENCRYPT FILE(S) WITH A .KEY FILE
 
 
 AES_ENCRYPTION_PROMPT = """[dodger_blue1]
---------------------------------------------
-ENCRYPT FILE(S) WITH PASSWORD [AES-GCM mode]
---------------------------------------------\n
+----------------------------
+ENCRYPT FILE(S) WITH A
+PASSWORD [AES-GCM mode]
+----------------------------\n
 [khaki3]Options :[bright_white]\n
 [1] Encrypt a single file
 [2] Encrypt all files in a folder\n
@@ -52,9 +55,9 @@ ENCRYPT FILE(S) WITH PASSWORD [AES-GCM mode]
 
 
 PGP_ENCRYPTION_PROMPT = """[dodger_blue1]
---------------------------------------------
-ENCRYPT FILE(S) USING PGP KEY
---------------------------------------------\n
+----------------------------
+ENCRYPT FILE(S) WITH PGP KEY
+----------------------------\n
 [khaki3]Options :[bright_white]\n
 [1] Create new PGP key pair
 [2] Encrypt a file using PGP
@@ -65,9 +68,10 @@ ENCRYPT FILE(S) USING PGP KEY
 
 
 XOR_ENCRYPTION_PROMPT = """[dodger_blue1]
---------------------------------------------
-ENCRYPT MESSAGE OR FILE(S) USING AN XOR KEY
---------------------------------------------\n
+----------------------------
+ENCRYPT MESSAGE OR FILE(S)
+USING AN XOR KEY
+----------------------------\n
 [khaki3]Options :[bright_white]\n
 [1] Encrypt a single message string
 [2] Encrypt a file
@@ -78,15 +82,15 @@ ENCRYPT MESSAGE OR FILE(S) USING AN XOR KEY
 
 
 TOP_LEVEL_DECRYPTION_MENU_PROMPT = f"""[dodger_blue1]
---------------------------------------------
-DECRYPTION MENU
+----------------------------
+MAIN DECRYPTION MENU
 v.{VERSION}
---------------------------------------------\n
+----------------------------\n
 [khaki3]Select the DECRYPTION method you want to use :[bright_white]\n
-[A] Decrypt file(s) using a .key file
-[B] Decrypt file(s) using a password
-[C] Decrypt file(s) using a PGP key
-[D] Decrypt message/file(s) using XOR\n
+[1] Decrypt file(s) using a .key file
+[2] Decrypt file(s) using a password
+[3] Decrypt file(s) using a PGP key
+[4] Decrypt message/file(s) using XOR\n
 [Q] Quit the Application\n\n
 [khaki3]ENTER CHOICE """
 

@@ -63,15 +63,15 @@ GnuPG."
         self.public_key_file = self.script_path / "mas_public_key.asc"
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns control cleanly back to the main menu processor."""
-        self.app.main(self)
+    # def return_to_main_menu(self) -> None:
+    #     """Returns control cleanly back to the main menu processor."""
+    #     self.app.main(self)
 
 
     def print_status(self, status: gnupg.GPG) -> None:
         """Prints GPG action execution status to terminal."""
         if getattr(status, "ok", False):
-            c.print(f"""[green3]
+            c.print(f"""[green]
 [-] GPG operation successful.\n{status.stderr}"""
             )
         else:
@@ -262,7 +262,7 @@ GPG status: {error_msg}"
         if hasattr(self, "print_status"):
             self.print_status(status)
 
-        c.print(f"""[green3]
+        c.print(f"""[green]
 [-] PGP file encrypted successfully : {encrypted_file_path.name}"""
         )
 
@@ -334,13 +334,13 @@ GPG status: {error_msg}"
                 failed_encryptions.append(file_path)
 
         if successful_encryptions:
-            c.print(f"""[green3]
+            c.print(f"""[green]
 ** Action Completed **
 Successfully PGP-encrypted {len(successful_encryptions)} files in \
 {target_dir_path} :"""
             )
             for encrypted_file in successful_encryptions:
-                c.print(f"""[green3]
+                c.print(f"""[green]
     {encrypted_file.name}"""
                 )
 
@@ -361,7 +361,7 @@ Failed to encrypt {len(failed_encryptions)} files in {target_dir_path} :"""
         """Main routing controller for encryption jobs."""
         while True:
             try:
-                Functions.clear_screen()
+                # Functions.clear_screen()
                 target_option = (
                     Prompt.ask("""[dodger_blue1]
 ---------------------------------------
@@ -383,8 +383,9 @@ ENCRYPT FILE(S) USING PGP KEY
 
                 # Global exits
                 if target_option == "r":
-                    self.return_to_main_menu()
-                    return
+                    # self.return_to_main_menu()
+                    # return
+                    pass
                 if target_option == "q":
                     Functions.exit_application()
                     return
@@ -409,7 +410,7 @@ Press Enter to return to menu..."""
 
                 # Option 2: Encrypt single file
                 elif target_option == "2":
-                    raw_path = Functions.get_file_path(text="ENCRYPTED")
+                    raw_path = Functions.get_file_path(text="encrypted")
                     # User cancelled input
                     if not raw_path or not raw_path.strip():
                         continue
@@ -433,7 +434,7 @@ Press Enter to continue..."""
 
                 # Option 3: Encrypt directory
                 elif target_option == "3":
-                    raw_dir = Functions.get_folder_path(text="ENCRYPT")
+                    raw_dir = Functions.get_folder_path(text="encrypted")
                     if not raw_dir or not raw_dir.strip():
                         continue
 

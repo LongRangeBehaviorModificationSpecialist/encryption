@@ -173,7 +173,7 @@ file is corrupted."
 
         decrypted_file_path.write_bytes(plaintext)
 
-        c.print("""[green3]
+        c.print("""[green]
 [-] File decrypted successfully."""
         )
 
@@ -242,13 +242,13 @@ file is corrupted."
                 failed_decryptions.append(file_path)
 
         if successful_decryptions:
-            c.print(f"""[green3]
+            c.print(f"""[green]
 ** Action Completed **
 [-] Successfully decrypted {len(successful_decryptions)} files in \
 {target_dir} :"""
             )
             for decrypted_file in successful_decryptions:
-                c.print(f"""[green3]
+                c.print(f"""[green]
     {decrypted_file.name}"""
                 )
 
@@ -269,7 +269,7 @@ Failed to decrypt {len(failed_decryptions)} files :"""
         """Main routing controller for decryption jobs."""
         while True:
             try:
-                Functions.clear_screen()
+                # Functions.clear_screen()
                 target_option = (
                     Prompt.ask(textwrap.dedent("""[dodger_blue1]
 ----------------------------------------------------
@@ -290,8 +290,9 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
 
                 # Global exits
                 if target_option == "r":
-                    self.return_to_main_menu()
-                    return
+                    # self.return_to_main_menu()
+                    # return
+                    pass
                 if target_option == "q":
                     Functions.exit_application()
                     return
@@ -314,7 +315,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
 
                 if is_single_file:
                     target_file_path = Path(
-                        Functions.get_file_path(text="DECRYPTED")
+                        Functions.get_file_path(text="decrypted")
                     )
                     if not target_file_path:  # User cancelled input
                         continue
@@ -330,7 +331,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
                     )
                 else:
                     target_dir_path = Path(
-                        Functions.get_folder_path(text="DECRYPT")
+                        Functions.get_folder_path(text="decrypted")
                     )
                     if not target_dir_path:
                         continue

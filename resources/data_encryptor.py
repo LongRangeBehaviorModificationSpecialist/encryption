@@ -113,7 +113,7 @@ class DataEncryptor:
                         )
                         encrypted_file_path.write_bytes(encrypted_data)
                         console.print(
-                            f"""[green3]
+                            f"""[green]
 [-] Encrypted {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
                         )
                     else:

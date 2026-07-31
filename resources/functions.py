@@ -41,7 +41,7 @@ class Functions:
     @staticmethod
     def exit_application() -> None:
         console.print(
-            "[green3][!] Exiting the application. Goodbye..."
+            "\n\n[green][-] Exiting the application...\n"
             )
         sys.exit(0)
 
@@ -60,32 +60,31 @@ class Functions:
     @staticmethod
     def get_email_address() -> str:
         return Prompt.ask(
-            "[bright_white][-] Enter email address of the PGP key owner "
+            "\n[bright_white][-] Enter email address of the PGP key owner "
             ).strip().lower()
 
 
     @staticmethod
-    def get_file_path(text: str) -> Path:
-        return Path(Prompt.ask(
-            f"[bright_white][-] Enter the path of the file to be {text} ")
-            )
+    def get_file_path(text: str) -> str:
+        return Prompt.ask(
+            f"\n[bright_white][-] Enter the path of the file to be {text} "
+            ).strip("\"'")
 
 
     @staticmethod
-    def get_folder_path(text: str) -> Path:
-        return Path(
-            Prompt.ask(
-                f"[bright_white][-] Path of the directory containing the "
-                f"files to be {text} ")
-                )
+    def get_folder_path(text: str) -> str:
+        return Prompt.ask(
+            f"\n[bright_white][-] Path of the directory containing the "
+            f"files to be {text} "
+            ).strip("\"'")
 
 
     @staticmethod
-    def select_recursive_option(default: bool = True) -> bool:
+    def select_recursive_option() -> bool:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input =Prompt.ask(
-                "[bright_white]Encrypt subdirectories recursively? ",
+                "\n[bright_white]Encrypt subdirectories recursively? ",
                 choices=["y", "n"],
                 show_choices=True
                 ).strip().lower()
@@ -95,7 +94,7 @@ class Functions:
                 case "n":
                     return False
             console.print(
-                "[bright_red][!] Invalid input.  Enter either 'y' or 'n'."
+                "\n[bright_red][!] Invalid input. Enter either 'y' or 'n'."
                 )
 
 
@@ -107,7 +106,7 @@ class Functions:
         while True:
             # Prompt user and convert directly to a mutable bytearray
             raw_password = getpass.getpass(
-                "Enter the PASSWORD you want to use : "
+                "\n[-] Enter the PASSWORD you want to use : "
                 ).encode("utf-8")
             password_bytes = bytearray(raw_password)
 
@@ -120,12 +119,12 @@ class Functions:
                 password_bytes[i] = 0
 
             console.print(
-                "[bright_red][!] Not a valid password. Please try again."
-            )
+                "\n[bright_red][!] Not a valid password. Please try again."
+                )
 
 
     @staticmethod
-    def validate_password(password: bytearray|bytes|str) -> bool:
+    def validate_password(password: bytearray | bytes | str) -> bool:
         """Validates if a password meets the strength requirements.
 
         Args:
@@ -175,7 +174,7 @@ Your password must meet the following criteria :\n
             return False
         else:
             console.print(
-                f"[bright_white][-] Your password meets the minimum "
+                f"\n[bright_white][-] Your password meets the minimum "
                 "requirements. Continuing..."
                 )
             return True
@@ -184,16 +183,16 @@ Your password must meet the following criteria :\n
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:
         return console.print(
-            f"[green3][-] ** Action Successful **\n[khaki3]The {text} file "
+            f"\n[green][*] Action Successful\n[khaki3]The {text} file "
             f"was saved as : {file_name}"
             )
 
 
     @staticmethod
     def format_key_file_log(
-        timestamp: str,
-        key_path: Path | str,
-        hash_value: str
+            timestamp: str,
+            key_path: Path | str,
+            hash_value: str
     ) -> str:
         return (
         "------------------------------------------\n"
@@ -206,17 +205,19 @@ Your password must meet the following criteria :\n
 
     @staticmethod
     def format_key_file_verification(
-        key_file_dir: Path | str,
-        full_key_path: Path | str,
-        key_file_hash_file: Path | str,
-        key_file_hash_value: str
-        ) -> str:
-        return ("[bright_white]------------------------------------------\n"
-f"[green3][-] ** Key file created **\n"
-f"[bright_white][-] Key file saved in : [khaki3]{key_file_dir}"
-f"[bright_white][-] Key file name     : [khaki3]{full_key_path.name}\n"
-f"[green3][-] ** Key file hashed **\n"
-f"[bright_white][-] Key file hash verification saved in : [khaki3]{key_file_hash_file.parent}"
-f"[bright_white][-] Key file hash file name             : [khaki3]{key_file_hash_file.name}"
-f"[bright_white][-] Key file hash value (SHA256)        : [khaki3]{key_file_hash_value}\n"
-"[bright_white]------------------------------------------")
+            key_file_dir: Path | str,
+            full_key_path: Path | str,
+            key_file_hash_file: Path | str,
+            key_file_hash_value: str
+    ) -> str:
+        return (
+"[bright_white]------------------------------------------\n\n"
+f"[green][-] ** Key file created **\n\n"
+f"[bright_white][-] Key file saved in : [khaki3]{key_file_dir}\n"
+f"[bright_white][-] Key file name     : [khaki3]{full_key_path.name}\n\n"
+f"[green][-] ** Key file hashed **\n\n"
+f"[bright_white][-] Key file hash verification saved in : [khaki3]{key_file_hash_file.parent}\n"
+f"[bright_white][-] Key file hash file name             : [khaki3]{key_file_hash_file.name}\n"
+f"[bright_white][-] Key file hash value (SHA256)        : [khaki3]{key_file_hash_value}\n\n"
+"[bright_white]------------------------------------------"
+)

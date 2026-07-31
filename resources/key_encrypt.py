@@ -26,9 +26,9 @@ class KeyFileEncryptor:
         self.app = app_instance
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns control cleanly back to the main menu processor."""
-        self.app.main(self)
+    # def return_to_main_menu(self) -> None:
+    #     """Returns control cleanly back to the main menu processor."""
+    #     self.app.main(self)
 
 
     def _load_fernet(self, key_file_path: Path | str) -> bytes:
@@ -37,7 +37,7 @@ class KeyFileEncryptor:
             c.print(f"""[bright_red]
 [!] Key file not found : {key_file_path}"""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
 
         return Fernet(key_file_path.read_bytes())
 
@@ -90,10 +90,10 @@ class KeyFileEncryptor:
 
             c.print(f"""[bright_white]
 ------------------------------------------\n
-[green3][-] Key file created\n[bright_white]
+[green][-] Key file created\n[bright_white]
 [-] Key file saved in : [khaki3]{key_file_dir}[bright_white]
 [-] Key file name : [khaki3]{full_key_path.name}\n
-[green3][-] Key file hashed\n[bright_white]
+[green][-] Key file hashed\n[bright_white]
 [-] Key file hash verification saved in : [khaki3]\
 {key_file_hash_file.parent}[bright_white]
 [-] Key file hash file name : [khaki3]\
@@ -138,7 +138,7 @@ class KeyFileEncryptor:
             c.print(f"""[bright_red]
 [!] Target file not found : {target_file_path}"""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
             return
 
         try:
@@ -253,7 +253,7 @@ Failed to encrypt {len(failed_encryptions)} files :"""
     def ask_key_choice(self) -> str:
         """Prompts user for key choice."""
 
-        Functions.clear_screen()
+        # Functions.clear_screen()
         return (
             Prompt.ask("""[dodger_blue1]
 ----------------------------------------
@@ -276,7 +276,7 @@ ENCRYPT FILE(S) WITH A .KEY FILE
     def get_target_choice(self) -> None:
         """Main routing controller for encryption jobs."""
 
-        Functions.clear_screen()
+        # Functions.clear_screen()
         while True:
             target_option = (
                 Prompt.ask("""[dodger_blue1]
@@ -298,8 +298,9 @@ ENCRYPT FILE(S) WITH A .KEY FILE
 
             # Global exits
             if target_option == "r":
-                self.return_to_main_menu()
-                return
+                # self.return_to_main_menu()
+                # return
+                pass
             if target_option == "q":
                 Functions.exit_application()
                 return
@@ -311,8 +312,9 @@ ENCRYPT FILE(S) WITH A .KEY FILE
             key_choice = self.ask_key_choice()
 
             if key_choice == "r":
-                self.return_to_main_menu()
-                continue
+                # self.return_to_main_menu()
+                # continue
+                pass
             if key_choice == "q":
                 Functions.exit_application()
                 return
@@ -326,13 +328,13 @@ ENCRYPT FILE(S) WITH A .KEY FILE
             fernet = self._load_fernet(key_file_path=key_file_path)
 
             if is_single_file:
-                target_file_path = Functions.get_file_path(text="ENCRYPT")
+                target_file_path = Functions.get_file_path(text="encrypted")
                 self.encrypt_file_with_key(
                     fernet=fernet,
                     target_file_path=Path(target_file_path)
                 )
             else:
-                target_dir_path = Functions.get_folder_path(text="ENCRYPT")
+                target_dir_path = Functions.get_folder_path(text="encrypted")
                 self.encrypt_files_in_dir_with_key(
                     fernet=fernet,
                     target_dir_path=Path(target_dir_path)

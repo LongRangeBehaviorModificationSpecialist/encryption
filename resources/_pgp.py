@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 30-Jul-2026
+# DLU : 31-Jul-2026
 
 
 import gnupg
@@ -18,54 +18,37 @@ from resources.prompts import PGP_ENCRYPTION_PROMPT
 
 class PGPClass:
 
+    script_path = Path(__file__).parent.resolve()
 
-    def __init__(
-        self,
-        app_instance,
-        gnupg_home: Optional[Path|str] = None,
-        gpg_binary: Optional[str] = None
-    ) -> None:
-        """Store a reference to the main app loop controller."""
-        self.app = app_instance
+    gnupg_home_dir = script_path / ".gnupg"
 
-        self.script_path = Path(__file__).parent.resolve()
+    if not gnupg_home_dir.exists():
+        gnupg_home_dir.mkdir(parents=True, exist_ok=True)
 
-        if gnupg_home:
-            self.gnupg_home_dir = Path(gnupg_home)
-        else:
-            self.gnupg_home_dir = self.script_path / ".gnupg"
+    if os.name == "posix":
+        os.chmod(gnupg_home_dir, 0o700)
 
-        if not self.gnupg_home_dir.exists():
-            self.gnupg_home_dir.mkdir(parents=True, exist_ok=True)
-
-        if os.name == "posix":
-            os.chmod(self.gnupg_home_dir, 0o700)
-
-        resolved_gpg = (
-            gpg_binary or shutil.which("gpg")
-            or r"C:\Program Files\GnuPG\bin\gpg.exe"
+    resolved_gpg = (
+        shutil.which("gpg")
+        or r"C:\Program Files\GnuPG\bin\gpg.exe"
+        )
+    if not shutil.which(resolved_gpg) and not Path(resolved_gpg).exists():
+        raise FileNotFoundError(
+            f"GnuPG binary not found at '{resolved_gpg}'. Please install "
+            "GnuPG."
             )
-        if not shutil.which(resolved_gpg) and not Path(resolved_gpg).exists():
-            raise FileNotFoundError(
-                f"GnuPG binary not found at '{resolved_gpg}'. Please install "
-                "GnuPG."
-                )
 
-        self.gpg = gnupg.GPG(
-            gnupghone=str(self.gnupg_home_dir), gpgbinary=resolved_gpg
-            )
-        self.gpg.encoding = "utf-8"
+    gpg = gnupg.GPG(
+        gnupghome=str(gnupg_home_dir), gpgbinary=resolved_gpg
+        )
+    gpg.encoding = "utf-8"
 
-        self.private_key_file = self.script_path / "mas_private_key.asc"
-        self.public_key_file = self.script_path / "mas_public_key.asc"
+    private_key_file = script_path / "mas_private_key.asc"
+    public_key_file = script_path / "mas_public_key.asc"
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns control cleanly back to the main menu processor."""
-        self.app.main(self)
-
-
-    def pgp_export_public_key(self, keyid: str) -> str:
+    @classmethod
+    def pgp_export_public_key(cls, keyid: str) -> str:
         """Exports an armored public key by Key ID to the designated file path.
 
         Args:
@@ -74,22 +57,23 @@ class PGPClass:
         Returns:
             str: The exported ASCII-armored public key block.
         """
-        public_key_data = self.gpg.export_keys(
+        public_key_data = cls.gpg.export_keys(
             keyids=keyid,
-            output=str(self.public_key_file)
+            output=str(cls.public_key_file)
             )
-        if not public_key_data or not self.public_key_file.exists():
+        if not public_key_data or not cls.public_key_file.exists():
             raise RuntimeError(
                 f"Failed to export public key for Key ID '{keyid}'"
                 )
         console.print(
             f"[bright_white][-] Public key exported successfully to "
-            f"{self.public_key_file.name}"
+            f"{cls.public_key_file.name}"
             )
         return str(public_key_data)
 
 
-    def pgp_export_private_key(self, keyid: str, password: str) -> str:
+    @classmethod
+    def pgp_export_private_key(cls, keyid: str, password: str) -> str:
         """Exports an armored private key by Key ID and passphrase to the
         designated file path.
 
@@ -100,28 +84,30 @@ class PGPClass:
         Returns:
             str: The exported ASCII-armored secret key block.
         """
-        private_key_data = self.gpg.export_keys(
+        private_key_data = cls.gpg.export_keys(
             keyids=keyid,
             secret=True,
             passphrase=password,
-            output=str(self.private_key_file)
+            output=str(cls.private_key_file)
             )
-        if not private_key_data or not self.private_key_file.exists():
+        if not private_key_data or not cls.private_key_file.exists():
             raise RuntimeError(
                 f"Failed to export private key for Key ID : {keyid}. "
                 "Check the keyid/passphrase."
                 )
         console.print(
             f"[bright_white][-] Private key exported successfully to "
-            f"{self.private_key_file.name}"
+            f"{cls.private_key_file.name}"
             )
         return str(private_key_data)
 
 
+    @classmethod
     def generate_pgp_key_pair(
-        self, password: str,
-        email_address: str,
-        key_length: int = 2048
+            cls,
+            password: str,
+            email_address: str,
+            key_length: int = 2048
     ) -> str:
         """Generates a new RSA PGP key pair and exports public/private keys.
 
@@ -138,14 +124,14 @@ class PGPClass:
                 f"Invalid or missing email address provided : {email_address}"
                 )
 
-        input_data = self.gpg.gen_key_input(
+        input_data = cls.gpg.gen_key_input(
             name_email=email_address,
             passphrase=password,
             key_type="RSA",
             key_length=key_length
             )
 
-        key = self.gpg.gen_key(input_data)
+        key = cls.gpg.gen_key(input_data)
 
         if not key.fingerprint:
             raise RuntimeError(
@@ -159,9 +145,8 @@ class PGPClass:
             )
 
         # Export keys upon successful generation
-        PGPClass.pgp_export_public_key(self, keyid=fingerprint)
-        PGPClass.pgp_export_private_key(
-            self,
+        cls.pgp_export_public_key(keyid=fingerprint)
+        cls.pgp_export_private_key(
             keyid=fingerprint,
             password=password
             )
@@ -169,11 +154,12 @@ class PGPClass:
         return fingerprint
 
 
+    @classmethod
     def pgp_encrypt_file(
-        self,
-        target_file_path: Path | str,
-        recipients: str|List[str],
-        always_trust: bool = True
+            cls,
+            target_file_path: Path | str,
+            recipients: str|List[str],
+            always_trust: bool = True
     ) -> None:
         """Encrypts a single file using PGP/GPG and handles GPG engine
         failures safely.
@@ -193,7 +179,7 @@ class PGPClass:
 
         try:
             with open(target_file_path, "rb") as f:
-                status = self.gpg.encrypt_file(
+                status = cls.gpg.encrypt_file(
                     f,
                     recipients=[recipients],
                     always_trust=always_trust,
@@ -219,23 +205,24 @@ class PGPClass:
                 f"status : {error_msg}"
                 )
 
-        if hasattr(self, "print_status"):
-            self.print_status(status)
+        if hasattr(cls, "print_status"):
+            cls.print_status(status)
 
         console.print(
-            f"[green3][-] PGP file encrypted successfully : "
+            f"\n[green][-] PGP file encrypted successfully : "
             f"{encrypted_file_path.name}"
             )
 
         return encrypted_file_path
 
 
+    @classmethod
     def pgp_encrypt_files_in_folder(
-        self,
-        target_dir_path: Path | str,
-        recipients: str|List[str],
-        recursive: bool = True,
-        always_trust: bool = True
+            cls,
+            target_dir_path: Path | str,
+            recipients: str|List[str],
+            recursive: bool = True,
+            always_trust: bool = True
     ) -> List[Path]:
         """Encrypts all files in a directory using PGP/GPG.
 
@@ -293,7 +280,7 @@ class PGPClass:
                 continue
 
             try:
-                encrypted_path = self.pgp_encrypt_file(
+                encrypted_path = cls.pgp_encrypt_file(
                     target_file_path=file_path,
                     recipients=recipients,
                     always_trust=always_trust
@@ -319,7 +306,7 @@ class PGPClass:
 
         if failed_encryptions:
             console.print(
-                f"[bright_red][!] ** Warning **\nFailed to encrypt "
+                f"\n[bright_red][!] ** Warning **\nFailed to encrypt "
                 f"{len(failed_encryptions)} files :"
                 )
             for failed_file in failed_encryptions:
@@ -330,7 +317,8 @@ class PGPClass:
         return successful_encryptions
 
 
-    def get_pgp_encryption_choice(self) -> None:
+    @staticmethod
+    def get_pgp_encryption_choice() -> None:
         pgp_encryption_choice = Prompt.ask(
             PGP_ENCRYPTION_PROMPT,
             choices=["1", "2", "3", "r", "q"],
@@ -343,7 +331,7 @@ class PGPClass:
                 email_address = Functions.get_email_address()
                 if not password.strip() or not email_address.strip():
                     console.print(
-                        "[yellow][!] Key generation cancelled : Missing "
+                        "\n[yellow][!] Key generation cancelled : Missing "
                         "password or email."
                         )
                     Prompt.ask(
@@ -351,7 +339,6 @@ class PGPClass:
                         )
                     return
                 PGPClass.generate_pgp_key_pair(
-                    self,
                     password=password,
                     email=email_address
                     )
@@ -361,11 +348,11 @@ class PGPClass:
                 if not target_file_path or not target_file_path.strip():
                     return
                 recipient = Prompt.ask(
-                    "[bright_white][-] Enter recipient email or Key ID "
+                    "\n[bright_white][-] Enter recipient email or Key ID "
                     ).strip()
                 if not recipient:
                     console.print(
-                        "[yellow][!] Encryption cancelled : No recipient "
+                        "\n[yellow][!] Encryption cancelled : No recipient "
                         "specified"
                         )
                     Prompt.ask(
@@ -379,11 +366,11 @@ class PGPClass:
             case "3":
                 target_dir_path = Functions.get_folder_path(text="encrypted")
                 recipient = Prompt.ask(
-                    "[bright_white][-] Enter recipient email or Key ID "
+                    "\n[bright_white][-] Enter recipient email or Key ID "
                     ).strip()
                 if not recipient:
                     console.print(
-                        "[yellow][!] Encryption cancelled : No recipient "
+                        "\n[yellow][!] Encryption cancelled : No recipient "
                         "specified"
                         )
                     Prompt.ask(
@@ -392,18 +379,18 @@ class PGPClass:
                     return
                 recursive = Functions.select_recursive_option()
                 PGPClass.pgp_encrypt_files_in_folder(
-                    self,
                     target_dir_path=target_dir_path,
                     recipients=recipient,
                     recursive=recursive
                     )
             case "r":
-                self.return_to_main_menu()
+                # self.return_to_main_menu()
+                pass
             case "q":
                 Functions.exit_application()
 
 
 
-
-    def get_pgp_decryption_choice(self) -> None:
+    @staticmethod
+    def get_pgp_decryption_choice() -> None:
         pass

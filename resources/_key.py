@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 30-Jul-2026
+# DLU : 31-Jul-2026
 
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -18,22 +18,23 @@ from resources.prompts import KEY_ENCRYPTION_PROMPT, KEY_DECRYPTION_PROMPT
 class KEYClass:
 
 
-    def __init__(self, app_instance) -> None:
-        """Store a reference to the main app loop controller."""
-        self.app = app_instance
+    # def __init__(self, app_instance) -> None:
+    #     """Store a reference to the main app loop controller."""
+    #     self.app = app_instance
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns control cleanly back to the main menu processor."""
-        self.app.main(self)
+    # def return_to_main_menu(self) -> None:
+    #     """Returns control cleanly back to the main menu processor."""
+    #     self.app.main(self)
 
-
-    def _load_fernet(self, key_file_path: Path | str) -> bytes:
+    @staticmethod
+    def _load_fernet(key_file_path: Path | str) -> bytes:
         """Load the fernet key"""
         return Fernet(key_file_path.read_bytes())
 
 
-    def generate_and_save_key(self) -> bytes:
+    @staticmethod
+    def generate_and_save_key() -> bytes:
         """Generates a secure Fernet key, saves it, and generates a SHA-256
         metadata log.
 
@@ -42,11 +43,11 @@ class KEYClass:
         """
         key_file_dir = Path(
             Prompt.ask(
-                "[bright_white][-] Where do you want to save the key file? "
+                "\b[bright_white][-] Where do you want to save the key file? "
                 ).strip().strip('"\''))
 
         key_file_name = Prompt.ask(
-            "[bright_white][-] Enter a name for the key file (w/o file "
+            "\b[bright_white][-] Enter a name for the key file (w/o file "
             "extension) "
             ).strip()
 
@@ -68,7 +69,7 @@ class KEYClass:
                 timestamp=Functions.get_date_time(),
                 key_path=full_key_path,
                 hash_value=key_file_hash_value
-            )
+                )
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
@@ -76,7 +77,8 @@ class KEYClass:
                 key_file_dir=key_file_dir,
                 full_key_path=full_key_path,
                 key_file_hash_file=key_file_hash_file,
-                key_file_hash_value=key_file_hash_value))
+                key_file_hash_value=key_file_hash_value)
+                )
 
             return full_key_path
 
@@ -87,7 +89,8 @@ class KEYClass:
             raise
 
 
-    def get_existing_key_file_path(self) -> Path:
+    @staticmethod
+    def get_existing_key_file_path() -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
             key_file = Prompt.ask(
@@ -98,11 +101,11 @@ class KEYClass:
                 return path
 
 
+    @staticmethod
     def key_process_single_file(
-        self,
-        key_file_path: Path | str,
-        target_file_path: Path | str,
-        action: str
+            key_file_path: Path | str,
+            target_file_path: Path | str,
+            action: str
     ) -> None:
         """Reads and either encrypts or decrypts a single file using Fernet
         symmetric encryption.
@@ -136,7 +139,7 @@ class KEYClass:
             resolved_key_file_path = Path(key_file_path).resolve()
         else:
             resolved_key_file_path = Path(
-                KEYClass.get_existing_key_file_path(self)
+                KEYClass.get_existing_key_file_path()
                 ).resolve()
 
         if not resolved_key_file_path.is_file():
@@ -164,7 +167,6 @@ class KEYClass:
             original_file_data = target_file_path.read_bytes()
 
             fernet = KEYClass._load_fernet(
-                self,
                 key_file_path=resolved_key_file_path
                 )
             fernet_obj = (
@@ -183,7 +185,7 @@ class KEYClass:
                 encrypted_data = fernet_obj.encrypt(original_file_data)
                 processed_file = target_file_path.with_name(
                     f"{target_file_path.name}.encrypted"
-                )
+                    )
 
                 processed_file.write_bytes(encrypted_data)
             else:
@@ -195,13 +197,13 @@ class KEYClass:
                 else:
                     processed_file = target_file_path.with_name(
                         f"decrypted_{target_file_path.name}"
-                    )
+                        )
 
                 # Save the decrypted file
                 processed_file.write_bytes(decrypted_data)
 
             console.print(
-                f"[green3][-] {action.capitalize()}ed "
+                f"[green][-] {action.capitalize()}ed "
                 f"{target_file_path.name:34s}{'->':7s}{processed_file.name}"
                 )
 
@@ -222,11 +224,10 @@ class KEYClass:
 
 
     def key_process_files_in_folder(
-        self,
-        key_file_path: Path | str,
-        target_dir_path: Path | str,
-        action: str = "encrypt",
-        recursive: bool = True
+            key_file_path: Path | str,
+            target_dir_path: Path | str,
+            action: str = "encrypt",
+            recursive: bool = True
     ) -> List[Path]:
         """Encrypts or decrypts all discovered assets within a target
         directory.
@@ -251,11 +252,11 @@ class KEYClass:
             key_file_path = Path(key_file_path).resolve()
         else:
             key_file_path = Path(
-                KEYClass.get_existing_key_file_path(self)
+                KEYClass.get_existing_key_file_path()
                 ).resolve()
 
         console.print(
-            f"[green3][-] {target_dir_path} validated. Fetching targets "
+            f"\n[green][*] {target_dir_path} validated. Fetching targets "
             f"for {action}ion..."
             )
 
@@ -309,14 +310,12 @@ class KEYClass:
             try:
                 if action == "encrypt":
                     processed_path = KEYClass.key_process_single_file(
-                        self,
                         key_file_path=key_file_path,
                         target_file_path=file_path,
                         action="encrypt"
                         )
                 else:
                     processed_path = KEYClass.key_process_single_file(
-                        self,
                         key_file_path=key_file_path,
                         target_file_path=file_path,
                         action="decrypt"
@@ -355,7 +354,8 @@ class KEYClass:
         return successful_files
 
 
-    def get_key_action_choice(self, action: str) -> None:
+    @staticmethod
+    def get_key_action_choice(action: str) -> None:
         """Gets input from the user on what action to start next."""
         action = action.lower().strip()
 
@@ -367,36 +367,35 @@ class KEYClass:
                 ).strip().lower()
 
             match key_encryption_choice:
-                case "r":
-                    self.return_to_main_menu()
-                case "q":
-                    Functions.exit_application()
                 case "1":
-                    KEYClass.generate_and_save_key(self)
+                    KEYClass.generate_and_save_key()
                 case "2":
-                    key_file_path = KEYClass.get_existing_key_file_path(self)
+                    key_file_path = KEYClass.get_existing_key_file_path()
                     target_file_path = Functions.get_file_path(
                         text="encrypted"
                         )
                     KEYClass.key_process_single_file(
-                        self,
                         key_file_path=key_file_path,
                         target_file_path=target_file_path,
                         action="encrypt"
                         )
                 case "3":
-                    key_file_path = KEYClass.get_existing_key_file_path(self)
+                    key_file_path = KEYClass.get_existing_key_file_path()
                     target_dir_path = Functions.get_folder_path(
                         text="encrypted"
                         )
                     recursive = Functions.select_recursive_option()
                     KEYClass.key_process_files_in_folder(
-                        self,
                         target_dir_path=target_dir_path,
                         key_file_path=key_file_path,
                         action="encrypt",
                         recursive=recursive
                         )
+                case "r":
+                    # self.return_to_main_menu()
+                    pass
+                case "q":
+                    Functions.exit_application()
 
         elif action == "decrypt":
             key_decryption_choice = Prompt.ask(
@@ -406,19 +405,14 @@ class KEYClass:
                 ).strip().lower()
 
             match key_decryption_choice:
-                case "r":
-                    self.return_to_main_menu()
-                case "q":
-                    Functions.exit_application()
                 case "1" | "2":
                     key_file_path = KEYClass.get_existing_key_file_path()
 
                     if key_decryption_choice == "1":
                         target_file_path = Functions.get_file_path(
-                            text="decrypt"
+                            text="decrypted"
                             )
                         KEYClass.key_process_single_file(
-                            self,
                             key_file_path=key_file_path,
                             target_file_path=target_file_path,
                             action="decrypt"
@@ -429,9 +423,13 @@ class KEYClass:
                             )
                         recursive = Functions.select_recursive_option()
                         KEYClass.key_process_files_in_folder(
-                            self,
                             target_dir_path=target_dir_path,
                             key_file_path=key_file_path,
                             action="decrypt",
                             recursive=recursive
                             )
+                case "r":
+                    # self.return_to_main_menu()
+                    pass
+                case "q":
+                    Functions.exit_application()

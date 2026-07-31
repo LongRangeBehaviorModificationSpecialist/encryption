@@ -17,6 +17,6 @@ class Decryptor:
         self.app = app_instance
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns control cleanly back to the main menu processor."""
-        self.app.main(self)
+    # def return_to_main_menu(self) -> None:
+    #     """Returns control cleanly back to the main menu processor."""
+    #     self.app.main(self)

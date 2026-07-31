@@ -70,7 +70,7 @@ class XORDecryptor:
 encoding)."
             ) from e
 
-        c.print(f"""[green3]
+        c.print(f"""[green]
 [-] ** Action successful **\n
 The original message is:\n
     [bright_white]{decrypted_text}"""
@@ -131,7 +131,7 @@ The original message is:\n
                 f"Error decrypting file {target_path.name} : {e}"
             ) from e
 
-        c.print(f"""[green3]
+        c.print(f"""[green]
 [-] ** Action successful ** File Decrypted with XOR key.
 [bright_white][-] Output saved to: {destination_path.name}"""
         )

@@ -77,7 +77,7 @@ class XOREncryptor:
                 f"Could not write encrypted message to {out_path} : {e}"
             ) from e
 
-        c.print(f"""[green3]
+        c.print(f"""[green]
 [-] ** Action successful **\n
 The Base64-encoded encrypted message is:\n
     [bright_white]{b64_encoded_msg}\n
@@ -140,7 +140,7 @@ The Base64-encoded encrypted message is:\n
                 f"Error encrypting file {target_path.name} : {e}"
             ) from e
 
-        c.print(f"""[green3]
+        c.print(f"""[green]
 [-] ** Action successful ** File Encrypted with XOR key.\n
 [dim]Output saved to: {destination_path.name}"""
         )
@@ -152,7 +152,7 @@ The Base64-encoded encrypted message is:\n
         """Main routing controller for encryption jobs."""
         while True:
             try:
-                Functions.clear_screen()
+                # Functions.clear_screen()
                 target_option = (Prompt.ask("""[dodger_blue1]
 ---------------------------------------
 ENCRYPT FILE(S) USING AN XOR KEY
@@ -172,11 +172,11 @@ ENCRYPT FILE(S) USING AN XOR KEY
 
                 # Global exits
                 if target_option == "r":
-                    self.return_to_main_menu()
-                    return
+                    # self.return_to_main_menu()
+                    # return
+                    pass
                 if target_option == "q":
                     Functions.exit_application()
-                    return
 
                 if target_option == "1":
                     xor_key = Functions.get_xor_key_prompt()

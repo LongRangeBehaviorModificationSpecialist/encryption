@@ -59,14 +59,14 @@ class KeyFileDecryptor:
             c.print(f"""[bright_red]
 [!] Target file not found : {target_file_path}"""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
             return
 
         if not key_file_path.is_file():
             c.print(f"""[bright_red]
 [!] Key file not found : {key_file_path}"""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
             return
 
         # Prevent decrypting a file that isn't marked as encrypted
@@ -74,7 +74,7 @@ class KeyFileDecryptor:
             c.print(f"""[bright_red]
 [!] The target file does not appear to be an .encrypted file."""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
             return
 
         try:
@@ -129,14 +129,14 @@ class KeyFileDecryptor:
             c.print(f"""[bright_red]
 [!] Target directory not found : {target_dir_path}"""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
             return
 
         if not key_file_path.is_file():
             c.print(f"""[bright_red]
 [!] Key file not found : {key_file_path}"""
             )
-            self.return_to_main_menu()
+            # self.return_to_main_menu()
             return
 
         try:
@@ -173,7 +173,7 @@ class KeyFileDecryptor:
 [-] Decrypted {file.name} -> {decrypted_file_path.name}"""
                 )
 
-            c.print(f"""[green3]
+            c.print(f"""[green]
 [+] Successfully decrypted {len(files)} files"""
             )
 
@@ -209,8 +209,9 @@ DECRYPT FILE WITH PROVIDED .KEY
             )
 
             if target_option == "r":
-                self.return_to_main_menu()
-                return
+                # self.return_to_main_menu()
+                # return
+                pass
             if target_option == "q":
                 Functions.exit_application()
                 return
@@ -220,13 +221,13 @@ DECRYPT FILE WITH PROVIDED .KEY
             is_single_file = (target_option == "1")
 
             if is_single_file:
-                target_file_path = Functions.get_file_path(text="DECRYPT")
+                target_file_path = Functions.get_file_path(text="decrypted")
                 self.decrypt_file_with_key(
                     key_file_path=key_file_path,
                     target_file_path=Path(target_file_path)
                 )
             else:
-                target_dir_path = Functions.get_folder_path(text="DECRYPT")
+                target_dir_path = Functions.get_folder_path(text="decrypted")
                 self.decrypt_files_in_dir_with_key(
                     key_file_path=key_file_path,
                     target_dir_path=Path(target_dir_path)

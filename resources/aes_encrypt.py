@@ -34,9 +34,9 @@ class AESEncryptor:
         self.SALT_LENGTH = 16
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns control cleanly back to the main menu processor."""
-        self.app.main(self)
+    # def return_to_main_menu(self) -> None:
+    #     """Returns control cleanly back to the main menu processor."""
+    #     self.app.main(self)
 
 
     def _derive_key(self, password: str, salt: bytes) -> bytes:
@@ -109,7 +109,7 @@ class AESEncryptor:
         encrypted_file_path.write_bytes(combined_payload)
 
         # UI Output
-        c.print(f"""[green3]
+        c.print(f"""[green]
 [-] Encrypted {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
         )
         c.print(
@@ -217,7 +217,7 @@ Failed to encrypt {len(failed_encryptions)} files :"""
         """Main routing controller for encryption jobs."""
         while True:
             try:
-                Functions.clear_screen()
+                # Functions.clear_screen()
                 target_option = (
                     Prompt.ask("""[dodger_blue1]
 ----------------------------------------------------
@@ -238,8 +238,9 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 # Global exits
                 if target_option == "r":
-                    self.return_to_main_menu()
-                    return
+                    # self.return_to_main_menu()
+                    # return
+                    pass
                 if target_option == "q":
                     Functions.exit_application()
                     return

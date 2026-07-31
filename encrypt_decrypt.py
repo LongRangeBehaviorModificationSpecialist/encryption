@@ -42,24 +42,20 @@ class App:
             f"[!] Interrupted at line {frame.f_lineno} in "
             f"{frame.f_code.co_filename}"
             )
-        # print(f"\nCleaning up {len(self.temp_files)} temporary files...")
-        # for file in self.temp_files:
-        #     file.unlink(missing_ok=True)
-        # Optional: print a full stack traceback of where execution paused
-        traceback.print_stack(frame)
         console.print(
             "\n[bright_yellow][!] Operation cancelled by user. Exiting..."
         )
         sys.exit(0)
 
 
-    def return_to_main_menu(self) -> None:
-        """Returns the user to the main application menu."""
-        Functions.clear_screen()
-        App.main(self)
+    # def return_to_main_menu(self) -> None:
+    #     """Returns the user to the main application menu."""
+    #     Functions.clear_screen()
+    #     App.main(self)
 
 
-    def main(self) -> None:
+    @staticmethod
+    def main() -> None:
         Functions.clear_screen()
         """Main function where the user can pick what option they want."""
 
@@ -74,23 +70,23 @@ class App:
                 Functions.clear_screen()
                 encryption_choice = Prompt.ask(
                     TOP_LEVEL_ENCRYPTION_MENU_PROMPT,
-                    choices=["a", "b", "c", "d", "q"],
+                    choices=["1", "2", "3", "4", "q"],
                     show_choices=False
                     ).strip().lower()
 
                 match encryption_choice:
-                    case "a":
+                    case "1":
                         Functions.clear_screen()
-                        KEYClass.get_key_action_choice(self, action="encrypt")
-                    case "b":
+                        KEYClass.get_key_action_choice(action="encrypt")
+                    case "2":
                         Functions.clear_screen()
-                        AESClass.get_aes_encryption_choice(self)
-                    case "c":
+                        AESClass.get_aes_encryption_choice()
+                    case "3":
                         Functions.clear_screen()
-                        PGPClass.get_pgp_encryption_choice(self)
-                    case "d":
+                        PGPClass.get_pgp_encryption_choice()
+                    case "4":
                         Functions.clear_screen()
-                        XORClass.get_xor_encryption_choice(self)
+                        XORClass.get_xor_encryption_choice()
                     case "q":
                         Functions.exit_application()
 
@@ -98,23 +94,23 @@ class App:
                 Functions.clear_screen()
                 decryption_choice = Prompt.ask(
                     TOP_LEVEL_DECRYPTION_MENU_PROMPT,
-                    choices=["a", "b", "c", "d", "q"],
+                    choices=["1", "2", "3", "4", "q"],
                     show_choices=False
                     ).strip().lower()
 
                 match decryption_choice:
-                    case "a":
+                    case "1":
                         Functions.clear_screen()
-                        KEYClass.get_key_action_choice(self, action="decrypt")
-                    case "b":
+                        KEYClass.get_key_action_choice(action="decrypt")
+                    case "2":
                         Functions.clear_screen()
-                        AESClass.get_aes_decryption_choice(self)
-                    case "c":
+                        AESClass.get_aes_decryption_choice()
+                    case "3":
                         Functions.clear_screen()
-                        PGPClass.get_pgp_decryption_choice(self)
-                    case "d":
+                        PGPClass.get_pgp_decryption_choice()
+                    case "4":
                         Functions.clear_screen()
-                        XORClass.get_xor_decryption_choice(self)
+                        XORClass.get_xor_decryption_choice()
                     case "q":
                         Functions.exit_application()
 
@@ -126,4 +122,8 @@ class App:
 
 
 if __name__ == "__main__":
-    App.main(App)
+    # App.main(App)
+    # app = App()
+    # app.main()
+
+    App.main()
