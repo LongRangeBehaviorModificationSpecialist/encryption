@@ -1,9 +1,11 @@
 # !/usr/bin/env python3
-# DLU : 31-Jul-2026
+# DLU : 02-Aug-2026
+
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
+import logging
 import os
 from pathlib import Path
 from rich.prompt import Prompt
@@ -11,24 +13,29 @@ from typing import List
 
 # Import the console object from the main __init__.py file
 from . import console
-from resources.functions import Functions
-from resources.prompts import AES_ENCRYPTION_PROMPT
+from resources.functions import (
+    verify_is_file,
+    verify_file_access,
+    get_password,
+    get_file_path,
+    get_folder_path,
+    clear_screen,
+    exit_application
+)
+from resources.prompts import (
+    show_main_app_menu,
+    show_aes_encryption_menu
+)
 
 
 class AESClass:
 
 
-    # def __init__(self) -> None:
-    #     """Store a reference to the main app loop controller."""
-        # self.app = app_instance
-    IV_LENGTH = 12  # Standard 96-bit IV for AES-GCM
-    TAG_LENGTH = 16
-    SALT_LENGTH = 16
-
-
-    # def return_to_main_menu(self) -> None:
-    #     """Returns control cleanly back to the main menu processor."""
-    #     self.app.main(self)
+    def __init__(self) -> None:
+        self.logger = logging.getLogger(__name__)
+        self.IV_LENGTH = 12  # Standard 96-bit IV for AES-GCM
+        self.TAG_LENGTH = 16
+        self.SALT_LENGTH = 16
 
 
     @staticmethod
@@ -47,21 +54,25 @@ class AESClass:
         return kdf.derive(pwd_buffer)
 
 
-    @classmethod
-    def aes_encrypt_single_file(cls, target_file_path: Path | str) -> Path:
+    def aes_encrypt_single_file(self, target_file_path: Path | str) -> Path:
         """Encrypts a single file using AES (GCM with native AEAD)."""
         target_file_path = Path(target_file_path)
 
-        if not target_file_path.is_file():
-            console.print(
-                f"[bright_red][!] {target_file_path.name} does not exist or "
-                "is a directory."
+        if not verify_is_file(target_file_path=target_file_path):
+            self.logger.debug(
+                f"File validation for {target_file_path.name} failed : the "
+                "file does not exist or is not a file"
                 )
-            raise FileNotFoundError(
-                f"Invalid target file : {target_file_path}"
-                )
+            return
 
-        password = Functions.get_password()
+        if not verify_file_access(target_file_path=target_file_path):
+            self.logger.debug(
+                f"Validation for {target_file_path.name} failed : insufficient "
+                "file access permission"
+            )
+            return
+
+        password = get_password()
 
         try:
             console.print(
@@ -73,8 +84,8 @@ class AESClass:
                 )
 
             # Generate fresh, random cryptographic parameters
-            salt = os.urandom(cls.SALT_LENGTH)
-            iv = os.urandom(cls.IV_LENGTH)  # 96-bit IV is standard for GCM
+            salt = os.urandom(self.SALT_LENGTH)
+            iv = os.urandom(self)  # 96-bit IV is standard for GCM
             key = AESClass._derive_key(password, salt)
 
             console.print(f"[bright_white][-] Encrypting file data...")
@@ -182,31 +193,26 @@ class AESClass:
 
     @staticmethod
     def get_aes_encryption_choice() -> None:
-        aes_encryption_choice = Prompt.ask(
-            AES_ENCRYPTION_PROMPT,
-            choices=["1", "2", "r", "q"],
-            show_choices=False
-        ).strip().lower()
+        aes_encryption_choice = show_aes_encryption_menu()
 
         match aes_encryption_choice:
             case "1":
-                target_file_path = Functions.get_file_path(text="encrypted")
+                target_file_path = get_file_path(text="encrypted")
                 AESClass.aes_encrypt_single_file(
                     target_file_path=target_file_path
                     )
             case "2":
-                target_dir_path = Functions.get_folder_path(text="encrypted")
+                target_dir_path = get_folder_path(text="encrypted")
                 AESClass.aes_encrypt_files_in_folder(
                     target_dir_path=target_dir_path
                     )
             case "r":
-                pass
-                # self.return_to_main_menu()
+                clear_screen()
+                show_main_app_menu()
             case "q":
-                Functions.exit_application()
+                exit_application()
 
-    @classmethod
-    def aes_decrypt_single_file(cls, target_file_path: Path | str) -> None:
+    def aes_decrypt_single_file(self, target_file_path: Path | str) -> None:
         """Decrypts a single file encrypted with AES-GCM."""
         target_file_path = Path(target_file_path)
 
@@ -234,7 +240,7 @@ class AESClass:
                 )
             encrypted_data = target_file_path.read_bytes()
 
-            min_length = cls.SALT_LENGTH + cls.IV_LENGTH + 16
+            min_length = self.SALT_LENGTH + self.IV_LENGTH + 16
             if len(encrypted_data) < min_length:
                 raise ValueError(
                     "File is corrupted or too short to be a valid AES-GCM "
@@ -243,12 +249,12 @@ class AESClass:
 
             try:
                 # Parse payload layout: [ SALT ] [ IV ] [ CIPHERTEXT + TAG ]
-                salt = encrypted_data[: cls.SALT_LENGTH]
+                salt = encrypted_data[: self.SALT_LENGTH]
                 iv = encrypted_data[
-                    cls.SALT_LENGTH : cls.SALT_LENGTH + cls.IV_LENGTH
+                    self.SALT_LENGTH : self.SALT_LENGTH + self.IV_LENGTH
                     ]
                 ciphertext_with_tag = encrypted_data[
-                    cls.SALT_LENGTH + cls.IV_LENGTH :
+                    self.SALT_LENGTH + self.IV_LENGTH :
                     ]
 
                 # Derive key and decrypt/verify

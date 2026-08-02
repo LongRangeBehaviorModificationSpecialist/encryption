@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 31-Jul-2026
+# DLU : 02-Aug-2026
 
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -11,8 +11,20 @@ from typing import List
 
 # Import the console object from the main __init__.py file
 from . import console
-from resources.functions import Functions
-from resources.prompts import KEY_ENCRYPTION_PROMPT, KEY_DECRYPTION_PROMPT
+from resources.functions import (
+    exit_application,
+    format_key_file_log,
+    format_key_file_verification,
+    get_date_time,
+    get_file_path,
+    get_folder_path,
+    select_recursive_option
+)
+from resources.prompts import (
+    show_main_app_menu,
+    show_key_encryption_menu,
+    show_key_decryption_menu
+)
 
 
 class KEYClass:
@@ -65,15 +77,15 @@ class KEYClass:
             key_file_hash_value = hashlib.sha256(key).hexdigest().upper()
             key_file_hash_file = full_key_path.with_suffix(".key.sha256")
 
-            log_content = Functions.format_key_file_log(
-                timestamp=Functions.get_date_time(),
+            log_content = format_key_file_log(
+                timestamp=get_date_time(),
                 key_path=full_key_path,
                 hash_value=key_file_hash_value
                 )
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
-            console.print(Functions.format_key_file_verification(
+            console.print(format_key_file_verification(
                 key_file_dir=key_file_dir,
                 full_key_path=full_key_path,
                 key_file_hash_file=key_file_hash_file,
@@ -360,18 +372,14 @@ class KEYClass:
         action = action.lower().strip()
 
         if action == "encrypt":
-            key_encryption_choice = Prompt.ask(
-                KEY_ENCRYPTION_PROMPT,
-                choices=["1", "2", "3", "r", "q"],
-                show_choices=False
-                ).strip().lower()
+            key_encryption_choice = show_key_encryption_menu()
 
             match key_encryption_choice:
                 case "1":
                     KEYClass.generate_and_save_key()
                 case "2":
                     key_file_path = KEYClass.get_existing_key_file_path()
-                    target_file_path = Functions.get_file_path(
+                    target_file_path = get_file_path(
                         text="encrypted"
                         )
                     KEYClass.key_process_single_file(
@@ -381,10 +389,10 @@ class KEYClass:
                         )
                 case "3":
                     key_file_path = KEYClass.get_existing_key_file_path()
-                    target_dir_path = Functions.get_folder_path(
+                    target_dir_path = get_folder_path(
                         text="encrypted"
                         )
-                    recursive = Functions.select_recursive_option()
+                    recursive = select_recursive_option()
                     KEYClass.key_process_files_in_folder(
                         target_dir_path=target_dir_path,
                         key_file_path=key_file_path,
@@ -392,24 +400,19 @@ class KEYClass:
                         recursive=recursive
                         )
                 case "r":
-                    # self.return_to_main_menu()
-                    pass
+                    show_main_app_menu()
                 case "q":
-                    Functions.exit_application()
+                    exit_application()
 
         elif action == "decrypt":
-            key_decryption_choice = Prompt.ask(
-                KEY_DECRYPTION_PROMPT,
-                choices=["1", "2", "r", "q"],
-                show_choices=False
-                ).strip().lower()
+            key_decryption_choice = show_key_decryption_menu()
 
             match key_decryption_choice:
                 case "1" | "2":
                     key_file_path = KEYClass.get_existing_key_file_path()
 
                     if key_decryption_choice == "1":
-                        target_file_path = Functions.get_file_path(
+                        target_file_path = get_file_path(
                             text="decrypted"
                             )
                         KEYClass.key_process_single_file(
@@ -418,10 +421,10 @@ class KEYClass:
                             action="decrypt"
                             )
                     else:
-                        target_dir_path = Functions.get_folder_path(
+                        target_dir_path = get_folder_path(
                             text="decrypted"
                             )
-                        recursive = Functions.select_recursive_option()
+                        recursive = select_recursive_option()
                         KEYClass.key_process_files_in_folder(
                             target_dir_path=target_dir_path,
                             key_file_path=key_file_path,
@@ -432,4 +435,4 @@ class KEYClass:
                     # self.return_to_main_menu()
                     pass
                 case "q":
-                    Functions.exit_application()
+                    exit_application()

@@ -1,15 +1,22 @@
 # !/usr/bin/env python3
-# DLU : 31-Jul-2026
+# DLU : 02-Aug-2026
 
 import base64
-import os
 from pathlib import Path
 from rich.prompt import Prompt
-from typing import List, Optional
+from typing import List
 
 from . import console
-from resources.functions import Functions
-from resources.prompts import XOR_ENCRYPTION_PROMPT
+from resources.functions import (
+    clear_screen,
+    exit_application,
+    get_file_path,
+    get_folder_path
+)
+from resources.prompts import (
+    show_main_app_menu,
+    show_xor_encryption_menu
+)
 
 
 class XORClass:
@@ -241,7 +248,7 @@ class XORClass:
     @staticmethod
     def get_xor_file_to_decrypt() -> Path:
         return Path(
-            Functions.get_file_path(text="decrypted")
+            get_file_path(text="decrypted")
             )
 
 
@@ -250,13 +257,9 @@ class XORClass:
     def get_xor_encryption_choice() -> None:
         """Main routing controller for encryption jobs."""
         while True:
-            # Functions.clear_screen()
+            clear_screen()
             try:
-                xor_encryption_choice = Prompt.ask(
-                    XOR_ENCRYPTION_PROMPT,
-                    choices=["1", "2", "3", "r", "q"],
-                    show_choices=False
-                    ).strip().lower()
+                xor_encryption_choice = show_xor_encryption_menu()
 
                 match xor_encryption_choice:
                     case "1":
@@ -270,7 +273,7 @@ class XORClass:
                             message=message
                             )
                     case "2":
-                        target_file_path = Functions.get_file_path(
+                        target_file_path = get_file_path(
                             text="encrypted"
                             )
                         xor_key = XORClass.get_xor_key_prompt()
@@ -279,7 +282,7 @@ class XORClass:
                             xor_key=xor_key
                             )
                     case "3":
-                        target_dir_path = Functions.get_folder_path(
+                        target_dir_path = get_folder_path(
                             text="encrypted"
                             )
                         xor_key = XORClass.get_xor_key_prompt()
@@ -288,10 +291,10 @@ class XORClass:
                             xor_key=xor_key
                             )
                     case "r":
-                        # self.return_to_main_menu()
-                        pass
+                        clear_screen()
+                        show_main_app_menu()
                     case "q":
-                        Functions.exit_application()
+                        exit_application()
 
             except KeyboardInterrupt:
                 console.print(

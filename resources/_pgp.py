@@ -1,19 +1,30 @@
 # !/usr/bin/env python3
-# DLU : 31-Jul-2026
+# DLU : 02-Aug-2026
 
 
 import gnupg
 import os
 from pathlib import Path
 import shutil
-from typing import List, Optional
+from typing import List
 
 from rich.prompt import Prompt
 
 # Import the console object from the main __init__.py file
 from . import console
-from resources.functions import Functions
-from resources.prompts import PGP_ENCRYPTION_PROMPT
+from resources.functions import (
+    clear_screen,
+    exit_application,
+    get_email_address,
+    get_file_path,
+    get_folder_path,
+    get_password,
+    select_recursive_option
+)
+from resources.prompts import (
+    show_main_app_menu,
+    show_pgp_encryption_menu
+)
 
 
 class PGPClass:
@@ -158,7 +169,7 @@ class PGPClass:
     def pgp_encrypt_file(
             cls,
             target_file_path: Path | str,
-            recipients: str|List[str],
+            recipients: str | List[str],
             always_trust: bool = True
     ) -> None:
         """Encrypts a single file using PGP/GPG and handles GPG engine
@@ -220,7 +231,7 @@ class PGPClass:
     def pgp_encrypt_files_in_folder(
             cls,
             target_dir_path: Path | str,
-            recipients: str|List[str],
+            recipients: str | List[str],
             recursive: bool = True,
             always_trust: bool = True
     ) -> List[Path]:
@@ -319,16 +330,12 @@ class PGPClass:
 
     @staticmethod
     def get_pgp_encryption_choice() -> None:
-        pgp_encryption_choice = Prompt.ask(
-            PGP_ENCRYPTION_PROMPT,
-            choices=["1", "2", "3", "r", "q"],
-            show_choices=False
-            ).strip().lower()
+        pgp_encryption_choice = show_pgp_encryption_menu()
 
         match pgp_encryption_choice:
             case "1":
-                password = Functions.get_password()
-                email_address = Functions.get_email_address()
+                password = get_password()
+                email_address = get_email_address()
                 if not password.strip() or not email_address.strip():
                     console.print(
                         "\n[yellow][!] Key generation cancelled : Missing "
@@ -343,7 +350,7 @@ class PGPClass:
                     email=email_address
                     )
             case "2":
-                target_file_path = Functions.get_file_path(text="encrypted")
+                target_file_path = get_file_path(text="encrypted")
                 # User cancelled input
                 if not target_file_path or not target_file_path.strip():
                     return
@@ -364,7 +371,7 @@ class PGPClass:
                     recipients=recipient
                     )
             case "3":
-                target_dir_path = Functions.get_folder_path(text="encrypted")
+                target_dir_path = get_folder_path(text="encrypted")
                 recipient = Prompt.ask(
                     "\n[bright_white][-] Enter recipient email or Key ID "
                     ).strip()
@@ -377,17 +384,17 @@ class PGPClass:
                         "[bright_white][-] Press Enter to continue..."
                         )
                     return
-                recursive = Functions.select_recursive_option()
+                recursive = select_recursive_option()
                 PGPClass.pgp_encrypt_files_in_folder(
                     target_dir_path=target_dir_path,
                     recipients=recipient,
                     recursive=recursive
                     )
             case "r":
-                # self.return_to_main_menu()
-                pass
+                clear_screen()
+                show_main_app_menu()
             case "q":
-                Functions.exit_application()
+                exit_application()
 
 
 
