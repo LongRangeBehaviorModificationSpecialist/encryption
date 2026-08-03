@@ -175,9 +175,10 @@ ENCRYPT MESSAGE OR FILE(S) USING AN XOR KEY
 --------------------------------------------\n
 [khaki3]Options :[bright_white]\n
 [1] Decrypt a single message
-[2] Decrypt a file\n
+[2] Decrypt a file
+[3] Decrypt all files in a folder using XOR\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(XOR_DECRYPTION_MENU, choices=["1", "2", "r", "q"],
+    return (Prompt.ask(XOR_DECRYPTION_MENU, choices=["1", "2", "3", "r", "q"],
         show_choices=False).strip().lower())

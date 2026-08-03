@@ -60,7 +60,7 @@ class AESDecryptor:
 
 
     def aes_decrypt_file(
-        self, target_file_path: Union[str, Path], password: str, mode: str
+        self, target_file: Union[str, Path], password: str, mode: str
     ) -> Path:
         """Decrypts a single file using AES-GCM or AES-CBC and handles
         safe writing.
@@ -69,7 +69,7 @@ class AESDecryptor:
         [ 16 bytes Salt ] + [ 16 bytes IV ] + [ Encrypted Data ]
 
         Args:
-            target_file_path: Path -> Path to the encrypted file
+            target_file: Path -> Path to the encrypted file
             password: str -> Password to derive the decryption key
             mode: str -> AES mode to use
 
@@ -77,15 +77,15 @@ class AESDecryptor:
             Path -> The path to the decrypted file
         """
 
-        target_file_path = Path(target_file_path)
+        target_file = Path(target_file)
 
-        if not target_file_path.exists():
+        if not target_file.exists():
             raise FileNotFoundError(
-                f"Target file not found : {target_file_path}"
+                f"Target file not found : {target_file}"
             )
-        if not target_file_path.is_file():
+        if not target_file.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file : {target_file_path}"
+                f"Provided path is a directory, not a file : {target_file}"
             )
 
         # Mode validation
@@ -96,9 +96,9 @@ class AESDecryptor:
             )
 
         c.print(f"""[bright_white]
-[-] Reading encrypted file : {target_file_path.name}..."""
+[-] Reading encrypted file : {target_file.name}..."""
         )
-        encrypted_data = target_file_path.read_bytes()
+        encrypted_data = target_file.read_bytes()
 
         salt_size = getattr(self, "SALT_LENGTH", 16)
         iv_size = getattr(self, "IV_LENGTH", 16)
@@ -159,11 +159,11 @@ file is corrupted."
                 ) from e
 
         # Handle output path creation
-        if target_file_path.suffix == ".encrypted":
-            decrypted_file_path = target_file_path.with_suffix("")
+        if target_file.suffix == ".encrypted":
+            decrypted_file_path = target_file.with_suffix("")
         else:
-            decrypted_file_path = target_file_path.with_name(
-                f"{target_file_path.name}.decrypted"
+            decrypted_file_path = target_file.with_name(
+                f"{target_file.name}.decrypted"
             )
 
         if decrypted_file_path.exists():
@@ -181,7 +181,7 @@ file is corrupted."
 
 
     def aes_decrypt_directory(
-        self, target_folder_path: Path | str, password: str, mode: str
+        self, target_directory_path: Path | str, password: str, mode: str
     ) ->  List[Path]:
         """Decrypts all '.encrypted' files in a directory, returning a list
         of successfully decrypted file paths.
@@ -190,7 +190,7 @@ file is corrupted."
         # Set up logging for non-UI diagnostics
         logger = logging.getLogger(__name__)
 
-        target_dir = Path(target_folder_path)
+        target_dir = Path(target_directory_path)
 
         if not target_dir.exists():
             raise FileNotFoundError(
@@ -202,7 +202,7 @@ file is corrupted."
             )
 
         try:
-            all_files = Functions.get_all_files(target_dir_path=target_dir)
+            all_files = Functions.get_all_files(target_dir=target_dir)
         except Exception as e:
             c.print(f"""[bright_red]
 [!] Failed to retrieve files from {target_dir} : {e}"""
@@ -226,7 +226,7 @@ file is corrupted."
         for file_path in files_to_decrypt:
             try:
                 decrypted_path = self.aes_decrypt_file(
-                    target_file_path=file_path,
+                    target_file=file_path,
                     password=password,
                     mode=mode
                 )
@@ -314,10 +314,10 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
                 is_single_file = target_option == "1"
 
                 if is_single_file:
-                    target_file_path = Path(
+                    target_file = Path(
                         Functions.get_file_path(text="decrypted")
                     )
-                    if not target_file_path:  # User cancelled input
+                    if not target_file:  # User cancelled input
                         continue
 
                     password = Functions.get_password()
@@ -325,15 +325,15 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
                         continue
 
                     self.aes_decrypt_file(
-                        target_file_path=target_file_path,
+                        target_file=target_file,
                         password=password,
                         mode=mode
                     )
                 else:
-                    target_dir_path = Path(
-                        Functions.get_folder_path(text="decrypted")
+                    target_dir = Path(
+                        Functions.get_directory_path(text="decrypted")
                     )
-                    if not target_dir_path:
+                    if not target_dir:
                         continue
 
                     password = Functions.get_password()
@@ -341,7 +341,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
                         continue
 
                     self.aes_decrypt_directory(
-                        targer_folder_path=target_dir_path,
+                        targer_folder_path=target_dir,
                         password=password,
                         mode=mode
                     )

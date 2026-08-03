@@ -188,7 +188,7 @@ Check keyid/passphrase."
 
     def pgp_encrypt_file(
         self,
-        target_file_path: Path | str,
+        target_file: Path | str,
         recipients: Union[str, List[str]],
         always_trust: bool = True
     ) -> None:
@@ -198,16 +198,16 @@ Check keyid/passphrase."
 
         logger = logging.getLogger(__name__)
 
-        target_file_path = Path(target_file_path)
+        target_file = Path(target_file)
 
         # Path existence and file type checks
-        if not target_file_path.exists():
+        if not target_file.exists():
             raise FileNotFoundError(
-                f"Target file not found : {target_file_path}"
+                f"Target file not found : {target_file}"
             )
-        if not target_file_path.is_file():
+        if not target_file.is_file():
             raise IsADirectoryError(
-                f"Provided path is a directory, not a file : {target_file_path}"
+                f"Provided path is a directory, not a file : {target_file}"
             )
 
         # Normalize recipients input to a list
@@ -222,12 +222,12 @@ Check keyid/passphrase."
         c.print(f"""[bright_white]
 [-] Encrypting data..."""
         )
-        encrypted_file_path = target_file_path.with_name(
-            f"{target_file_path.name}.pgp"
+        encrypted_file_path = target_file.with_name(
+            f"{target_file.name}.pgp"
         )
 
         try:
-            with open(target_file_path, "rb") as f:
+            with open(target_file, "rb") as f:
                 status = self.gpg.encrypt_file(
                     f,
                     recipients=[recipients],
@@ -236,7 +236,7 @@ Check keyid/passphrase."
                 )
         except Exception as e:
             logger.error(
-                f"GPG process invocation failed for {target_file_path}: {e}",
+                f"GPG process invocation failed for {target_file}: {e}",
                 exc_info=True,
             )
             raise RuntimeError(
@@ -252,10 +252,10 @@ Check keyid/passphrase."
                 status, "status", getattr(status, "stderr", "Unknown GPG error")
             )
             logger.error(
-                f"PGP encryption failed for {target_file_path.name} : {error_msg}"
+                f"PGP encryption failed for {target_file.name} : {error_msg}"
             )
             raise RuntimeError(
-                f"PGP Encryption failed for '{target_file_path.name}'. \
+                f"PGP Encryption failed for '{target_file.name}'. \
 GPG status: {error_msg}"
             )
 
@@ -271,7 +271,7 @@ GPG status: {error_msg}"
 
     def pgp_encrypt_directory(
         self,
-        target_folder_path: Union[str, Path],
+        target_directory_path: Union[str, Path],
         recipients: Union[str, List[str]],
         always_trust: bool = True
     ) -> List[Path]:
@@ -280,23 +280,23 @@ GPG status: {error_msg}"
         # Set up logging for non-UI diagnostics
         logger = logging.getLogger(__name__)
 
-        target_dir_path = Path(target_folder_path)
+        target_dir = Path(target_directory_path)
 
-        if not target_dir_path.exists():
+        if not target_dir.exists():
             raise FileNotFoundError(
-                f"Target directory does not exist : {target_dir_path}"
+                f"Target directory does not exist : {target_dir}"
             )
-        if not target_dir_path.is_dir():
+        if not target_dir.is_dir():
             raise NotADirectoryError(
-                f"The provided path is not a directory : {target_dir_path}"
+                f"The provided path is not a directory : {target_dir}"
             )
 
         try:
-            files = [f for f in target_dir_path.rglob("*") if f.is_file()]
+            files = [f for f in target_dir.rglob("*") if f.is_file()]
 
         except Exception as e:
             c.print(f"""[bright_red]
-[!] Failed to retrieve files from {target_dir_path}: {e}."""
+[!] Failed to retrieve files from {target_dir}: {e}."""
             )
             return []
 
@@ -308,7 +308,7 @@ GPG status: {error_msg}"
 
         if not files_to_encrypt:
             c.print(f"""[yellow]
-[!] No valid files to encrypt in {target_dir_path}"""
+[!] No valid files to encrypt in {target_dir}"""
             )
             return []
 
@@ -318,7 +318,7 @@ GPG status: {error_msg}"
         for file_path in files_to_encrypt:
             try:
                 encrypted_path = self.pgp_encrypt_file(
-                    target_file_path=file_path,
+                    target_file=file_path,
                     recipients=recipients,
                     always_trust=always_trust
                 )
@@ -337,7 +337,7 @@ GPG status: {error_msg}"
             c.print(f"""[green]
 ** Action Completed **
 Successfully PGP-encrypted {len(successful_encryptions)} files in \
-{target_dir_path} :"""
+{target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
                 c.print(f"""[green]
@@ -347,7 +347,7 @@ Successfully PGP-encrypted {len(successful_encryptions)} files in \
         if failed_encryptions:
             c.print(f"""[bright_red]
 ** Warning **
-Failed to encrypt {len(failed_encryptions)} files in {target_dir_path} :"""
+Failed to encrypt {len(failed_encryptions)} files in {target_dir} :"""
             )
             for failed_file in failed_encryptions:
                 c.print(f"""[bright_red]
@@ -428,13 +428,13 @@ Press Enter to continue..."""
                         continue
 
                     self.pgp_encrypt_file(
-                        target_file_path=Path(raw_path),
+                        target_file=Path(raw_path),
                         recipients=[recipient]
                     )
 
                 # Option 3: Encrypt directory
                 elif target_option == "3":
-                    raw_dir = Functions.get_folder_path(text="encrypted")
+                    raw_dir = Functions.get_directory_path(text="encrypted")
                     if not raw_dir or not raw_dir.strip():
                         continue
 
@@ -451,7 +451,7 @@ Press Enter to continue..."""
                         continue
 
                     self.pgp_encrypt_directory(
-                        target_folder_path=Path(raw_dir),
+                        target_directory_path=Path(raw_dir),
                         recipients=[recipient]
                     )
 

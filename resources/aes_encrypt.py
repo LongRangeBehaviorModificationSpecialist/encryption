@@ -48,15 +48,15 @@ class AESEncryptor:
 
 
     def aes_encrypt_file(
-        self, target_file_path: Union[str, Path], password: str, mode: str
+        self, target_file: Union[str, Path], password: str, mode: str
     ) -> Path:
         """Encrypts a single file safely using AES (GCM or CBC) and independent
         salt derivation.
         """
-        target_file_path = Path(target_file_path)
-        if not target_file_path.is_file():
+        target_file = Path(target_file)
+        if not target_file.is_file():
             raise FileNotFoundError(
-                f"Target file not found : {target_file_path}"
+                f"Target file not found : {target_file}"
             )
 
         valid_modes = {"AES.GCM", "AES.CBC"}
@@ -66,8 +66,8 @@ class AESEncryptor:
             )
 
         c.print(f"""[bright_white]
-[-] Reading file : {target_file_path.name}...""")
-        plaintext = target_file_path.read_bytes()
+[-] Reading file : {target_file.name}...""")
+        plaintext = target_file.read_bytes()
 
         # Generate fresh, random cryptographic parameters
         salt = os.urandom(self.SALT_LENGTH)
@@ -77,8 +77,8 @@ class AESEncryptor:
         c.print(f"""[bright_white]
 [-] Encrypting file data..."""
         )
-        encrypted_file_path = target_file_path.with_name(
-            f"{target_file_path.name}.encrypted"
+        encrypted_file_path = target_file.with_name(
+            f"{target_file.name}.encrypted"
         )
 
         # Default tag for non-authenticated modes like CBC
@@ -110,7 +110,7 @@ class AESEncryptor:
 
         # UI Output
         c.print(f"""[green]
-[-] Encrypted {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
+[-] Encrypted {target_file.name:34s}{'->':7s}{encrypted_file_path.name}"""
         )
         c.print(
             f"""[dim]
@@ -128,7 +128,7 @@ class AESEncryptor:
 
 
     def aes_encrypt_directory(
-        self, target_folder_path: Path | str, password: str,  mode: str
+        self, target_directory_path: Path | str, password: str,  mode: str
     ) -> List[Path]:
         """Encrypts all valid files in a given directory, skipping already
         encrypted files and gracefully handling individual file errors.
@@ -137,7 +137,7 @@ class AESEncryptor:
         # Set up logging for non-UI diagnostics
         logger = logging.getLogger(__name__)
 
-        target_dir = Path(target_folder_path)
+        target_dir = Path(target_directory_path)
 
         if not target_dir.exists():
             raise FileNotFoundError(
@@ -149,7 +149,7 @@ class AESEncryptor:
             )
 
         try:
-            all_files = Functions.get_all_files(target_dir_path=target_dir)
+            all_files = Functions.get_all_files(target_dir=target_dir)
         except Exception as e:
             c.print(f"""[bright_red]
 [!] Failed to retrieve files from {target_dir} : {e}"""
@@ -173,7 +173,7 @@ class AESEncryptor:
         for file_path in files_to_encrypt:
             try:
                 encrypted_path = self.aes_encrypt_file(
-                    target_file_path=file_path,
+                    target_file=file_path,
                     password=password,
                     mode=mode
                 )
@@ -262,9 +262,9 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                 is_single_file = target_option == "1"
 
                 if is_single_file:
-                    target_file_path = Functions.get_file_path(text="encrypted")
+                    target_file = Functions.get_file_path(text="encrypted")
                     # User cancelled input
-                    if not target_file_path:
+                    if not target_file:
                         continue
 
                     password = Functions.get_password()
@@ -273,13 +273,13 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                         continue
 
                     self.aes_encrypt_file(
-                        target_file_path=Path(target_file_path),
+                        target_file=Path(target_file),
                         password=password,
                         mode=mode
                     )
                 else:
-                    target_dir_path = Functions.get_folder_path(text="encrypted")
-                    if not target_dir_path:
+                    target_dir = Functions.get_directory_path(text="encrypted")
+                    if not target_dir:
                         continue
 
                     password = Functions.get_password()
@@ -287,7 +287,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                         continue
 
                     self.aes_encrypt_directory(
-                        targer_folder_path=Path(target_dir_path),
+                        targer_folder_path=Path(target_dir),
                         password=password,
                         mode=mode
                     )

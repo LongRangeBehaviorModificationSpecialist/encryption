@@ -127,33 +127,33 @@ class KeyFileEncryptor:
     def encrypt_file_with_key(
         self,
         fernet: bytes,
-        target_file_path: Path | str
+        target_file: Path | str
     ) -> None:
         """Reads an existing key and encrypts a single target file."""
 
-        target_file_path = Path(target_file_path)
+        target_file = Path(target_file)
 
         # Validation checks
-        if not target_file_path.is_file():
+        if not target_file.is_file():
             c.print(f"""[bright_red]
-[!] Target file not found : {target_file_path}"""
+[!] Target file not found : {target_file}"""
             )
             # self.return_to_main_menu()
             return
 
         try:
             c.print(f"""[bright_white]
-[-] Reading file : {target_file_path.name}..."""
+[-] Reading file : {target_file.name}..."""
                 )
-            file_data = target_file_path.read_bytes()
+            file_data = target_file.read_bytes()
 
             c.print(f"""[bright_white]
 [-] Encrypting file data..."""
             )
             encrypted_data = fernet.encrypt(file_data)
 
-            encrypted_file_path = target_file_path.with_name(
-                f"{target_file_path.name}.encrypted"
+            encrypted_file_path = target_file.with_name(
+                f"{target_file.name}.encrypted"
             )
 
             c.print("""[bright_white]
@@ -162,7 +162,7 @@ class KeyFileEncryptor:
             encrypted_file_path.write_bytes(encrypted_data)
 
             c.print(f"""[bright_white]
-[-] Encrypted {target_file_path.name:34s}{'->':7s}{encrypted_file_path.name}"""
+[-] Encrypted {target_file.name:34s}{'->':7s}{encrypted_file_path.name}"""
             )
 
         except Exception as e:
@@ -174,35 +174,35 @@ class KeyFileEncryptor:
     def encrypt_files_in_dir_with_key(
         self,
         fernet: bytes,
-        target_dir_path: Path | str
+        target_dir: Path | str
     ) -> None:
         """Encrypts all discovered assets within a target directory."""
 
-        target_dir_path = Path(target_dir_path)
+        target_dir = Path(target_dir)
 
-        if not target_dir_path.exists():
+        if not target_dir.exists():
             raise FileNotFoundError(
-                f"[!] The target directory does not exist : {target_dir_path}"
+                f"[!] The target directory does not exist : {target_dir}"
             )
-        if not target_dir_path.is_dir():
+        if not target_dir.is_dir():
             raise NotADirectoryError(
-                f"[!] The provided path is not a directory : {target_dir_path}"
+                f"[!] The provided path is not a directory : {target_dir}"
             )
 
         try:
             all_files = [
-                f for f in target_dir_path.rglob("*")
+                f for f in target_dir.rglob("*")
                 if f.is_file() and not f.suffix == ".encrypted"
             ]
         except Exception as e:
                 c.print(f"""[bright_red]
-[!] Failed to retrieve files from {target_dir_path} : {e}"""
+[!] Failed to retrieve files from {target_dir} : {e}"""
                 )
                 return []
 
         if not all_files:
             c.print(f"""[yellow]
-[!] No valid files to encrypt in {target_dir_path}"""
+[!] No valid files to encrypt in {target_dir}"""
             )
             return []
 
@@ -216,7 +216,7 @@ class KeyFileEncryptor:
 
             encrypted_path = self.encrypt_file_with_key(
                 fernet=fernet,
-                target_file_path=file_path
+                target_file=file_path
             )
             successful_encryptions.append(encrypted_path)
 
@@ -229,7 +229,7 @@ class KeyFileEncryptor:
             c.print(f"""[green]
 ** Action Completed **
 Successfully encrypted {len(successful_encryptions)} files in \
-{target_dir_path} :"""
+{target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
                 c.print(f"""[green]
@@ -328,16 +328,16 @@ ENCRYPT FILE(S) WITH A .KEY FILE
             fernet = self._load_fernet(key_file_path=key_file_path)
 
             if is_single_file:
-                target_file_path = Functions.get_file_path(text="encrypted")
+                target_file = Functions.get_file_path(text="encrypted")
                 self.encrypt_file_with_key(
                     fernet=fernet,
-                    target_file_path=Path(target_file_path)
+                    target_file=Path(target_file)
                 )
             else:
-                target_dir_path = Functions.get_folder_path(text="encrypted")
+                target_dir = Functions.get_directory_path(text="encrypted")
                 self.encrypt_files_in_dir_with_key(
                     fernet=fernet,
-                    target_dir_path=Path(target_dir_path)
+                    target_dir=Path(target_dir)
                 )
 
             # Clean work completion exit

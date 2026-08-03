@@ -1,17 +1,16 @@
 # !/usr/bin/env python3
-# DLU : 02-Aug-2026
+# DLU : 03-Aug-2026
 
 import logging
-from rich.prompt import Prompt
 from rich.console import Console
 import signal
 import sys
 from resources.logging_setup import setup_logging
 from resources.functions import Functions
-from resources._aes import AESClass
-from resources._pgp import PGPClass
-from resources._key import KEYClass
-from resources._xor import XORClass
+from resources._aes import AES
+from resources._pgp import PGP
+from resources._key import KEY
+from resources._xor import XOR
 from resources.prompts import (
     show_main_app_menu,
     show_main_encryption_menu,
@@ -19,7 +18,7 @@ from resources.prompts import (
 )
 
 __author__ = "[@mikespon]"
-__last_updated__ = "02-Aug-2026"
+__last_updated__ = "03-Aug-2026"
 
 
 console = Console()
@@ -31,16 +30,15 @@ class App:
         setup_logging()
         self.logger = logging.getLogger(__name__)
 
+
     @staticmethod
     def handle_sigint(sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         console.print(
             f"[!] Interrupted at line {frame.f_lineno} in "
-            f"{frame.f_code.co_filename}"
-            )
+            f"{frame.f_code.co_filename}")
         console.print(
-            "\n[bright_yellow][!] Operation cancelled by user. Exiting..."
-        )
+            "\n[bright_yellow][!] Operation cancelled by user. Exiting...")
         sys.exit(0)
 
 
@@ -51,47 +49,47 @@ class App:
         initial_choice = show_main_app_menu()
 
         self.logger.info(
-            f"User selected {initial_choice}. Continuing..."
-        )
+            f"User selected {initial_choice}. Continuing...")
 
         match initial_choice:
-            case "1":
+
+            case "1":  # MAIN ENCRYPTION MENU
                 Functions.clear_screen()
                 encryption_choice = show_main_encryption_menu()
-
+                action = "encrypt"
                 match encryption_choice:
                     case "1":
                         Functions.clear_screen()
-                        KEYClass.get_key_action_choice(action="encrypt")
+                        KEY.get_key_action_choice(action=action)
                     case "2":
                         Functions.clear_screen()
-                        AESClass.get_aes_encryption_choice()
+                        AES.get_aes_action_choice(action=action)
                     case "3":
                         Functions.clear_screen()
-                        PGPClass.get_pgp_encryption_choice()
+                        PGP.get_pgp_action_choice(action=action)
                     case "4":
                         Functions.clear_screen()
-                        XORClass.get_xor_encryption_choice()
+                        XOR.get_xor_action_choice(action=action)
                     case "q":
                         Functions.exit_application()
 
-            case "2":
+            case "2":  # MAIN DECRYPTION MENU
                 Functions.clear_screen()
                 decryption_choice = show_main_decryption_menu()
-
+                action = "decrypt"
                 match decryption_choice:
                     case "1":
                         Functions.clear_screen()
-                        KEYClass.get_key_action_choice(action="decrypt")
+                        KEY.get_key_action_choice(action=action)
                     case "2":
                         Functions.clear_screen()
-                        AESClass.get_aes_decryption_choice()
+                        AES.get_aes_action_choice(action=action)
                     case "3":
                         Functions.clear_screen()
-                        PGPClass.get_pgp_decryption_choice()
+                        PGP.get_pgp_action_choice(action=action)
                     case "4":
                         Functions.clear_screen()
-                        XORClass.get_xor_decryption_choice()
+                        XOR.get_xor_action_choice(action=action)
                     case "q":
                         Functions.exit_application()
 
@@ -103,9 +101,6 @@ class App:
 
 
 if __name__ == "__main__":
-    # App.main(App)
-    # app = App()
-    # app.main()
     App.main()
 
 

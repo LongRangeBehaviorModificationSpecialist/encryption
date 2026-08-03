@@ -41,9 +41,9 @@ class KeyFileDecryptor:
 
     @Functions.timeit
     def decrypt_file_with_key(
-        self, key_file_path: Path, target_file_path: Path
+        self, key_file_path: Path, target_file: Path
     ) -> None:
-        """Reads a key from key_file_path and decrypts target_file_path.
+        """Reads a key from key_file_path and decrypts target_file.
         Removes the '.encrypted' extension from the file name.
 
         Args:
@@ -55,9 +55,9 @@ class KeyFileDecryptor:
         """
 
         # Validation checks
-        if not target_file_path.is_file():
+        if not target_file.is_file():
             c.print(f"""[bright_red]
-[!] Target file not found : {target_file_path}"""
+[!] Target file not found : {target_file}"""
             )
             # self.return_to_main_menu()
             return
@@ -70,7 +70,7 @@ class KeyFileDecryptor:
             return
 
         # Prevent decrypting a file that isn't marked as encrypted
-        if target_file_path.suffix != ".encrypted":
+        if target_file.suffix != ".encrypted":
             c.print(f"""[bright_red]
 [!] The target file does not appear to be an .encrypted file."""
             )
@@ -85,9 +85,9 @@ class KeyFileDecryptor:
             )
 
             c.print(f"""[bright_white]
-[-] Reading encrypted file : {target_file_path.name}..."""
+[-] Reading encrypted file : {target_file.name}..."""
             )
-            encrypted_data = target_file_path.read_bytes()
+            encrypted_data = target_file.read_bytes()
 
             c.print("""[bright_white]
 [-] Decrypting data..."""
@@ -97,7 +97,7 @@ class KeyFileDecryptor:
 
             # Determine output path (e.g., "data.txt.encrypted" -> "data.txt")
             # '.with_suffix("")' strips away the LAST extension (.encrypted)
-            decrypted_file_path = target_file_path.with_suffix("")
+            decrypted_file_path = target_file.with_suffix("")
 
             # Save the decrypted file
             decrypted_file_path.write_bytes(decrypted_data)
@@ -120,14 +120,14 @@ class KeyFileDecryptor:
 
     @Functions.timeit
     def decrypt_files_in_dir_with_key(
-        self, key_file_path: Union[str, Path], target_dir_path: Union[str, Path]
+        self, key_file_path: Union[str, Path], target_dir: Union[str, Path]
     ) -> None:
         """Decrypts all discovered assets within a target directory directory."""
 
         # Validation checks
-        if not target_dir_path.is_dir():
+        if not target_dir.is_dir():
             c.print(f"""[bright_red]
-[!] Target directory not found : {target_dir_path}"""
+[!] Target directory not found : {target_dir}"""
             )
             # self.return_to_main_menu()
             return
@@ -147,7 +147,7 @@ class KeyFileDecryptor:
             )
 
             files = [
-                f for f in target_dir_path.rglob("*")
+                f for f in target_dir.rglob("*")
                 if f.is_file() and f.suffix == ".encrypted"
             ]
 
@@ -221,16 +221,16 @@ DECRYPT FILE WITH PROVIDED .KEY
             is_single_file = (target_option == "1")
 
             if is_single_file:
-                target_file_path = Functions.get_file_path(text="decrypted")
+                target_file = Functions.get_file_path(text="decrypted")
                 self.decrypt_file_with_key(
                     key_file_path=key_file_path,
-                    target_file_path=Path(target_file_path)
+                    target_file=Path(target_file)
                 )
             else:
-                target_dir_path = Functions.get_folder_path(text="decrypted")
+                target_dir = Functions.get_directory_path(text="decrypted")
                 self.decrypt_files_in_dir_with_key(
                     key_file_path=key_file_path,
-                    target_dir_path=Path(target_dir_path)
+                    target_dir=Path(target_dir)
                 )
 
             break

@@ -14,7 +14,7 @@ from resources.functions import Functions
 c = Console()
 
 
-class PGPClass:
+class PGP:
 
     script_path = Path(__file__).parent
     gnupg_home_dir = script_path / ".gnupg"
@@ -175,7 +175,7 @@ PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue (y/n)? """).strip
                 continue
 
             with open(current_file, "rb") as efile:
-                status = PGPClass.gpg.encrypt_file(
+                status = PGP.gpg.encrypt_file(
                     efile,
                     recipients=["TEST.EMAIL@gmail.com"],
                     always_trust=True,
