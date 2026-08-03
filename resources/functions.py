@@ -111,11 +111,12 @@ class Functions:
             return True
 
     @staticmethod
-    def select_recursive_option() -> bool:
+    def select_recursive_option(action: str) -> bool:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input =Prompt.ask(
-                "\n[bright_white]Encrypt subdirectories recursively? ",
+                f"\n[bright_white]{action.capitalize()} subdirectories "
+                "recursively? ",
                 choices=["y", "n"],
                 show_choices=True
                 ).strip().lower()

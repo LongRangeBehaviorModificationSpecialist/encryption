@@ -19,7 +19,8 @@ v.{VERSION}
 [2] Run DECRYPTION\n
 [Q] Quit the Application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(MAIN_APP_MENU, choices=["1", "2", "q"],
+    return (Prompt.ask(MAIN_APP_MENU,
+        choices=["1", "2", "q"],
         show_choices=False).strip().lower())
 
 
@@ -36,7 +37,8 @@ v.{VERSION}
 [4] Use XOR\n
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(MAIN_ENCRYPTION_MENU, choices=["1", "2", "3", "4", "q"],
+    return (Prompt.ask(MAIN_ENCRYPTION_MENU,
+        choices=["1", "2", "3", "4", "q"],
         show_choices=False).strip().lower())
 
 
@@ -53,7 +55,8 @@ WITH A .KEY FILE
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(KEY_ENCRYPTION_MENU, choices=["1", "2", "3", "r", "q"],
+    return (Prompt.ask(KEY_ENCRYPTION_MENU,
+        choices=["1", "2", "3", "r", "q"],
         show_choices=False).strip().lower())
 
 
@@ -69,7 +72,8 @@ PASSWORD [AES-GCM mode]
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(AES_ENCRYPTION_MENU, choices=["1", "2", "r", "q"],
+    return (Prompt.ask(AES_ENCRYPTION_MENU,
+        choices=["1", "2", "r", "q"],
         show_choices=False).strip().lower())
 
 
@@ -85,8 +89,41 @@ ENCRYPT FILE(S) WITH PGP KEY
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(PGP_ENCRYPTION_MENU, choices=["1", "2", "r", "q"],
+    return (Prompt.ask(PGP_ENCRYPTION_MENU,
+        choices=["1", "2", "3", "r", "q"],
         show_choices=False).strip().lower())
+
+
+def show_pgp_encryption_type_menu() -> str:
+    PGP_ENCRYPTION_TYPE_MENU = """[dodger_blue1]
+----------------------------
+SELECT PGP ENCRYPTION TYPE
+----------------------------\n
+[khaki3]Options :[bright_white]\n
+[1] Asymmetric (using a public key)
+[2] Symmetric (password only, no key needed)\n
+[R] Return to the main menu
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """
+    return (Prompt.ask(PGP_ENCRYPTION_TYPE_MENU,
+        choices=["1", "2", "r", "q"],
+        show_choices=False).strip().lower())
+
+
+def show_pgp_armor_choice() -> str:
+    PGP_ARMOUR_CHOICE_MENU = """[dodger_blue1]
+--------------------------------------------
+SELECT PGP ARMOR OUTPUT FORMAT
+--------------------------------------------\n
+[khaki3]Options :[bright_white]\n
+[1] Binary output (.gpg)
+[2] ASCII-armored output (.asc)\n
+[R] Return to the main menu
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """
+    return (Prompt.ask(PGP_ARMOUR_CHOICE_MENU,
+            choices=["1", "2", "r", "q"],
+            show_choices=False).strip().lower())
 
 
 def show_xor_encryption_menu() -> str:
@@ -102,7 +139,8 @@ USING AN XOR KEY
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(XOR_ENCRYPTION_MENU, choices=["1", "2", "3", "r", "q"],
+    return (Prompt.ask(XOR_ENCRYPTION_MENU,
+        choices=["1", "2", "3", "r", "q"],
         show_choices=False).strip().lower())
 
 
@@ -119,7 +157,8 @@ v.{VERSION}
 [4] Decrypt message/file(s) using XOR\n
 [Q] Quit the Application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(MAIN_DECRYPTION_MENU, choices=["1", "2", "3", "4", "q"],
+    return (Prompt.ask(MAIN_DECRYPTION_MENU,
+        choices=["1", "2", "3", "4", "q"],
         show_choices=False).strip().lower())
 
 
@@ -134,7 +173,8 @@ DECRYPT FILE(S) WITH PROVIDED .KEY
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(KEY_DECRYPTION_MENU, choices=["1", "2", "r", "q"],
+    return (Prompt.ask(KEY_DECRYPTION_MENU,
+        choices=["1", "2", "r", "q"],
         show_choices=False).strip().lower())
 
 
@@ -149,7 +189,8 @@ DECRYPT FILE(S) WITH PASSWORD [AES-GCM mode]
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(AES_DECRYPTION_MENU, choices=["1", "2", "r", "q"],
+    return (Prompt.ask(AES_DECRYPTION_MENU,
+        choices=["1", "2", "r", "q"],
         show_choices=False).strip().lower())
 
 
@@ -159,12 +200,29 @@ def show_pgp_decryption_menu() -> str:
 DECRYPT FILE(S) USING PGP KEY
 --------------------------------------------\n
 [khaki3]Options :[bright_white]\n
-[1] Decrypt a file using PGP key
-[2] Decrypt all files in a folder using PGP key\n
+[1] Decrypt a file using PGP
+[2] Decrypt all files in a folder using PGP\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(PGP_DECRYPTION_MENU, choices=["1", "2", "r", "q"],
+    return (Prompt.ask(PGP_DECRYPTION_MENU,
+        choices=["1", "2", "r", "q"],
+        show_choices=False).strip().lower())
+
+
+def show_pgp_decryption_type_menu() -> str:
+    PGP_DECRYPTION_TYPE_MENU = """[dodger_blue1]
+----------------------------
+SELECT PGP DECRYPTION TYPE
+----------------------------\n
+[khaki3]Options :[bright_white]\n
+[1] Asymmetric (using a private key)
+[2] Symmetric (password only)\n
+[R] Return to the main menu
+[Q] Quit the application\n\n
+[khaki3]ENTER CHOICE """
+    return (Prompt.ask(PGP_DECRYPTION_TYPE_MENU,
+        choices=["1", "2", "r", "q"],
         show_choices=False).strip().lower())
 
 
@@ -180,5 +238,6 @@ ENCRYPT MESSAGE OR FILE(S) USING AN XOR KEY
 [R] Return to the main menu
 [Q] Quit the application\n\n
 [khaki3]ENTER CHOICE """
-    return (Prompt.ask(XOR_DECRYPTION_MENU, choices=["1", "2", "3", "r", "q"],
+    return (Prompt.ask(XOR_DECRYPTION_MENU,
+        choices=["1", "2", "3", "r", "q"],
         show_choices=False).strip().lower())
