@@ -2,7 +2,6 @@ __pycache__
 .gnupg
 temp
 *.asc
-vars.py
 .vscode
 hold.py
 all_types.py

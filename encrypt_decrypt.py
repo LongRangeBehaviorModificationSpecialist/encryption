@@ -63,13 +63,13 @@ class App:
                         KEY.get_key_action_choice(action=action)
                     case "2":
                         Functions.clear_screen()
-                        AES.get_aes_action_choice(action=action)
+                        AES.get_aes_action(action=action)
                     case "3":
                         Functions.clear_screen()
-                        PGP.get_pgp_action_choice(action=action)
+                        PGP.get_pgp_action(action=action)
                     case "4":
                         Functions.clear_screen()
-                        XOR.get_xor_action_choice(action=action)
+                        XOR.get_xor_action(action=action)
                     case "q":
                         Functions.exit_application()
 
@@ -83,13 +83,13 @@ class App:
                         KEY.get_key_action_choice(action=action)
                     case "2":
                         Functions.clear_screen()
-                        AES.get_aes_action_choice(action=action)
+                        AES.get_aes_action(action=action)
                     case "3":
                         Functions.clear_screen()
-                        PGP.get_pgp_action_choice(action=action)
+                        PGP.get_pgp_action(action=action)
                     case "4":
                         Functions.clear_screen()
-                        XOR.get_xor_action_choice(action=action)
+                        XOR.get_xor_action(action=action)
                     case "q":
                         Functions.exit_application()
 

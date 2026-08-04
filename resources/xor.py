@@ -36,7 +36,7 @@ The encrypted message is:\n
 ==========================================""")
 
 
-    def xor_encrypt_single_file(self,
+    def xor_process_file(self,
             file_path: Path,
             xor_key: str) -> None:
 

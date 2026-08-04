@@ -63,11 +63,6 @@ GnuPG."
         self.public_key_file = self.script_path / "mas_public_key.asc"
 
 
-    # def return_to_main_menu(self) -> None:
-    #     """Returns control cleanly back to the main menu processor."""
-    #     self.app.main(self)
-
-
     def print_status(self, status: gnupg.GPG) -> None:
         """Prints GPG action execution status to terminal."""
         if getattr(status, "ok", False):
@@ -219,8 +214,7 @@ Check keyid/passphrase."
                 "At least one recipient email or key ID must be provided."
             )
 
-        c.print(f"""[bright_white]
-[-] Encrypting data..."""
+        c.print(f"[bright_white][-] Encrypting data..."
         )
         encrypted_file_path = target_file.with_name(
             f"{target_file.name}.pgp"

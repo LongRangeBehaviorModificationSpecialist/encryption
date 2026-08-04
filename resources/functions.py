@@ -56,15 +56,9 @@ class Functions:
         return current_time
 
     @staticmethod
-    def get_email_address() -> str:
+    def get_file_path() -> str:
         return Prompt.ask(
-            "\n[bright_white][-] Enter email address of the PGP key owner "
-            ).strip().lower()
-
-    @staticmethod
-    def get_file_path(text: str) -> str:
-        return Prompt.ask(
-            f"\n[bright_white][-] Enter the path of the file to be {text} "
+            "\n[bright_white][-] Enter the path of the file to be processed "
             ).strip("\"'")
 
     @staticmethod
@@ -92,31 +86,30 @@ class Functions:
             return True
 
     @staticmethod
-    def get_directory_path(text: str) -> str:
+    def get_directory_path() -> str:
         return Prompt.ask(
-            f"\n[bright_white][-] Path of the directory containing the "
-            f"files to be {text} "
+            "\n[bright_white][-] Enter the full path of the directory "
+            "containing the files to be processed "
             ).strip("\"'")
 
     @staticmethod
-    def verify_is_directory(target_dir: Path | str) -> bool:
+    def verify_is_directory(
+            target_dir: Path | str) -> bool:
         """Returns true if target_dir points to a directory."""
         if not target_dir.is_dir():
             console.print(
                 f"[bright_red][!] {target_dir} does not exist or is not a "
-                "valid directory."
-                )
+                "valid directory.")
             return False
         else:
             return True
 
     @staticmethod
-    def select_recursive_option(action: str) -> bool:
+    def select_recursive_option() -> bool:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input =Prompt.ask(
-                f"\n[bright_white]{action.capitalize()} subdirectories "
-                "recursively? ",
+                "\n[bright_white][?] Process subdirectories recursively? ",
                 choices=["y", "n"],
                 show_choices=True
                 ).strip().lower()
@@ -208,6 +201,12 @@ class Functions:
                 "requirements. Continuing..."
                 )
             return True
+
+    @staticmethod
+    def get_email_address() -> str:
+        return Prompt.ask(
+            "\n[bright_white][-] Enter email address of the PGP key owner "
+            ).strip().lower()
 
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:

@@ -87,7 +87,7 @@ The Base64-encoded encrypted message is:\n
         return b64_encoded_msg
 
 
-    def xor_encrypt_single_file(
+    def xor_process_file(
         self, file_path: Union[str, Path], xor_key: str
     ) -> None:
         """XOR encrypts a file by reading/writing raw binary streams."""

@@ -1,10 +1,9 @@
 # !/usr/bin/env python3
-# DLU : 03-Aug-2026
+# DLU : 04-Aug-2026
 
 
-from datetime import datetime
+from enum import StrEnum
 import getpass
-import logging
 import os
 from pathlib import Path
 import shutil
@@ -18,36 +17,40 @@ try:
     HAS_PGP = True
 except ImportError:
     print(
-    "Missing dependency: python-gnupg\n"
-    "Install with: \"pip install python-gnupg\""
+        "Missing dependency: python-gnupg\n"
+        "Install with: \"pip install python-gnupg\""
     )
     sys.exit(1)
 
 # Import the console object from the main __init__.py file
 from . import console
+from resources.vars import ENCRYPTED_EXT_LIST
 from resources.functions import Functions
 from resources.prompts import (
-    show_main_app_menu,
-    show_pgp_encryption_menu,
-    show_pgp_decryption_menu,
-    show_pgp_encryption_type_menu,
-    show_pgp_decryption_type_menu,
-    show_pgp_armor_choice
+    show_main_menu,
+    show_pgp_menu
 )
+
+
+class Action(StrEnum):
+    ENCRYPT = "encrypt"
+    DECRYPT = "decrypt"
 
 
 class PGP:
 
-    def __init__(self, password: Optional[str] = None):
-        self.logger = logging.getLogger(__name__)
-        self.EXCLUDE_EXT_LIST = {".encrypted", ".enc", ".pgp", "gpg", ".key"}
-        self.ENCRYPTED_SUFFIXES = (".gpg", ".asc")
-        self.BINARY_SUFFIX = ".gpg"
-        self.ARMORED_SUFFIX = ".asc"
-        self.SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv"}
+    _ACTION_MAP = {
+        "2": (Action.ENCRYPT, "single"),
+        "3": (Action.DECRYPT, "single"),
+        "4": (Action.ENCRYPT, "folder"),
+        "5": (Action.DECRYPT, "folder")
+    }
+
+
+    def __init__(self, password: str | None = None):
         self.script_path = Path(__file__).parent.resolve()
         self.gpg_home = self.script_path / ".gnupg"
-        self._recipient_fp: Optional[str] = None
+        self._recipient_fp: str | None = None
         self._key_imported = False
         self._armored = False
         self._symmetric = False
@@ -90,6 +93,22 @@ class PGP:
         self._gpg = gnupg.GPG(**kwargs)
 
 
+    def print_status(self, action: str, status: gnupg.GPG) -> None:
+        """Prints GPG action execution status to terminal."""
+        if status.ok == True:
+            console.print(
+                f"[khaki3][-] File {action}ion was successful : "
+                f"{status.stderr}")
+        else:
+            status_msg = getattr(
+                status,
+                "status",
+                getattr(status, "stderr", "Unknown Error"))
+            console.print(
+                f"[red1][-] File encryption WAS NOT successful : "
+                f"{status_msg}. Please try again.")
+
+
     def import_key(self, key_path: Path | str) -> bool:
         """Import a PGP public or private key from an external file.
         Returns True on success.
@@ -98,23 +117,27 @@ class PGP:
             with open(key_path, "r", encoding="utf-8") as fh:
                 key_data = fh.read()
         except OSError as e:
-            self.logger.error(
-                f"Cannot read key file \"{key_path}\" : {e}")
+            console.print(
+                f"Cannot read key file \"{key_path}\" : {e}"
+            )
             return False
 
         result = self.gpg.import_keys(key_data)
 
         if result.count == 0:
-            self.logger.error(
-                "No keys imported — the file may not contain a valid PGP key.")
+            console.print(
+                "No keys imported — the file may not contain a valid PGP key."
+            )
             return False
 
         self._recipient_fp = result.fingerprints[0]
         self._key_imported = True
-        self.logger.info(
-            f"Imported key fingerprint : {self._recipient_fp}")
-        self.logger.debug(
-            f"Full import result : {result.summary()}")
+        console.print(
+            f"Imported key fingerprint : {self._recipient_fp}"
+        )
+        console.print(
+            f"Full import result : {result.summary()}"
+        )
         return True
 
 
@@ -139,49 +162,59 @@ class PGP:
             confirm : If True, prompt twice to confirm the passphrase.
         """
         if self._password is not None and not force_new:
-            self.logger.debug(
-                f"Using cached passphrase for {purpose}")
+            console.print(
+                f"Using cached passphrase for {purpose}"
+            )
             return self._password
 
         attempts_left = 3
         while attempts_left > 0:
             if confirm:
                 password1 = getpass.getpass(
-                    f"Enter passphrase for {purpose} : ")
+                    f"Enter passphrase for {purpose} : "
+                )
                 password2 = getpass.getpass(
-                    f"Confirm passphrase for {purpose} : ")
+                    f"Confirm passphrase for {purpose} : "
+                )
 
                 if password1 != password2:
-                    self.logger.warning(
-                        "Passphrases did not match.")
+                    console.print(
+                        "Passphrases did not match."
+                    )
                     attempts_left -= 1
                     console.print(
-                        f"\n[-] {attempts_left} attempt(s) remaining.\n")
+                        f"\n[-] {attempts_left} attempt(s) remaining.\n"
+                    )
                     continue
             else:
                 password1 = getpass.getpass(
-                    f"Enter passphrase for {purpose} : ")
+                    f"Enter passphrase for {purpose} : "
+                )
                 if len(password1) < 1:
-                    self.logger.warning(
-                        "Empty passphrase not allowed.")
+                    console.print(
+                        "Empty passphrase not allowed."
+                    )
                     attempts_left -= 1
                     continue
 
-            self.logger.info(
-                f"Passphrase accepted for {purpose}")
+            console.print(
+                f"Passphrase accepted for {purpose}"
+            )
             self._password = password1
             return password1
 
-        self.logger.error(
-            f"Too many failed passphrase attempts for {purpose}")
+        console.print(
+            f"Too many failed passphrase attempts for {purpose}"
+        )
         return None
 
 
     def clear_passphrase(self) -> None:
         """Clear any cached passphrase from memory (use after sensitive ops)."""
         self._password = None
-        self.logger.info(
-            "Cleared cached passphrase from memory")
+        console.print(
+            "Cleared cached passphrase from memory"
+        )
 
 
     def pgp_export_public_key(self, keyid: str) -> str:
@@ -195,13 +228,20 @@ class PGP:
         """
         public_key_data = self.gpg.export_keys(
             keyids=keyid,
-            output=str(self.public_key_file))
+            output=str(self.public_key_file)
+        )
+
         if not public_key_data or not self.public_key_file.exists():
+            console.print(
+                f"Failed to export public key for Key ID : {keyid}"
+            )
             raise RuntimeError(
-                f"Failed to export public key for Key ID '{keyid}'")
+                f"Failed to export public key for Key ID : {keyid}")
+
         console.print(
             f"[bright_white][-] Public key exported successfully to "
             f"{self.public_key_file.name}")
+
         return str(public_key_data)
 
 
@@ -220,34 +260,49 @@ class PGP:
             keyids=keyid,
             secret=True,
             passphrase=password,
-            output=str(self.private_key_file))
+            output=str(self.private_key_file)
+            )
+
         if not private_key_data or not self.private_key_file.exists():
+            console.print(
+                f"Failed to export private key for Key ID : {keyid}. "
+                "Check the keyid/passphrase."
+            )
             raise RuntimeError(
                 f"Failed to export private key for Key ID : {keyid}. "
-                "Check the keyid/passphrase.")
+                "Check the keyid/passphrase."
+            )
+
         console.print(
             f"[bright_white][-] Private key exported successfully to "
             f"{self.private_key_file.name}")
+
         return str(private_key_data)
 
 
-    def generate_pgp_key_pair(
-            self,
-            password: str,
-            email_address: str,
-            key_length: int = 2048
-    ) -> str:
+    def generate_pgp_key_pair(self, key_length: int = 4096) -> str:
         """Generates a new RSA PGP key pair and exports public/private keys.
 
         Args:
-            password: Passphrase to encrypt the generated private key.
-            email_address: Associated identity email address.
-            key_length: Bit length of the RSA key (default: 2048).
+            key_length: Bit length of the RSA key (default: 4096).
 
         Returns:
             str: Fingerprint of the newly created key pair.
         """
+        password = Prompt.ask(
+            "\n[bright_white][-] Enter passphrase for the private key ",
+            password=True
+        )
+
+        email_address = Prompt.ask(
+            "\n[bright_white][-] Enter email address of the PGP key owner "
+            ).strip().lower()
+
         if not email_address or "@" not in email_address:
+            console.print(
+                "\n[yellow][!] Invalid or missing email address provided : "
+                f"{email_address}"
+            )
             raise ValueError(
                 f"Invalid or missing email address provided : {email_address}")
 
@@ -264,330 +319,750 @@ class PGP:
                 f"PGP key generation failed. Engine error output : "
                 f"{key.stderr}")
 
-        fingerprint = str(key.fingerprint)
+        keyid = str(key.fingerprint)
         console.print(
-            f"[bright_white][-] Generated Key Fingerprint : {fingerprint}")
+            f"\n[bright_white][-] Generated Key Fingerprint : {keyid}")
 
         # Export keys upon successful generation
-        self.pgp_export_public_key(keyid=fingerprint)
+        self.pgp_export_public_key(keyid=keyid)
         self.pgp_export_private_key(
-            keyid=fingerprint,
+            keyid=keyid,
             password=password)
 
-        return fingerprint
+        return keyid
 
 
-    def pgp_encrypt_single_file(
+    def _handle_pgp_process_file(self, action: Action) -> None:
+        """Collect user inputs and call pgp_process_file."""
+        # Email address (required for public-key encryption)
+        email_input = Prompt.ask(
+            "\n[bright_white][-] Enter recipient email address(es): "
+        ).strip()
+
+        if not email_input:
+            console.print("\n[yellow][!] No email address provided.")
+            return
+
+        email_address = [addr.strip() for addr in email_input.split(",")]
+
+        # Password -> required for symmetric encryption or decryption
+        if action == Action.ENCRYPT:
+            confirm = Prompt.ask(
+                "Use symmetric (password only) encryption? ",
+                choices=["y", "n"],
+                show_choices=True
+            )
+            if confirm:
+                password = Functions.get_password()
+                if not password:
+                    console.print(
+                        "[yellow][!] Password required for symmetric "
+                        "encryption."
+                    )
+                    return
+
+                symmetric = True
+                armored = Prompt.ask(
+                    "ASCII-armored output (.asc)? ",
+                    choices=["y", "n"],
+                    show_choices=True
+                )
+            else:
+                # Will prompt GPG for private key passphrase
+                password = None
+                symmetric = False
+                armored = Prompt.ask(
+                    "ASCII-armored output (.asc)? ",
+                    choices=["y", "n"],
+                    show_choices=True
+                )
+        else:  # Decrypt
+            confirm = Prompt.ask(
+                "Provide a passphrase now? (leave blank for GPG prompt) ",
+                choices=["y", "n", ""],
+                show_choices=True
+            )
+            if confirm:
+                password = Prompt.ask(
+                    "Enter passphrase for decryption ",
+                    password=True
+                )
+            else:
+                password = None
+            symmetric = None  # Auto-detect from file
+
+        # Output path (optional)
+        output_path_input =Prompt.ask(
+            "Output path (leave blank for default): ",
+        ).strip()
+        output_path = (
+            Path(output_path_input).resolve()
+            if output_path_input else None
+        )
+
+        # Get target file
+        target_file = Functions.get_file_path(action=action.value)
+        if not target_file:
+            return
+
+        # Process the file
+        try:
+            result = self.pgp_process_file(
+                target_file=target_file,
+                action=action.value,
+                email_address=email_address,
+                output_path=output_path,
+                armored=armored,
+                symmetric=symmetric,
+                password=password,
+                always_trust=True,
+            )
+            console.print(f"[green]✓ Successfully processed : {result}")
+        except Exception as e:
+            console.print(f"[bright_red][!] Operation failed : {e}")
+
+
+    def pgp_process_file(
             self,
             target_file: Path | str,
-            recipients: str | List[str],
-            output_path: Optional[Path | str] = None,
-            armored: Optional[bool] = None,
-            symmetric: Optional[bool] = None,
-            password: Optional[str] = None,
+            action: str,
+            email_address: str | List[str],
+            output_path: Path | str | None = None,
+            armored: bool | None = None,
+            symmetric: bool | None = None,
+            password: str | None = None,
             always_trust: bool = True
-    ) -> bool:
+    ) -> Path:
         """Encrypts a single file using PGP/GPG and handles GPG engine
         failures safely.
 
         Args:
-            target_file : Path to the plaintext source.
+            target_file: Path to the plaintext source.
+            action: Operational mode, either 'encrypt' or 'decrypt'.
+            email_address: Recipient email or key ID(s). Required for public-key
+                encryption. Ignored for symmetric encryption.
+            output_path: Where to write the ciphertext. If None, derived from
+                input
+            armored: True → ASCII-armored (.asc); False → binary (.gpg).
+                If None, uses the instance default.
+            symmetric: True → password-only encryption; False → public-key
+                encryption. If None, uses the instance default
+                (self.default_symmetric).
+            password: Password for symmetric encryption or private key. If
+                None, will be prompted interactively.
+            always_trust: Trust all public keys without verification.
 
-            output_path : Where to write the ciphertext. If None, derived from
-            input.
+        Returns:
+            Path: Path to the resulting encrypted or decrypted file.
 
-            armored : True → ASCII-armored (.asc); False → binary (.gpg). If
-            None, uses the instance default.
-
-            symmetric : True → password-only encryption; False → public-key
-            encryption. If None, uses the instance setting.
-
-            passphrase : Passphrase for symmetric encryption or private key.
-            If None, will be prompted interactively.
+        Raises:
+            FileNotFoundError: If target file or key file does not exist.
+            ValueError: If a valid key ID is not provided
         """
-        # Resolve instance settings
-        use_armor = self._armored if armored is None else armored
-        use_symmetric = self._symmetric if symmetric is None else symmetric
-        suffix = self.ARMORED_SUFFIX if use_armor else self.BINARY_SUFFIX
         target_file = Path(target_file).resolve()
 
         if not target_file.is_file():
-            self.logger.error(
-                f"\"{target_file}\" is not a regular file.")
-            return
+            console.print(
+                f"[bright_red][!] {target_file.name} does not exist or "
+                "is a directory."
+            )
+            raise FileNotFoundError(f"Invalid target file : {target_file}")
 
-        # Prepare output path
-        base_name = str(target_file)
-        for sfx in self.ENCRYPTED_SUFFIXES:
-            if base_name.endswith(sfx):
-                base_name = base_name[: -len(sfx)]
-                break
+        action = action.lower().strip()
 
-        if output_path is None:
-            output_path = base_name + suffix
-        else:
-            output_path = str(Path(output_path).resolve())
+        # Resolve instance defaults for symmetric and armored
+        use_symmetric = symmetric if symmetric is not None else getattr(
+            self, "_symmetric", False)
+        use_armored = armored if armored is not None else getattr(
+            self, "_armored", False)
 
-        # Handle passphrase
-        effective_password = password or self._password
+        # Normalize recipients input to a list
+        if email_address and isinstance(email_address, str):
+            email_address = [email_address]
 
-        if use_symmetric:
-            # Symmetric mode requires a passphrase
-            if effective_password is None:
-                effective_password = self._get_passphrase(
-                    purpose="symmetric encryption",
-                    confirm=True)
-            if effective_password is None:
-                self.logger.error(
-                    "Symmetric encryption aborted -> no passphrase provided.")
-                return False
-        else:
-            # Asymmetric mode requires a key
-            if not self._key_imported:
-                self.logger.error(
-                    "Asymmetric encryption requires an imported public key.")
-                return False
-
-        try:
-            with open(target_file, "rb") as fh:
-                if use_symmetric:
-                    result = self.gpg.encrypt_file(
-                        fh,
-                        output=output_path,
-                        symmetric=True,
-                        password=effective_password,
-                        armor=use_armor,
-                        always_trust=True)
-                else:
-                    result = self.gpg.encrypt_file(
-                        fh,
-                        recipients=[self._recipient_fp],
-                        output=output_path,
-                        always_trust=True,
-                        armor=use_armor)
-        except OSError as e:
-            self.logger.error(
-                f"Cannot read \"{target_file}\" : {e}")
-            return False
-
-        if result.ok:
-            mode_str = "SYMMETRIC" if use_symmetric else "ASYMMETRIC"
-            arm_str = "ARMORED" if use_armor else "BINARY"
-            self.logger.info(
-                f"Encrypted [{mode_str} + {arm_str}] "
-                f"{target_file.name} → {Path(output_path).name}")
-            self.logger.debug(
-                f"Result status : {result.status}")
-            return True
-        else:
-            self.logger.error(
-                f"Failed to encrypt \"{target_file.name}\" : {result.status}")
-            if output_path.exists():
-                output_path.unlink(missing_ok=True)
-            return False
-
-
-    def pgp_encrypt_files_in_directory(
-            self,
-            dir_path: Path | str,
-            recursive: bool = False,
-            armored: Optional[bool] = None,
-            symmetric: Optional[bool] = None,
-    ) -> int:
-        """
-        Encrypt every regular file inside *dir_path*.
-        Returns count of files successfully encrypted.
-        """
-        dir_path = Path(dir_path).resolve()
-        encrypted, skipped, failed = 0, 0, 0
-
-        self.logger.info(
-            f"Starting {"SYMMETRIC" if symmetric else "ASYMMETRIC"} "
-            f"encryption of directory \"{dir_path}\""
+        # Validate: public-key encryption requires recipients
+        if action == "encrypt" and not use_symmetric:
+            if not email_address:
+                raise ValueError(
+                "At least one recipient email or key ID must be provided "
+                "for public-key encryption. Use symmetric=True for "
+                "password-only encryption."
             )
 
-        iterator = dir_path.rglob("*") if recursive else dir_path.glob("*")
-
-        for entry in iterator:
-            if entry.is_dir():
-                continue
-            if not entry.is_file():
-                continue
-            if entry.name.startswith("."):
-                continue
-            if entry.suffix in self.ENCRYPTED_SUFFIXES:
-                skipped += 1
-                continue
-
-            if self.encrypt_file(
-                str(entry),
-                armored=armored,
-                symmetric=symmetric):
-                encrypted += 1
-            else:
-                failed += 1
-
-        self.logger.info(
-            f"Directory \"{dir_path}\" — "
-            f"encrypted: {encrypted}, skipped: {skipped}, failed: {failed}")
-        return encrypted
-
-
-    def pgp_decrypt_single_file(
-            self,
-            file_path: Path | str,
-            output_path: Optional[str] = None,
-            password: Optional[str] = None,
-    ) -> bool:
-        """Decrypt a single PGP-encrypted file.
-
-        Args:
-            file_path : Path to the encrypted (.gpg / .asc) file.
-
-            output_path : Where to write the decrypted plaintext. If None, the
-            cipher suffix is stripped from the input name.
-
-            passphrase : Passphrase for symmetric decryption or private key. If
-            None, will be prompted interactively.
-        """
-        file_path = Path(file_path).resolve()
-
-        if not file_path.is_file():
-            self.logger.error(
-                f"\"{file_path}\" is not a regular file.")
-            return False
-
-        # Derive output path by stripping known cipher suffixes
-        base_name = str(file_path)
-        for sfx in self.ENCRYPTED_SUFFIXES:
-            if base_name.endswith(sfx):
-                base_name = base_name[: -len(sfx)]
-                break
-
-        if output_path is None:
-            output_path = base_name
-        else:
-            output_path = str(Path(output_path).resolve())
-
-        # Avoid overwriting an existing plaintext file silently
-        if Path(output_path).exists():
-            overwrite = self._confirm(
-                f"Output \"{Path(output_path).name}\" already exists. "
-                "Overwrite?")
-            if not overwrite:
-                self.logger.warning(
-                    f"Skipped \"{file_path.name}\" — output exists and was "
-                    "not overwritten.")
-                return False
-
-        # Determine if this is likely symmetric (no private key in keyring)
-        use_symmetric = self._symmetric or not self._key_imported
-
-        # Handle passphrase
-        effective_password = password or self._password
-
-        if use_symmetric:
-            if effective_password is None:
-                effective_password = self._get_passphrase(
-                    purpose="symmetric decryption",
-                    confirm=False)
-            if effective_password is None:
-                self.logger.error(
-                    "Symmetric decryption aborted : no passphrase provided.")
-                return False
-        else:
-            # Asymmetric mode - passphrase needed if private key is protected
-            # We still allow None since GPG may use agent or unencrypted key
-            if effective_password is not None:
-                self.logger.info(
-                    "Private key passphrase supplied for asymmetric decryption")
+        # Validate: symmetric encryption requires a password
+        if action == "encrypt" and use_symmetric and not password:
+            raise ValueError(
+                "A password is required for symmetric encryption."
+            )
 
         try:
-            with open(file_path, "rb") as fh:
-                if use_symmetric:
-                    result = self.gpg.pgp_decrypt_single_file(
-                        fh,
-                        output=output_path,
-                        passphrase=effective_password,
-                        always_trust=True,)
-                else:
-                    result = self.gpg.pgp_decrypt_single_file(
-                        fh,
-                        output=output_path,
-                        passphrase=effective_password,
-                        always_trust=True,)
-        except OSError as e:
-            self.logger.error(
-                f"Cannot read \"{file_path}\" : {e}")
-            return False
+            console.print(
+                f"[bright_white][-] Reading file : {target_file.name}...")
 
-        if result.ok:
-            mode_str = "SYMMETRIC" if use_symmetric else "ASYMMETRIC"
-            self.logger.info(
-                f"Decrypted [{mode_str}] {file_path.name} -> "
-                f"{Path(output_path).name}")
-            self.logger.debug(
-                f"Result status : {result.status}")
-            return True
-        else:
-            self.logger.error(
-                f"Failed to decrypt -> {file_path.name} : {result.status}")
-            self.logger.debug(
-                f"stderr : {result.stderr}")
-
-            # Provide context for common failure modes
-            if "bad passphrase" in (result.stderr or "").lower():
-                self.logger.warning(
-                    "Possible wrong passphrase or expired key")
-            elif "no secret key" in (result.stderr or "").lower():
-                self.logger.warning(
-                    "Private key not found in keyring")
-            return False
-
-
-    def pgp_decrypt_files_in_directory(
-                self,
-                dir_path: Path | str,
-                recursive: bool = False,
-        ) -> int:
-            """Decrypt every PGP-encrypted file inside *dir_path*.
-            Returns count of files successfully decrypted.
-            """
-            dir_path = Path(dir_path).resolve()
-            decrypted, skipped, failed = 0, 0, 0
-
-            self.logger.info(
-                f"Starting decryption of directory -> {dir_path}"
+            if action == "encrypt":
+                # Determine output extension based on armored mode
+                ext = ".asc" if use_armored else ".pgp"
+                output_file = (
+                    Path(output_path).resolve()
+                    if output_path
+                    else target_file.with_name(f"{target_file.name}.{ext}")
                 )
 
-            iterator = dir_path.rglob("*") if recursive else dir_path.glob("*")
-
-            for entry in iterator:
-                if entry.is_dir():
-                    continue
-                if not entry.is_file():
-                    continue
-
-                if entry.suffix not in (self.BINARY_SUFFIX, self.ARMORED_SUFFIX):
-                    skipped += 1
-                    continue
-
-                if self.pgp_decrypt_single_file(str(entry)):
-                    decrypted += 1
+                with open(target_file, "rb") as f:
+                    console.print(
+                        f"[bright_white][-] {action.capitalize()}ing file "
+                        "data...")
+                    if use_symmetric:
+                        # Symmetric: password-only, no recipients needed
+                        status = self.gpg.encrypt_file(
+                            f,
+                            symmetric=True,
+                            passphrase=password,
+                            armor=use_armored,
+                            output=str(output_file),
+                        )
+                    else:
+                        # Public key -> use recipient keys
+                        status = self.gpg.encrypt_file(
+                            f,
+                            recipients=email_address,
+                            always_trust=always_trust,
+                            armor=use_armored,
+                            output=str(output_file),
+                        )
+            else:
+                if target_file.suffix in {".pgp", ".asc", ".gpg"}:
+                    output_file = (
+                        Path(output_path).resolve()
+                        if output_path
+                        else target_file.with_suffix("")
+                        )
                 else:
-                    failed += 1
+                    output_file = (
+                        Path(output_path).resolve()
+                        if output_path
+                        else target_file.with_name(
+                            f"{target_file.name}.decrypted")
+                        )
 
-            self.logger.info(
-                f"Directory \"{dir_path}\" — "
-                f"decrypted : {decrypted}, skipped : {skipped}, failed : "
-                f"{failed}")
+                with open(target_file, "rb") as f:
+                    status = self.gpg.decrypt_file(
+                        f,
+                        passphrase=password,
+                        output=str(output_file),
+                    )
 
-            return decrypted
+        except Exception as e:
+            raise RuntimeError(f"Failed to execute GPG {action}ion: {e}") from e
+
+        if not status.ok:
+            # Clean up partial/empty output file if created
+            if output_file.exists():
+                output_file.unlink(missing_ok=True)
+
+            error_msg = getattr(
+                status, "status", getattr(status, "status", "Unknown GPG error")
+            )
+            raise RuntimeError(
+                f"PGP {action.title()}ion failed for '{target_file.name}'. "
+                f"GPG status: {error_msg}"
+            )
+
+        if hasattr(self, "print_status"):
+            self.print_status(status)
+
+        console.print(
+            f"[green][-] PGP file {action}ed successfully : {output_file.name}"
+        )
+
+        return output_file
 
 
-    def get_pgp_action_choice(self, action: str) -> None:
-        """Gets input from the user on what action to start next."""
+    def _handle_pgp_process_folder(self, action: Action) -> None:
+        """Collect user inputs and call pgp_process_folder."""
+        # Target directory
+        target_dir = Functions.get_directory_path(action=action.value)
+        if not target_dir:
+            return
+
+        # Recursive option
+        recursive = Functions.select_recursive_option()
+
+        # Email address (required for public-key encryption)
+        email_input = Prompt.ask(
+            "\n[bright_white][-] Enter recipient email address(es) "
+            "(comma-separated) "
+        ).strip()
+
+        if not email_input and action == Action.ENCRYPT:
+            console.print("[yellow][!] No email provided.")
+            confirm = Prompt.ask(
+                "\n[bright_white][?] Proceed with symmetric encryption "
+                "instead? ",
+                choices=["y", "n"],
+                show_choices=True
+            )
+            if confirm:
+                email_input = None
+                symmetric = True
+            else:
+                return
+        else:
+            symmetric = None
+
+        email_address = None
+        if email_input:
+            email_address = [addr.strip() for addr in email_input.split(",")]
+
+        # Password (required for symmetric encryption)
+        if symmetric:
+            password =Prompt.ask(
+                "\n[bright_white][-] Enter passphrase for encryption "
+            )
+            if not password:
+                console.print(
+                    "[yellow][!] Password required for symmetric "
+                    "encryption.")
+                return
+        elif action == Action.DECRYPT:
+            confirm = Prompt.ask(
+                "\n[bright_white][?] Provide a passphrase now? (leave blank "
+                "for GPG prompt) ",
+                choices=["y", "n"],
+                show_choices=True
+            )
+            if confirm:
+                password = Prompt.ask(
+                    "\n[bright_whtite][-] Enter passphrase for decryption ",
+                    password=True
+                )
+            else:
+                password = None
+        else:
+            password = None
+
+        # Armored option
+        armored = Prompt.ask(
+            "\n[bright_white][?] ASCII-armored output (.asc)? ",
+            choices=["y", "n"],
+            show_choices=True
+        )
+
+        # Process the directory
+        try:
+            results = self.pgp_process_folder(
+                target_dir=target_dir,
+                action=action.value,
+                email_address=email_address,
+                password=password,
+                recursive=recursive,
+                armored=armored,
+                symmetric=symmetric,
+                always_trust=True,
+            )
+
+            console.print(
+                f"[green]✓ Completed processing {len(results)} files."
+            )
+        except Exception as e:
+            console.print(f"[bright_red][!] Operation failed: {e}")
+
+
+    def pgp_process_folder(
+            self,
+            target_dir: Path | str,
+            action: str,
+            email_address: str | list[str] | None = None,
+            password: str | None = None,
+            recursive: bool = False,
+            armored: bool | None = None,
+            symmetric: bool | None = None,
+            always_trust: bool = True
+    ) -> List[Path]:
+        """Encrypts or decrypts all discovered assets within a target
+        directory.
+
+        Args:
+            target_dir: Path to the directory containing files.
+            action: Either 'encrypt' or 'decrypt'.
+            email_address: Recipient email or key ID(s). Required for public-key
+                encryption. Ignored for symmetric encryption.
+            password: Passphrase for symmetric encryption or private key
+                decryption. If None, will be prompted interactively.
+            recursive: Traverse the target_dir and process files in sub-folders.
+            armored: True → ASCII-armored (.asc); False → binary (.pgp/.gpg).
+                If None, uses the instance default.
+            symmetric: True → password-only encryption; False → public-key
+                encryption. If None, uses the instance default.
+            always_trust: Trust all public keys without verification.
+
+        Returns:
+            List[Path]: List of successfully processed file paths.
+        """
         action = action.lower().strip()
+        target_dir = Path(target_dir).resolve()
+
+        if not Functions.verify_is_directory(target_dir=target_dir):
+            return []
+
+        # Resolve instance defaults
+        use_symmetric = symmetric if symmetric is not None else getattr(
+            self, "_symmetric", False)
+        use_armored = armored if armored is not None else getattr(
+            self, "_armored", False)
+
+        # Normalize recipients
+        if email_address and isinstance(email_address, str):
+            email_address = [email_address]
+
+        # Validate: public-key encryption requires recipients
+        if action == "encrypt" and not use_symmetric and not email_address:
+            raise ValueError(
+                "At least one recipient email or key ID must be provided "
+                "for public-key encryption. Use symmetric=True for "
+                "password-only encryption."
+            )
+
+        # Determine expected encrypted extensions based on armored mode
+        encrypted_exts = (
+            {".asc", ".pgp", ".gpg"}
+            if use_armored else {".pgp", ".gpg"}
+        )
+
+        try:
+            # Dynamically filter files based on the requested action
+            files_iterator = (
+                target_dir.rglob("*")
+                if recursive else target_dir.iterdir()
+            )
+
+            if action == "decrypt":
+                all_files = [
+                    f for f in files_iterator
+                    if f.is_file() and f.suffix in encrypted_exts
+                ]
+            else:
+                # Encrypt files EXCEPT those ending with certain extensions
+                all_files = [
+                    f for f in files_iterator
+                    if f.is_file()
+                    and f.suffix.lower() not in ENCRYPTED_EXT_LIST
+                ]
+
+        except Exception as e:
+            console.print(
+                "[red1][!] Failed to retrieve files from "
+                f"{target_dir} : {e}")
+            return []
+
+        if not all_files:
+            console.print(
+                f"[yellow][!] No valid files to {action} in {target_dir}")
+            return []
+
+        successful_files: List[Path] = []
+        failed_files: List[Path] = []
+
+        for file_path in all_files:
+            try:
+                processed_path = self.pgp_process_file(
+                    target_file=file_path,
+                    action=action,
+                    email_address=email_address,
+                    armored=use_armored,
+                    symmetric=use_symmetric,
+                    password=password,
+                    always_trust=always_trust,
+                )
+                successful_files.append(processed_path)
+            except Exception as e:
+                console.print(
+                    f"[red1][!] Error during {action}ing "
+                    f"{file_path.name} : {e}")
+                failed_files.append(file_path)
+
+        # Summary reporting
+        if successful_files:
+            console.print(
+                f"[green][-] ** Action Completed **\nSuccessfully {action}ed "
+                f"{len(successful_files)} files in {target_dir} :")
+            for processed_file in successful_files:
+                console.print(f"[green]\t{processed_file.name}")
+
+        if failed_files:
+            console.print(
+                f"[bright_red][!] ** Warning **\nFailed to {action} "
+                f"{len(failed_files)} files :")
+            for failed_file in failed_files:
+                console.print(f"[bright_red]\t{failed_file.name}")
+
+        return successful_files
+
+
+    def pgp_sign_file (
+            self,
+            target_file: Path | str,
+            signer_email: str,
+            password: str,
+            detached: bool = True,
+            clearsign: bool = False,
+            armored: bool | None = None,
+    ) -> Path:
+        """Signs a file using PGP/GPG, producing either a detached signature
+        or a clearsigned document.
+
+        Args:
+            # target_file: Path to the file to be signed.
+            signer_email: Email address or key ID of the signer's private key.
+            password: Passphrase for the signer's private key.
+            output_path: Where to write the signature or signed file. If None,
+                derived from the input file path.
+            detached: If True, produce a detached signature (.sig). If False,
+                produce an inline/compressed signed file.
+            clearsign: If True, produce a cleartext-signed document (.asc) that
+                remains readable while carrying an embedded signature. Overrides
+                `detached` when True.
+            armored: True → ASCII-armored output; False → binary. If None, uses
+                the instance default.
+        Returns:
+            Path: Path to the resulting signature or signed file.
+
+        Raises:
+            FileNotFoundError: If target file does not exist.
+            ValueError: If signer_email is empty or invalid.
+            RuntimeError: If the GPG signing operation fails.
+        """
+        target_file = Prompt.ask(
+            "[bright_white][-] Enter the path of the file to be signed "
+        )
+        target_file = Path(target_file).resolve()
+
+        if not target_file.is_file():
+            console.print(
+                f"[bright_red][!] {target_file.name} does not exist or is "
+                "a directory."
+            )
+            raise FileNotFoundError(f"Invalid target file : {target_file}")
+
+        signer_email = Prompt.ask(
+            "\n[bright_white][-] Email address or key ID of the signer's "
+            "private key "
+        )
+        if not signer_email:
+            raise ValueError("Signer email or key ID must be provided.")
+
+        password = Prompt.ask(
+            "\n[bright_white][-] Enter the passphrase for the signer's "
+            "private key "
+        )
+
+        use_armored = armored if armored is not None else getattr(
+            self, "_armored", False)
+
+        sig_type = Prompt.ask(
+            "What type of signature do you want to use to sign this file? "
+            "(1 = clearsign, 2 = detached, 3 = other) ",
+            choices=["1", "2", "3"],
+            show_choices=True
+        )
+
+        match sig_type:
+            case "1":
+                clearsign, detached = True, False
+            case "2":
+                clearsign, detached = False, True
+            case "3":
+                clearsign, detached = False, False
+            case _:
+                console.print(
+                    "\n[yellow][!] Invalid choice, defaulting to inline "
+                    "signature"
+                )
+                clearsign, detached = False, False
+        # Determine output path and extension
+        if clearsign:
+            output_file = target_file.with_suffix(".asc")
+        elif detached:
+            output_file = target_file.with_suffix(
+                target_file.suffix + ".sig")
+        else:
+            output_file = target_file.with_suffix(".gpg")
+
+        # Calling the signing method
+        try:
+            console.print(
+                f"\n[bright_white][-] Signing file : {target_file.name}..."
+            )
+            console.print(
+                f"[cyan][*] Signature will be written to : {output_file.name}"
+            )
+
+            with open(target_file, "rb") as f:
+                status = self.gpg.sign_file(
+                    f,
+                    keyid=signer_email,
+                    passphrase=password,
+                    detached=detached,
+                    clearsign=clearsign,
+                    armor=use_armored,
+                    output=str(output_file),
+            )
+            console.print(f"\n[green]✓ Signature created : {output_file.name}")
+        except Exception as e:
+            console.print(f"\n[red1][!] Signing failed : {e}")
+            raise RuntimeError(f"Failed to execute GPG signing: {e}") from e
+
+        if not status:
+            if output_file.exists():
+                output_file.unlink(missing_ok=True)
+
+            error_msg = getattr(status, "stderr", "Unknown GPG error")
+            raise RuntimeError(
+                f"PGP signing failed for : {target_file.name}. "
+                f"GPG status: {error_msg}"
+            )
+
+        if hasattr(self, "print_status"):
+            self.print_status(status)
+
+        return output_file
+
+
+    def pgp_verify_signature(
+        self,
+        signature_file: Path | str,
+        original_file: Path | str | None = None,
+        signer_email: str | None = None,
+    ) -> bool:
+        """Verifies a PGP signature on a document or file.
+
+        For detached signatures, both the signature file and the original
+        file must be provided. For cleartext or inline signatures, only the
+        signed file itself is needed.
+
+        Args:
+            signature_file: Path to the signature file (.sig, .asc, or signed
+                file for inline/clearsign verification).
+            original_file: Path to the original unsigned file. Required for
+                detached signatures. Ignored for inline/cleartext signatures.
+            signer_email: Expected signer email or key ID. If provided, the
+                method will check that the signature was produced by this key.
+                If None, any valid signature is accepted.
+
+        Returns:
+            bool: True if the signature is valid, False otherwise.
+
+        Raises:
+            FileNotFoundError: If the signature file or original file does
+                not exist.
+        """
+        signature_file = Path(signature_file).resolve()
+
+        if not signature_file.is_file():
+            console.print(
+                f"[bright_red][!] Signature file not found : {signature_file}"
+            )
+            raise FileNotFoundError(
+                f"Invalid signature file : {signature_file}"
+            )
+
+        # Determine if this is a detached or inline/cleartext signature
+        is_detached = original_file is not None
+
+        if is_detached:
+            original_file = Path(original_file).resolve()
+
+            if not original_file.is_file():
+                console.print(
+                    f"[bright_red][!] Original file not found : {original_file}"
+                )
+                raise FileNotFoundError(
+                    f"Invalid original file : {original_file}"
+                )
+
+        try:
+            console.print(
+                "[bright_white][-] Verifying signature : "
+                f"{signature_file.name}..."
+            )
+
+            if is_detached:
+                # Detached signature verification
+                with open(signature_file, "rb") as sig_f, \
+                    open(original_file, "rb") as orig_f:
+                    verified = self.gpg.verify_file(sig_f, file_data=orig_f)
+            else:
+                # Inline or cleartext signature verification
+                with open(signature_file, "rb") as sig_f:
+                    verified = self.gpg.verify_file(sig_f)
+
+        except Exception as e:
+            console.print(
+                "[bright_red][!] Verification error for "
+                f"{signature_file.name} : {e}"
+            )
+            return False
+
+        # Check basic validity
+        if not verified:
+            console.print(
+                f"[bright_red][!] Signature verification FAILED for "
+                f"{signature_file.name}."
+            )
+            if hasattr(verified, "stderr") and verified.stderr:
+                console.print(f"[bright_red]  {verified.stderr.strip()}")
+            return False
+
+        # If a specific signer was expected, verify the key matches
+        if signer_email:
+            actual_key_id = getattr(verified, "key_id", "").upper()
+            actual_fingerprint = getattr(verified, "fingerprint", "").upper()
+            expected = signer_email.upper()
+
+            # Match against key ID, fingerprint, or email in the UID
+            key_matches = (
+                expected in actual_key_id
+                or expected in actual_fingerprint
+            )
+
+            # Also check username field which may contain the email
+            username = getattr(verified, "username", "") or ""
+            if not key_matches and expected in username.upper():
+                key_matches = True
+
+            if not key_matches:
+                console.print(
+                    f"[bright_red][!] Signature is valid but was NOT produced "
+                    f"by expected signer : {signer_email}.\n"
+                    f"  -> Actual signer key_id      : {actual_key_id}\n"
+                    f"  -> Actual signer fingerprint : {actual_fingerprint}"
+                )
+                return False
+
+        # Success
+        signer_name = getattr(verified, "username", "Unknown")
+        signer_key = getattr(verified, "key_id", "Unknown")
+        sign_date = getattr(verified, "timestamp", "Unknown")
+
+        console.print(
+            f"[green][-] Signature verification PASSED for "
+            f"{signature_file.name}"
+        )
+        console.print(
+            f"[green]  Signer  : {signer_name}\n"
+            f"[green]  Key ID  : {signer_key}\n"
+            f"[green]  Signed  : {sign_date}\n"
+        )
+
+        if hasattr(self, "print_status"):
+            self.print_status(verified)
+
+        return True
+
+
+    def get_pgp_action(self, action: str) -> None:
+        """Gets input from the user on what action to start next."""
+        pgp_choice = show_pgp_menu()
 
         # GPG home
         gpg_home = Prompt.ask(
@@ -595,119 +1070,75 @@ class PGP:
         self.gpg_home = gpg_home.strip() or None
         self._init_gpg()
 
+        match pgp_choice:
+            case "1":
+                self.generate_pgp_key_pair()
+            case "2" | "3" | "4" | "5":
+                action, scope = self._ACTION_MAP[pgp_choice]
+                if scope == "single":
+                    self._handle_pgp_process_file(action)
+                else:
+                    self._handle_pgp_process_folder(action)
+            case "6":
+                self.pgp_sign_file()
+            case "7":
+                self.pgp_verify_signature()
+            case "r":
+                show_main_menu()
+            case "q":
+                Functions.exit_application()
+
+"""
+
+#!
+#! Usage examples for signing a file:
+#!
+
+# Detached signature (creates .sig file alongside original)
+sig_path = pgp.pgp_sign_file(
+    target_file="/path/to/document.pdf",
+    signer_email="alice@example.com",
+    password="my_private_key_passphrase",
+    detached=True,
+)
+
+# Cleartext signature (embeds signature in readable .asc file)
+asc_path = pgp.pgp_sign_file(
+    target_file="/path/to/message.txt",
+    signer_email="alice@example.com",
+    password="my_private_key_passphrase",
+    clearsign=True,
+)
+
+# Inline signature (compressed + signed .gpg file)
+signed_path = pgp.pgp_sign_file(
+    target_file="/path/to/data.bin",
+    signer_email="alice@example.com",
+    password="my_private_key_passphrase",
+    detached=False,
+)
 
 
-        if action == "encrypt":
-            pgp_encryption_choice = show_pgp_encryption_menu()
-            match pgp_encryption_choice:
-                case "1":  # Generate new PGP key pair
-                    password = Functions.get_password()
-                    email_address = Functions.get_email_address()
-                    if not password.strip() or not email_address.strip():
-                        console.print(
-                            "\n[yellow][!] Key generation cancelled : Missing "
-                            "password or email.")
-                        Prompt.ask(
-                            "[bright_white][-] Press Enter to return to menu...")
-                        return
-                    PGP.generate_pgp_key_pair(
-                        password=password,
-                        email=email_address)
-                case "2":  # Encrypt a file with PGP
-                    # Ask user to select type of PGP encryption:
-                    # "1" = Asymmetric
-                    # "2" = Symmetric
-                    pgp_encryption_type_choice = show_pgp_encryption_type_menu()
-                    match pgp_encryption_type_choice:
-                        case "1":  # Asymmetric
-                            self._symmetric = False
-                            self._armored = False
-                            pgp_encryption_armor_choice = show_pgp_armor_choice()
-                            match pgp_encryption_armor_choice:
-                                case "1":  # User chooses .pgp file output
-                                    self._armored = False
-                                case "2":  # User chooses .asc file output
-                                    self._armored = True
-                        case "2":  # Symmetric
-                            self._symmetric = True
-                            self._armored = False
-                        case "r":
-                            Functions.clear_screen()
-                            show_main_app_menu()
-                        case "q":
-                            Functions.exit_application()
-                    # Key import (only for asymmetric)
-                    if not self._symmetric:
-                        key_label = "private"
-                        key_path = Prompt.ask(
-                            "[bright_white][-] enter the path to the "
-                            f"recipient's {key_label} PGP key file ")
-                        if not self.import_key(key_path):
-                            self.logger.error(
-                                "Key import failed. Cannot continue")
-                            return
+#!
+#! Usage examples for verifying a signature:
+#!
 
-                case "3":
-                    target_dir = Functions.get_directory_path(text="encrypted")
+# Verify detached signature — requires original file
+is_valid = pgp.pgp_verify_signature(
+    signature_file="/path/to/document.pdf.sig",
+    original_file="/path/to/document.pdf",
+    signer_email="alice@example.com",  # Optional: enforce expected signer
+)
 
-                    recursive = Functions.select_recursive_option(
-                        action="encrypt")
-                    PGP.pgp_encrypt_single_files_in_folder(
-                        target_dir=target_dir,
-                        recursive=recursive)
-                case "r":
-                    Functions.clear_screen()
-                    show_main_app_menu()
-                case "q":
-                    Functions.exit_application()
+# Verify cleartext/inline signature — original file not needed
+is_valid = pgp.pgp_verify_signature(
+    signature_file="/path/to/message.asc",
+)
 
+# Verify without enforcing a specific signer (accept any valid signature)
+is_valid = pgp.pgp_verify_signature(
+    signature_file="/path/to/document.pdf.sig",
+    original_file="/path/to/document.pdf",
+)
 
-
-
-
-        elif action == "decrypt":
-            pgp_decryption_choice = show_pgp_decryption_menu()
-            match pgp_decryption_choice:
-                case "1":  # Decrypt a single file with PGP
-                    # For decrypt, auto-detect based on available keys
-                    has_keys = len(
-                        self.gpg.list_keys(secret=True)
-                        ) > 0
-                    if has_keys:
-                        # Ask user to select type of PGP encryption:
-                        # "1" = Asymmetric
-                        # "2" = Symmetric
-                        pgp_decryption_type_choice = (
-                            show_pgp_decryption_type_menu())
-                        match pgp_decryption_type_choice:
-                            case "1":
-                                # Set self._symmetric value to True
-                                self._symmetric = (
-                                    pgp_decryption_type_choice == "2")
-                            case "2":
-                                pass
-                    else:
-                        self.logger.info(
-                            "No private keys found. Switching to symmetric mode."
-                        )
-                        self._symmetric = True
-                    # Key import (only for asymmetric)
-                    if not self._symmetric:
-                        key_label = "private"
-                        key_path = self._prompt(
-                            f"Enter the path to the recipient's {key_label} PGP key file : ",
-                            validator=self._validate_existing_file,
-                            )
-                        if not self.import_key(key_path):
-                            self.logger.error(
-                                "Key import failed. Cannot continue."
-                                )
-                            return
-                case "2":
-                    target_path = Functions.get_directory_path(text="decrypt")
-                    recursive = Functions.select_recursive_option()
-                case "r":
-                    Functions.clear_screen()
-                    show_main_app_menu()
-                case "q":
-                    Functions.exit_application()
+"""
