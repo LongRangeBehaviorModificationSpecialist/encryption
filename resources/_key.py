@@ -8,6 +8,7 @@ from enum import StrEnum
 import hashlib
 from pathlib import Path
 from rich.prompt import Prompt
+from rich.traceback import install
 from typing import List
 
 # Import the console object from the main __init__.py file
@@ -20,6 +21,9 @@ from resources.prompts import (
 )
 
 
+install(show_locals=True)
+
+
 class Action(StrEnum):
     ENCRYPT = "encrypt"
     DECRYPT = "decrypt"
@@ -28,8 +32,8 @@ class Action(StrEnum):
 class KEY:
 
     _KEY_ACTION_MAP = {
-        "2": (Action.ENCRYPT, "single"),
-        "3": (Action.DECRYPT, "single"),
+        "2": (Action.ENCRYPT, "file"),
+        "3": (Action.DECRYPT, "file"),
         "4": (Action.ENCRYPT, "folder"),
         "5": (Action.DECRYPT, "folder")
     }
@@ -66,7 +70,7 @@ class KEY:
         )
 
         key_file_name = Prompt.ask(
-            f"{STATUS_ICONS['key']}[white][-] Enter a name for the key "
+            f"{STATUS_ICONS['key']}[white] Enter a name for the key "
             "file (w/o file extension) "
         ).strip()
 
@@ -113,20 +117,23 @@ class KEY:
 
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
-        while True:
-            key_file = Prompt.ask(
-                "[white][-] Enter the path of the .key file to use "
-            )
-            path = Path(key_file)
-            if path.is_file():
-                return path
+        return Prompt.ask(
+            f"{STATUS_ICONS['key']}[white] Enter the path of the .key "
+            "file to use "
+        ).strip("\"'")
+        # path = Path(key_file)
+        # if path.is_file():
+        #     return path
 
 
     def _handle_key_process_file(self, action: Action) -> None:
         """Helper function to process encryption or decryption of a file."""
-        key_file_path = self.get_existing_key_file_path()
+        key_file_path = KEY.get_existing_key_file_path(self)
+        # key_file_path = r"C:\Users\mikes\Desktop\2026-08-05_165951_mas-new-key.key"
         target_file = Functions.get_file_path()
-        self.key_process_file(
+        # target_file = r"C:\Users\mikes\Desktop\test\OSHA.docx"
+        KEY.key_process_file(
+            self,
             key_file_path=key_file_path,
             target_file=target_file,
             action=action.value,
@@ -156,51 +163,59 @@ class KEY:
         """
         action = action.lower().strip()
         target_file = Path(target_file).resolve()
+        key_file_path = Path(key_file_path).resolve()
 
         if not target_file.is_file():
-            console.print(
-                f"[red][!] {target_file.name} does not exist or "
-                "is a directory."
-            )
+            Functions.print_not_file_error(target_file=target_file)
             raise FileNotFoundError(f"Invalid target file : {target_file}")
 
-        # Ensure key_file_path is resolved to prevent key self-encryption
-        if key_file_path:
-            resolved_key_file_path = Path(key_file_path).resolve()
-        else:
-            resolved_key_file_path = Path(
-                self.get_existing_key_file_path()
-            ).resolve()
+        if not Functions.verify_file_access(target_file=target_file):
+            return
 
-        if not resolved_key_file_path.is_file():
+        # Ensure key_file_path is resolved to prevent key self-encryption
+        # if key_file_path:
+        #     resolved_key_file_path = Path(key_file_path).resolve()
+        # else:
+        #     resolved_key_file_path = Path(
+        #         self.get_existing_key_file_path(self)
+        #     ).resolve()
+
+        if not key_file_path.is_file():
             console.print(
-                "[red][!] Key file not found : "
-                f"{resolved_key_file_path}"
+                f"{STATUS_ICONS['failure2']}[red] Key file not found : "
+                f"{key_file_path}"
             )
             raise FileNotFoundError(
-                f"Invalid .key file : {resolved_key_file_path}"
+                f"Invalid .key file : {key_file_path}"
             )
 
         # Prevent self-encryption guard
-        if target_file == resolved_key_file_path:
+        if target_file == key_file_path:
             console.print(
-                "[red][!] Target file is the active key file. Aborting."
+                f"{STATUS_ICONS['warning']}[yellow3] Target file is the "
+                "active key file. Aborting."
             )
-            raise ValueError(
-                "Cannot encrypt or decrypt the active key file."
-            )
+            raise ValueError("Cannot encrypt or decrypt the active key file.")
 
         try:
             console.print(
-                f"[white][-] Reading file : {target_file.name}..."
+                f"{STATUS_ICONS['file']}[white] Reading file : "
+                f"{target_file.name}..."
             )
             original_file_data = target_file.read_bytes()
 
-            fernet_obj = self._load_fernet(key_file_path=resolved_key_file_path)
+            fernet_obj = KEY._load_fernet(
+                self,
+                key_file_path=key_file_path,
+            )
 
-            console.print("[white][-] File content read successfully...")
             console.print(
-                f"[white][-] {action.capitalize()}ing file data..."
+                f"{STATUS_ICONS['success']}[white] File content read "
+                "successfully..."
+            )
+            console.print(
+                f"{STATUS_ICONS['processing']}[white] {action.capitalize()}ing "
+                "file data..."
             )
 
             if action == "encrypt":
@@ -221,21 +236,22 @@ class KEY:
                 output_file.write_bytes(decrypted_data)
 
             console.print(
-                f"[green3][-] {action.capitalize()}ed "
-                f"{target_file.name:34s}{'->':7s}{output_file.name}"
+                f"{STATUS_ICONS['success']}[green3] {action.capitalize()}ed "
+                f"{target_file.name}  ->  {output_file.name}"
             )
 
             return output_file
 
         except InvalidToken:
             console.print(
-                f"[red][!] Decryption failed! The key provided is "
-                f"invalid for {target_file.name}"
+                f"{STATUS_ICONS['failure2']}[red] Decryption failed! The key "
+                f"provided is invalid for {target_file.name}"
             )
             raise
         except Exception as e:
             console.print(
-                f"[red][!] Failed to {action} {target_file.name} : {e}"
+                f"{STATUS_ICONS['failure2']}[red] Failed to {action} "
+                f"{target_file.name} : {e}"
             )
             raise
 
@@ -244,10 +260,11 @@ class KEY:
         """Helper function to process encryption or decryption of files
         in a folder.
         """
-        key_file_path = self.get_existing_key_file_path()
+        key_file_path = KEY.get_existing_key_file_path(self)
         target_dir = Functions.get_directory_path()
         recursive = Functions.select_recursive_option()
-        self.key_process_folder(
+        KEY.key_process_folder(
+            self,
             target_dir=target_dir,
             key_file_path=key_file_path,
             action=action.value,
@@ -277,13 +294,17 @@ class KEY:
         """
         action = action.lower().strip()
         target_dir = Path(target_dir).resolve()
+        key_file_path = Path(key_file_path).resolve()
 
         if not Functions.verify_is_directory(target_dir=target_dir):
             return []
 
         console.print(
-            f"\n[green3][*] {target_dir} validated. Fetching targets "
-            f"for {action}ion..."
+            f"{STATUS_ICONS['success']}[green3] {target_dir} validated."
+        )
+        console.print(
+            f"{STATUS_ICONS['processing']}[white] Fetching targets for "
+            f"{action}ion..."
         )
 
         # Ensure key_file_path is resolved to prevent key self-encryption
@@ -291,7 +312,7 @@ class KEY:
             key_file_path = Path(key_file_path).resolve()
         else:
             key_file_path = Path(
-                self.get_existing_key_file_path()
+                KEY.get_existing_key_file_path(self)
             ).resolve()
 
         try:
@@ -316,14 +337,15 @@ class KEY:
                 ]
         except Exception as e:
             console.print(
-                "[red][!] Failed to retrieve files from "
-                f"{target_dir} : {e}"
+                f"{STATUS_ICONS['failure2']}[red] Failed to retrieve files "
+                f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"[yellow3][!] No valid files to {action} in {target_dir}"
+                f"{STATUS_ICONS['warning']}[yellow3] No valid files to "
+                f"{action} in {target_dir}"
             )
             return []
 
@@ -332,7 +354,8 @@ class KEY:
 
         for file_path in all_files:
             try:
-                processed_path = self._handle_key_process_file(
+                processed_path = KEY.key_process_file(
+                    self,
                     key_file_path=key_file_path,
                     target_file=file_path,
                     action=action,
@@ -340,48 +363,66 @@ class KEY:
                 successful_files.append(processed_path)
             except Exception as e:
                 console.print(
-                    f"[red][!] Error during {action}ing "
-                    f"{file_path.name} : {e}"
+                    f"{STATUS_ICONS['failure2']}[red] Error during "
+                    f"{action}ing {file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
 
         # Summary reporting
         if successful_files:
             console.print(
-                f"[green3][-] ** Action Completed **\nSuccessfully {action}ed "
-                f"{len(successful_files)} files in {target_dir} :"
+                "\n" + "[green]-" * 45 + "\n",
+                f"[green3]** Action Completed **\n"
+                f"    Successfully {action}ed {len(successful_files)} files "
+                f"in {target_dir}:"
             )
             for processed_file in successful_files:
-                console.print(f"[green3]  {processed_file.name}")
+                console.print(f"[green3]        {processed_file.name}")
 
         if failed_files:
             console.print(
-                f"[red][!] ** Warning **\nFailed to {action} "
-                f"{len(failed_files)} files :"
+                "\n" + "-" * 45 + "\n",
+                f"[red]** Warning **\n"
+                f"    Failed to {action} {len(failed_files)} files:"
             )
             for failed_file in failed_files:
-                console.print(f"[red]  {failed_file.name}")
+                console.print(f"[red]        {failed_file.name}")
 
         return successful_files
 
 
-    @classmethod
-    def get_key_action(cls) -> None:
+    def get_key_action(self) -> None:
         """Gets input from the user on what action to start next."""
         key_choice = show_key_menu()
         match key_choice:
             case "1":
-                cls.generate_and_save_key()
+                KEY.generate_and_save_key(self)
             case "2" | "3" | "4" | "5":
-                action, scope = cls._KEY_ACTION_MAP[key_choice]
-                if scope == "single":
-                    cls._handle_key_process_file(KEY, action)
+                action, scope = self._KEY_ACTION_MAP[key_choice]
+                if scope == "file":
+                    KEY._handle_key_process_file(self, action=action)
                 else:
-                    cls._handle_key_process_folder(KEY, action)
+                    KEY._handle_key_process_folder(self, action=action)
             case "r":
                 Functions.clear_screen()
                 show_main_menu()
             case "q":
                 Functions.exit_application()
             case _:
-                console.print("[yellow][!] An invalid option was entered")
+                console.print(
+                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    "was entered"
+                )
+
+
+#! ------------------------------------
+#!  VERIFICATIONS CHECKS
+#!
+#!  Option "1" -- working 08-05-26
+#!  Option "2" -- working 08-05-26
+#!  Option "3" -- working 08-05-26
+#!  Option "4" -- working 08-05-26
+#!  Option "5" -- working 08-05-26
+#!  OPTION "r" -- NEED TO FIX.  Returns to the main menu, but when an
+#!                option is entered, the program exits.
+#!  OPTION "q" -- working 08-05-26

@@ -2,12 +2,12 @@
 # DLU : 05-Aug-2026
 
 
-# from functools import wraps
 from rich.prompt import Prompt
 
 # Import the console object from the main __init__.py file
 from . import console
 from resources.functions import Functions
+from resources.vars import STATUS_ICONS
 
 
 VERSION = "0.3.17076096"
@@ -28,9 +28,10 @@ def display_menu(
         if clear_on_invalid:
             Functions.clear_screen()
         console.print(
-            f"\n[red][ERROR] \"{user_input}\" is not a valid option. [/]"
-            f"""[white]Valid options: {', '.join(
-                f"'{c}'" for c in sorted(choices))}."""
+            f"\n\n{STATUS_ICONS['warning']}[yellow3] \"{user_input}\" is not "
+            "a valid option. [/]"
+            f"""[white]Valid options for this menu are: {', '.join(
+                f"'{c}'" for c in sorted(choices))}.\n\n"""
         )
 
 

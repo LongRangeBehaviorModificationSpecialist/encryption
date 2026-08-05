@@ -3,7 +3,6 @@
 
 
 from enum import StrEnum
-import getpass
 import os
 from pathlib import Path
 import shutil
@@ -19,11 +18,11 @@ try:
     HAS_PGP = True
 except ImportError:
     console.print(
-        "[yellow3][!] Missing dependency: 'python-gnupg'.."
-        "It can be installed using -> 'pip install python-gnupg'"
+        f"{STATUS_ICONS['warning']}[yellow3] Missing dependency: "
+        "'python-gnupg'.\n"
+        "It can be installed using the 'pip install python-gnupg' command"
     )
     sys.exit(1)
-
 
 from resources.vars import ENCRYPTED_EXT_LIST, STATUS_ICONS
 from resources.functions import Functions
@@ -68,10 +67,11 @@ class PGP:
             or r"C:\Program Files\GnuPG\bin\gpg.exe")
 
         if not self.resolved_gpg and not Path(self.resolved_gpg).exists():
-            raise FileNotFoundError(
-                f"GnuPG binary not found at '{self.resolved_gpg}'. Please "
-                "install GnuPG."
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3] GnuPG binary not found "
+                f"at '{self.resolved_gpg}'. Please install GnuPG."
             )
+            raise FileNotFoundError
 
         self.gpg = gnupg.GPG(
             gnupghome=str(self.gpg_home),
@@ -101,8 +101,8 @@ class PGP:
         """Prints GPG action execution status to terminal."""
         if status.ok == True:
             console.print(
-                f"[green3][-] File {action}ion was successful : "
-                f"{status.stderr}"
+                f"{STATUS_ICONS['success']}[green3] File {action}ion was "
+                f"successful : {status.stderr}"
             )
         else:
             status_msg = getattr(
@@ -111,8 +111,8 @@ class PGP:
                 getattr(status, "stderr", "Unknown Error")
             )
             console.print(
-                f"[red][!] File encryption WAS NOT successful : "
-                f"{status_msg}. Please try again."
+                f"{STATUS_ICONS['failure2']}[red] File encryption WAS NOT "
+                f"successful : {status_msg}. Please try again."
             )
 
 
@@ -125,7 +125,8 @@ class PGP:
                 key_data = fh.read()
         except OSError as e:
             console.print(
-                f"[red][!] Cannot read key file \"{key_path}\" : {e}"
+                f"{STATUS_ICONS['failure2']}[red] Cannot read key file "
+                f"\"{key_path}\" : {e}"
             )
             return False
 
@@ -133,18 +134,20 @@ class PGP:
 
         if result.count == 0:
             console.print(
-                "[red][!] No keys imported — the file may not contain a "
-                "valid PGP key."
+                f"{STATUS_ICONS['failure2']}[red] No keys imported — the file "
+                "may not contain a valid PGP key."
             )
             return False
 
         self._recipient_fp = result.fingerprints[0]
         self._key_imported = True
         console.print(
-            f"[green3][-] Imported key fingerprint : {self._recipient_fp}"
+            f"{STATUS_ICONS['success']}[green3] Imported key fingerprint : "
+            f"{self._recipient_fp}"
         )
         console.print(
-            f"[cyan][-] Full import result : {result.summary()}"
+            f"{STATUS_ICONS['file']}[cyan] Full import result : "
+            f"{result.summary()}"
         )
         return True
 
@@ -169,57 +172,70 @@ class PGP:
         """
         if self._password is not None and not force_new:
             console.print(
-                f"[white][-] Using cached passphrase for {purpose}"
+                f"{STATUS_ICONS['info']}[white] Using cached passphrase "
+                f"for {purpose}"
             )
             return self._password
 
         attempts_left = 3
         while attempts_left > 0:
             if confirm:
-                password1 = getpass.getpass(
-                    f"Enter passphrase for {purpose} : "
+                password1 = Prompt.ask(
+                    f"{STATUS_ICONS['key']}[white] Enter passphrase for "
+                    f"{purpose} ",
+                    password=True
                 )
-                password2 = getpass.getpass(
-                    f"Confirm passphrase for {purpose} : "
+                password2 = Prompt.ask(
+                    f"{STATUS_ICONS['key']}[white] Confirm passphrase for "
+                    f"{purpose} ",
+                    password=True
                 )
 
                 if password1 != password2:
                     console.print(
-                        "[yellow3][!] Passphrases did not match."
+                        f"{STATUS_ICONS['failure2']}[red] Passphrases did "
+                        "not match"
                     )
                     attempts_left -= 1
                     console.print(
-                        f"[yellow3][!] {attempts_left} attempt(s) remaining.\n"
+                        f"{STATUS_ICONS['warning']}[yellow3] {attempts_left} "
+                        "attempt(s) remaining"
                     )
                     continue
             else:
-                password1 = getpass.getpass(
-                    f"[white][-] Enter passphrase for {purpose} : "
+                password1 = Prompt.ask(
+                    f"{STATUS_ICONS['key']}[white] Enter passphrase for "
+                    f"{purpose} ",
+                    password=True
                 )
                 if len(password1) < 1:
                     console.print(
-                        "[yellow3][!] Empty passphrase not allowed."
+                        f"{STATUS_ICONS['warning']}[yellow3] An empty "
+                        "passphrase not allowed."
                     )
                     attempts_left -= 1
                     continue
 
             console.print(
-                f"[white][-] Passphrase accepted for {purpose}"
+                f"{STATUS_ICONS['success']}[white] Passphrase accepted for "
+                f"{purpose}"
             )
             self._password = password1
             return password1
 
         console.print(
-            f"[red][!] Too many failed passphrase attempts for {purpose}"
+            f"{STATUS_ICONS['failure2']}[red] Too many failed passphrase "
+            f"attempts for {purpose}"
         )
         return None
 
 
     def clear_passphrase(self) -> None:
-        """Clear any cached passphrase from memory (use after sensitive ops)."""
+        """Clear any cached passphrase from memory (after sensitive ops)."""
         self._password = None
         console.print(
-            "[white][-] Cleared cached passphrase from memory"
+            f"{STATUS_ICONS['info']}[white] Cleared cached passphrase "
+            "from memory"
         )
 
 
@@ -239,14 +255,15 @@ class PGP:
 
         if not public_key_data or not self.public_key_file.exists():
             console.print(
-                f"[red][!] Failed to export public key for Key ID : {keyid}"
+                f"{STATUS_ICONS['failure2']}[red] Failed to export public key "
+                f"for Key ID : {keyid}"
             )
             raise RuntimeError(
-                f"Failed to export public key for Key ID : {keyid}")
+                f"Failed to export public key ID {keyid}")
 
         console.print(
-            f"[white][-] Public key exported successfully to "
-            f"{self.public_key_file.name}"
+            f"{STATUS_ICONS['success']}[white] Public key exported successfully "
+            f"to {self.public_key_file.name}"
         )
 
         return str(public_key_data)
@@ -272,17 +289,16 @@ class PGP:
 
         if not private_key_data or not self.private_key_file.exists():
             console.print(
-                f"[red][!] Failed to export private key for Key ID : {keyid}. "
-                "Check the keyid/passphrase."
+                f"{STATUS_ICONS['failure2']}[red] Failed to export private key "
+                f"for Key ID : {keyid}. Check the keyid/passphrase."
             )
             raise RuntimeError(
-                f"Failed to export private key for Key ID : {keyid}. "
-                "Check the keyid/passphrase."
+                f"Failed to export private key ID {keyid}. "
             )
 
         console.print(
-            f"[white][-] Private key exported successfully to "
-            f"{self.private_key_file.name}"
+            f"{STATUS_ICONS['success']}[white] Private key exported "
+            f"successfully to {self.private_key_file.name}"
         )
 
         return str(private_key_data)
@@ -298,18 +314,20 @@ class PGP:
             str: Fingerprint of the newly created key pair.
         """
         password = Prompt.ask(
-            "[white][-] Enter passphrase for the private key ",
+            f"{STATUS_ICONS['key']}[white] Enter passphrase for the "
+            "private key ",
             password=True
         )
 
         email_address = Prompt.ask(
-            "[white][-] Enter email address of the PGP key owner "
-            ).strip().lower()
+            "{STATUS_ICONS['keyboard']}[white] Enter email address of the "
+            "PGP key owner "
+        ).strip().lower()
 
         if not email_address or "@" not in email_address:
             console.print(
-                "[yellow3][!] Invalid or missing email address provided : "
-                f"{email_address}"
+                f"{STATUS_ICONS['warning']}[yellow3] Invalid or missing "
+                f"email address provided : {email_address}"
             )
             raise ValueError(
                 f"Invalid or missing email address provided : {email_address}"
@@ -325,14 +343,16 @@ class PGP:
         key = self.gpg.gen_key(input_data)
 
         if not key.fingerprint:
-            raise RuntimeError(
-                f"PGP key generation failed. Engine error output : "
-                f"{key.stderr}"
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] PGP key generation failed. "
+                f"Engine error output : {key.stderr}"
             )
+            raise RuntimeError("PGP key generation failed.")
 
         keyid = str(key.fingerprint)
         console.print(
-            f"[white][-] Generated Key Fingerprint : {keyid}"
+            f"{STATUS_ICONS['success']}[white] Generated Key Fingerprint : "
+            f"{keyid}"
         )
 
         # Export keys upon successful generation
@@ -349,11 +369,14 @@ class PGP:
         """Collect user inputs and call pgp_process_file."""
         # Email address (required for public-key encryption)
         email_input = Prompt.ask(
-            "[white][-] Enter recipient email address(es): "
+            f"{STATUS_ICONS['keyboard']}[white] Enter recipient email "
+            "address(es) "
         ).strip()
 
         if not email_input:
-            console.print("[yellow3][!] No email address provided.")
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3] No email address provided."
+            )
             return
 
         email_address = [addr.strip() for addr in email_input.split(",")]
@@ -361,7 +384,8 @@ class PGP:
         # Password -> required for symmetric encryption or decryption
         if action == Action.ENCRYPT:
             confirm = Prompt.ask(
-                "[white][?] Use symmetric (password only) encryption? ",
+                f"{STATUS_ICONS['question']}[white] Use symmetric (password "
+                f"only) encryption? ",
                 choices=["y", "n"],
                 show_choices=True
             )
@@ -369,14 +393,15 @@ class PGP:
                 password = Functions.get_password()
                 if not password:
                     console.print(
-                        "[yellow3][!] Password required for symmetric "
-                        "encryption."
+                        f"{STATUS_ICONS['warning']}[yellow3] Password required "
+                        "for symmetric encryption."
                     )
                     return
 
                 symmetric = True
                 armored = Prompt.ask(
-                    "[white][?] Use ASCII-armored output (.asc)? ",
+                    f"{STATUS_ICONS['question']}[white] Use ASCII-armored "
+                    "output (.asc)? ",
                     choices=["y", "n"],
                     show_choices=True
                 )
@@ -385,20 +410,22 @@ class PGP:
                 password = None
                 symmetric = False
                 armored = Prompt.ask(
-                    "[white][?] Use ASCII-armored output (.asc)? ",
+                    f"{STATUS_ICONS['question']}[white] Use ASCII-armored "
+                    "output (.asc)? ",
                     choices=["y", "n"],
                     show_choices=True
                 )
         else:  # Decrypt
             confirm = Prompt.ask(
-                "[white][-] Provide a passphrase now? (leave blank "
-                "for GPG prompt) ",
+                f"{STATUS_ICONS['question']}[white] Do you want to provide a "
+                "passphrase now? (leave blank for GPG prompt) ",
                 choices=["y", "n", ""],
                 show_choices=True
             )
             if confirm:
                 password = Prompt.ask(
-                    "[white][-] Enter passphrase for decryption ",
+                    f"{STATUS_ICONS['key']}[white] Enter passphrase for "
+                    "decryption ",
                     password=True
                 )
             else:
@@ -407,8 +434,9 @@ class PGP:
 
         # Output path (optional)
         output_path_input = Prompt.ask(
-            "[white][-] Enter output path (leave blank for default) ",
-        ).strip()
+            f"{STATUS_ICONS['keyboard']}[white] Enter output path (leave "
+            "blank for default) ",
+        ).strip("\"'")
         output_path = (
             Path(output_path_input).resolve()
             if output_path_input else None
@@ -431,9 +459,14 @@ class PGP:
                 password=password,
                 always_trust=True,
             )
-            console.print(f"[green3][*] Successfully processed : {result}")
+            console.print(
+                f"{STATUS_ICONS['success']}[green3] Successfully processed : "
+                f"{result}"
+            )
         except Exception as e:
-            console.print(f"[red][!] Operation failed : {e}")
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] Operation failed : {e}"
+            )
 
 
     def pgp_process_file(
@@ -477,8 +510,8 @@ class PGP:
 
         if not target_file.is_file():
             console.print(
-                f"[red][!] {target_file.name} does not exist or "
-                "is a directory."
+                f"{STATUS_ICONS['failure2']}[red] {target_file.name} does not "
+                "exist or is a directory."
             )
             raise FileNotFoundError(f"Invalid target file : {target_file}")
 
@@ -497,21 +530,27 @@ class PGP:
         # Validate: public-key encryption requires recipients
         if action == "encrypt" and not use_symmetric:
             if not email_address:
-                raise ValueError(
-                "At least one recipient email or key ID must be provided "
-                "for public-key encryption. Use symmetric=True for "
-                "password-only encryption."
-            )
+                console.print(
+                    f"{STATUS_ICONS['warning']}[yellow3] At least one recipient "
+                    "email or key ID must be provided for public-key "
+                    "encryption. Use symmetric=True for password-only "
+                    "encryption."
+                )
+                raise ValueError
 
         # Validate: symmetric encryption requires a password
         if action == "encrypt" and use_symmetric and not password:
-            raise ValueError(
-                "A password is required for symmetric encryption."
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3]A password is required for "
+                "symmetric encryption."
             )
+            raise ValueError
 
         try:
             console.print(
-                f"[white][-] Reading file : {target_file.name}...")
+                f"{STATUS_ICONS['file']}[white] Reading file : "
+                f"{target_file.name}..."
+            )
 
             if action == "encrypt":
                 # Determine output extension based on armored mode
@@ -524,8 +563,8 @@ class PGP:
 
                 with open(target_file, "rb") as f:
                     console.print(
-                        f"[white][-] {action.capitalize()}ing file "
-                        "data..."
+                        f"{STATUS_ICONS['info']}[white] {action.capitalize()}ing "
+                        "file data..."
                     )
                     if use_symmetric:
                         # Symmetric: password-only, no recipients needed
@@ -568,7 +607,11 @@ class PGP:
                     )
 
         except Exception as e:
-            raise RuntimeError(f"Failed to execute GPG {action}ion: {e}") from e
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] Failed to execute GPG "
+                f"{action}ion: {e}"
+            )
+            raise RuntimeError
 
         if not status.ok:
             # Clean up partial/empty output file if created
@@ -578,16 +621,18 @@ class PGP:
             error_msg = getattr(
                 status, "status", getattr(status, "status", "Unknown GPG error")
             )
-            raise RuntimeError(
-                f"PGP {action.title()}ion failed for '{target_file.name}'. "
-                f"GPG status: {error_msg}"
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] PGP {action.title()}ion "
+                f"failed for '{target_file.name}'. GPG status: {error_msg}"
             )
+            raise RuntimeError
 
         if hasattr(self, "print_status"):
             self.print_status(status)
 
         console.print(
-            f"[green3][*] PGP file {action}ed successfully : {output_file.name}"
+            f"{STATUS_ICONS['success']}[green3] PGP file {action}ed "
+            f"successfully : {output_file.name}"
         )
 
         return output_file
@@ -605,15 +650,17 @@ class PGP:
 
         # Email address (required for public-key encryption)
         email_input = Prompt.ask(
-            "[white][-] Enter recipient email address(es) "
-            "(comma-separated) "
+            f"{STATUS_ICONS['keyboard']}[white] Enter recipient email "
+            "address(es) (comma-separated) "
         ).strip()
 
         if not email_input and action == Action.ENCRYPT:
-            console.print("[yellow3][!] No email provided.")
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3] No email provided."
+            )
             confirm = Prompt.ask(
-                "[white][?] Proceed with symmetric encryption "
-                "instead? ",
+                f"{STATUS_ICONS['question']}[white] Proceed with symmetric "
+                "encryption instead? ",
                 choices=["y", "n"],
                 show_choices=True
             )
@@ -632,23 +679,26 @@ class PGP:
         # Password (required for symmetric encryption)
         if symmetric:
             password =Prompt.ask(
-                "[white][-] Enter passphrase for encryption "
+                f"{STATUS_ICONS['keyboard']}[white] Enter passphrase for "
+                "encryption "
             )
             if not password:
                 console.print(
-                    "[yellow3][!] Password required for symmetric "
-                    "encryption.")
+                    f"{STATUS_ICONS['warning']}[yellow3] Passphrase required "
+                    "for symmetric encryption."
+                )
                 return
         elif action == Action.DECRYPT:
             confirm = Prompt.ask(
-                "[white][?] Provide a passphrase now? (leave blank "
-                "for GPG prompt) ",
+                f"{STATUS_ICONS['question']}[white] Do you want to provide a "
+                "passphrase now? (leave blank for GPG prompt) ",
                 choices=["y", "n"],
                 show_choices=True
             )
             if confirm:
                 password = Prompt.ask(
-                    "[bright_whtite][-] Enter passphrase for decryption ",
+                    f"{STATUS_ICONS['keyboard']}[white] Enter passphrase for "
+                    "processing ",
                     password=True
                 )
             else:
@@ -658,7 +708,8 @@ class PGP:
 
         # Armored option
         armored = Prompt.ask(
-            "[white][?] Use ASCII-armored output (.asc)? ",
+            f"{STATUS_ICONS['question']}[white] Use ASCII-armored output "
+            "(.asc)? ",
             choices=["y", "n"],
             show_choices=True
         )
@@ -677,10 +728,12 @@ class PGP:
             )
 
             console.print(
-                f"[green3][*] Completed processing {len(results)} files."
+                f"{STATUS_ICONS['success']}[green3] Completed processing "
+                f"{len(results)} files."
             )
         except Exception as e:
-            console.print(f"[red][!] Operation failed : {e}")
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] Operation failed : {e}")
 
 
     def pgp_process_folder(
@@ -732,11 +785,12 @@ class PGP:
 
         # Validate: public-key encryption requires recipients
         if action == "encrypt" and not use_symmetric and not email_address:
-            raise ValueError(
-                "At least one recipient email or key ID must be provided "
-                "for public-key encryption. Use symmetric=True for "
-                "password-only encryption."
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] At least one recipient email "
+                "or key ID must be provided for public-key encryption. Use "
+                "symmetric=True for password-only encryption."
             )
+            raise ValueError
 
         # Determine expected encrypted extensions based on armored mode
         encrypted_exts = (
@@ -766,14 +820,15 @@ class PGP:
 
         except Exception as e:
             console.print(
-                "[red][!] Failed to retrieve files from "
-                f"{target_dir} : {e}"
+                f"{STATUS_ICONS['failure2']}[red] Failed to retrieve files "
+                f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"[yellow3][!] No valid files to {action} in {target_dir}"
+                f"{STATUS_ICONS['warning']}[yellow3] No valid files to "
+                f"{action} in {target_dir}"
             )
             return []
 
@@ -794,7 +849,7 @@ class PGP:
                 successful_files.append(processed_path)
             except Exception as e:
                 console.print(
-                    f"[red][!] Error during {action}ing "
+                    f"{STATUS_ICONS['failure2']}[red] Error during {action}ing "
                     f"{file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
@@ -802,16 +857,17 @@ class PGP:
         # Summary reporting
         if successful_files:
             console.print(
-                f"[green3][*] Action Completed\nSuccessfully {action}ed "
-                f"{len(successful_files)} files in {target_dir} :"
+                f"{STATUS_ICONS['success']}[green3] Action Completed\n"
+                f"Successfully {action}ed {len(successful_files)} files in "
+                f"{target_dir} :"
             )
             for processed_file in successful_files:
                 console.print(f"[green3]  {processed_file.name}")
 
         if failed_files:
             console.print(
-                f"[red][!] ** Warning **\nFailed to {action} "
-                f"{len(failed_files)} files :"
+                f"{STATUS_ICONS['failure2']}[red] Warning\n"
+                f"Failed to {action} {len(failed_files)} files :"
             )
             for failed_file in failed_files:
                 console.print(f"[red]  {failed_file.name}")
@@ -853,27 +909,29 @@ class PGP:
             RuntimeError: If the GPG signing operation fails.
         """
         target_file = Prompt.ask(
-            "[white][-] Enter the path of the file to be signed "
+            f"{STATUS_ICONS['keyboard']}[white] Enter the path of the file to "
+            "be signed "
         )
         target_file = Path(target_file).resolve()
 
         if not target_file.is_file():
-            console.print(
-                f"[red][!] {target_file.name} does not exist or is "
-                "a directory."
-            )
+            Functions.print_not_file_error(target_file=target_file)
             raise FileNotFoundError(f"Invalid target file : {target_file}")
 
         signer_email = Prompt.ask(
-            "[white][-] Enter the email address or key ID of the signer's "
-            "private key "
+            f"{STATUS_ICONS['keyboard']}[white] Enter the email address or "
+            "key ID of the signer's private key "
         )
         if not signer_email:
-            raise ValueError("Signer email or key ID must be provided.")
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3] The signer's email or "
+                "key ID must be provided"
+            )
+            raise ValueError
 
         password = Prompt.ask(
-            "[white][-] Enter the passphrase for the signer's "
-            "private key ",
+            f"{STATUS_ICONS['key']}[white] Enter the passphrase for the "
+            "signer's private key ",
             password=True
         )
 
@@ -881,8 +939,9 @@ class PGP:
             self, "_armored", False)
 
         sig_type = Prompt.ask(
-            "[white][?] What type of signature do you want to use "
-            "to sign this file? (1 = clearsign, 2 = detached, 3 = other) ",
+            f"{STATUS_ICONS['question']}[white] What type of signature do "
+            "you want to use to sign this file? (1 = clearsign, 2 = detached, "
+            "3 = other) ",
             choices=["1", "2", "3"],
             show_choices=True
         )
@@ -896,8 +955,8 @@ class PGP:
                 clearsign, detached = False, False
             case _:
                 console.print(
-                    "[yellow3][!] Invalid choice, defaulting to inline "
-                    "signature"
+                    f"{STATUS_ICONS['warning']}[yellow3] Invalid choice, "
+                    "defaulting to inline signature"
                 )
                 clearsign, detached = False, False
         # Determine output path and extension
@@ -912,10 +971,12 @@ class PGP:
         # Calling the signing method
         try:
             console.print(
-                f"[white][-] Signing file : {target_file.name}..."
+                f"{STATUS_ICONS['info']}[white] Signing file : "
+                f"{target_file.name}..."
             )
             console.print(
-                f"[cyan][-] Signature will be written to : {output_file.name}"
+                f"{STATUS_ICONS['info']}[cyan] Signature will be written "
+                f"to : {output_file.name}"
             )
 
             with open(target_file, "rb") as f:
@@ -928,9 +989,14 @@ class PGP:
                     armor=use_armored,
                     output=str(output_file),
             )
-            console.print(f"[green3][*] Signature created : {output_file.name}")
+            console.print(
+                f"{STATUS_ICONS['success']}[green3] Signature created : "
+                f"{output_file.name}"
+            )
         except Exception as e:
-            console.print(f"[red][!] File signing failed : {e}")
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] File signing failed : {e}"
+            )
             raise RuntimeError(f"Failed to execute GPG signing: {e}") from e
 
         if not status:
@@ -939,8 +1005,8 @@ class PGP:
 
             error_msg = getattr(status, "stderr", "Unknown GPG error")
             raise RuntimeError(
-                f"PGP signing failed for : {target_file.name}. "
-                f"GPG status: {error_msg}"
+                f"{STATUS_ICONS['failure2']}[red] PGP signing failed for : "
+                f"{target_file.name}. GPG status: {error_msg}"
             )
 
         if hasattr(self, "print_status"):
@@ -981,7 +1047,8 @@ class PGP:
 
         if not signature_file.is_file():
             console.print(
-                f"[red][!] Signature file not found : {signature_file}"
+                f"{STATUS_ICONS['failure2']}[red] Signature file not found : "
+                f"{signature_file}"
             )
             raise FileNotFoundError(
                 f"Invalid signature file : {signature_file}"
@@ -995,7 +1062,8 @@ class PGP:
 
             if not original_file.is_file():
                 console.print(
-                    f"[red][!] Original file not found : {original_file}"
+                    f"{STATUS_ICONS['failure2']}[red] Original file not "
+                    f"found : {original_file}"
                 )
                 raise FileNotFoundError(
                     f"Invalid original file : {original_file}"
@@ -1003,7 +1071,7 @@ class PGP:
 
         try:
             console.print(
-                "[white][-] Verifying signature : "
+                f"{STATUS_ICONS['info']}white] Verifying signature : "
                 f"{signature_file.name}..."
             )
 
@@ -1019,7 +1087,7 @@ class PGP:
 
         except Exception as e:
             console.print(
-                "[red][!] Verification error for "
+                f"{STATUS_ICONS['failure2']}[red] Verification error for "
                 f"{signature_file.name} : {e}"
             )
             return False
@@ -1027,8 +1095,8 @@ class PGP:
         # Check basic validity
         if not verified:
             console.print(
-                f"[red][!] Signature verification FAILED for "
-                f"{signature_file.name}."
+                f"{STATUS_ICONS['failure2']}[red] Signature verification "
+                f"FAILED for {signature_file.name}."
             )
             if hasattr(verified, "stderr") and verified.stderr:
                 console.print(f"[red]  {verified.stderr.strip()}")
@@ -1053,8 +1121,9 @@ class PGP:
 
             if not key_matches:
                 console.print(
-                    f"[red][!] Signature is valid but was NOT produced "
-                    f"by expected signer : {signer_email}.\n"
+                    f"{STATUS_ICONS['failure2']}[red] Signature is valid "
+                    f"but was NOT produced by expected signer : "
+                    f"{signer_email}.\n"
                     f"  -> Actual signer key_id      : {actual_key_id}\n"
                     f"  -> Actual signer fingerprint : {actual_fingerprint}"
                 )
@@ -1066,8 +1135,8 @@ class PGP:
         sign_date = getattr(verified, "timestamp", "Unknown")
 
         console.print(
-            f"[green3][-] Signature verification PASSED for "
-            f"{signature_file.name}"
+            f"{STATUS_ICONS['success']}[green3] Signature verification "
+            f"PASSED with {signature_file.name}"
         )
         console.print(
             f"[green3]  Signer  : {signer_name}\n"
@@ -1087,10 +1156,10 @@ class PGP:
         pgp_choice = show_pgp_menu()
         # GPG home
         gpg_home = Prompt.ask(
-            "[white][-] Enter GPG home directory "
+            f"{STATUS_ICONS['keyboard']}[white] Enter GPG home directory "
             "(blank for default ~/.gnupg) "
-        )
-        cls.gpg_home = gpg_home.strip() or None
+        ).strip("\"'")
+        cls.gpg_home = gpg_home or None
         cls._init_gpg()
 
         match pgp_choice:
@@ -1112,7 +1181,10 @@ class PGP:
             case "q":
                 Functions.exit_application()
             case _:
-                console.print("[yellow][!] An invalid option was entered")
+                console.print(
+                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    "was entered"
+                )
 
 """
 

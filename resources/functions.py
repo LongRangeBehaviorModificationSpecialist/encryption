@@ -1,9 +1,9 @@
 # !/usr/bin/env python3
-# DLU : 02-Aug-2026
+# DLU : 05-Aug-2026
+
 
 from datetime import datetime
 from functools import wraps
-import getpass
 import os
 from pathlib import Path
 import re
@@ -14,6 +14,7 @@ import time
 
 # Import the console object from the main __init__.py file
 from . import console
+from resources.vars import STATUS_ICONS
 
 
 class Functions:
@@ -27,23 +28,28 @@ class Functions:
             end_time = time.perf_counter()
             total_time = end_time - start_time
             console.print(
-                f"[dodger_blue1][-] Operation [ {func.__name__}() ] was "
-                f"completed in {total_time:.4f} seconds"
-                )
+                f"{STATUS_ICONS['success']}[green3] Operation [ "
+                f"{func.__name__}() ] was completed in {total_time:.4f} seconds"
+            )
             return result
         return timeit_wrapper
+
 
     @staticmethod
     def clear_screen() -> None:
         command = "cls" if os.name == "nt" else "clear"
         subprocess.run(command, shell=True)
 
+
     @staticmethod
     def exit_application() -> None:
+        """Print message to screen then exit the application."""
         console.print(
-            "\n\n[green3][-] Exiting the application...\n"
-            )
+            f"\n\n{STATUS_ICONS['arrow_right']}[green3]  Exiting the "
+            "application...\n"
+        )
         sys.exit(0)
+
 
     @staticmethod
     def get_date_time() -> str:
@@ -52,75 +58,46 @@ class Functions:
         formatted_offset = f"UTC{offset[0]}{int(offset[1:3])}"
         current_time = local_time.strftime(
             f"%d-%b-%Y %H:%M:%S.%f ({formatted_offset})"
-            )
+        )
         return current_time
+
 
     @staticmethod
     def get_file_path() -> str:
         return Prompt.ask(
-            "\n[white][-] Enter the path of the file to be processed "
-            ).strip("\"'")
+            f"{STATUS_ICONS['keyboard']}[white] Enter the path of the "
+            "file to be processed "
+        ).strip("\"'")
 
-    @staticmethod
-    def verify_is_file(target_file: Path | str) -> bool:
-        """Returns True if the path points to a regular file."""
-        if not target_file.is_file():
-            console.print(
-                f"[red][!] {target_file.name} does not exist or "
-                "is a directory."
-                )
-            return False
-        else:
-            return True
-
-    @staticmethod
-    def verify_file_access(target_file: Path | str) -> bool:
-        """Returns True if the user has permission to read the file."""
-        if not os.access(target_file, os.R_OK):
-            console.print(
-                "[red][!] The logged in user does not have read "
-                f"permissions for {target_file.name}"
-                )
-            return False
-        else:
-            return True
 
     @staticmethod
     def get_directory_path() -> str:
         return Prompt.ask(
-            "\n[white][-] Enter the full path of the directory "
-            "containing the files to be processed "
-            ).strip("\"'")
+            f"{STATUS_ICONS['keyboard']}[white] Enter the full path of the "
+            "directory containing the files to be processed "
+        ).strip("\"'")
 
-    @staticmethod
-    def verify_is_directory(
-            target_dir: Path | str) -> bool:
-        """Returns true if target_dir points to a directory."""
-        if not target_dir.is_dir():
-            console.print(
-                f"[red][!] {target_dir} does not exist or is not a "
-                "valid directory.")
-            return False
-        else:
-            return True
 
     @staticmethod
     def select_recursive_option() -> bool:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input =Prompt.ask(
-                "\n[white][?] Process subdirectories recursively? ",
+                f"{STATUS_ICONS['question']}[white] Process subdirectories "
+                "recursively? ",
                 choices=["y", "n"],
                 show_choices=True
-                ).strip().lower()
+            ).strip().lower()
             match recursive_input:
                 case "y":
                     return True
                 case "n":
                     return False
             console.print(
-                "\n[red][!] Invalid input. Enter either 'y' or 'n'."
-                )
+                f"{STATUS_ICONS['failure2']}[red] Invalid input. Enter either "
+                "'y' or 'n'."
+            )
+
 
     @staticmethod
     def get_password() -> bytearray:
@@ -129,9 +106,11 @@ class Functions:
         """
         while True:
             # Prompt user and convert directly to a mutable bytearray
-            raw_password = getpass.getpass(
-                "\n[-] Enter the PASSWORD you want to use : "
-                ).encode("utf-8")
+            raw_password = Prompt.ask(
+                f"{STATUS_ICONS['key']}[white] Enter the PASSWORD you want "
+                "to use ",
+                password=True
+            ).encode("utf-8")
             password_bytes = bytearray(raw_password)
 
             # If the password passes validation, break the loop and return it
@@ -143,8 +122,10 @@ class Functions:
                 password_bytes[i] = 0
 
             console.print(
-                "\n[red][!] Not a valid password. Please try again."
-                )
+                f"{STATUS_ICONS['failure2']}[red] Not a valid password. "
+                "Please try again."
+            )
+
 
     @staticmethod
     def validate_password(password: bytearray | bytes | str) -> bool:
@@ -177,7 +158,7 @@ class Functions:
         # Check if any byte in pwd_bytes exists in our byte symbols set
         has_symbol = any(
             byte_char in symbols_bytes for byte_char in pwd_bytes
-            )
+        )
 
         # If the criteria are not satisfied, print message to screen
         if not (has_min_length
@@ -185,7 +166,7 @@ class Functions:
                 and has_upper
                 and has_lower
                 and has_symbol):
-            console.print("""[red]
+            console.print(f"""{STATUS_ICONS['failure2']}[red]
     Your password did not meet the minimun requirements. Please try again.\n
     Your password must meet the following criteria :\n
     [-] Is at least ten (10) characters long
@@ -197,23 +178,27 @@ class Functions:
             return False
         else:
             console.print(
-                f"\n[white][-] Your password meets the minimum "
-                "requirements. Continuing..."
-                )
+                f"{STATUS_ICONS['success']}[white] Your password meets "
+                "the minimum requirements. Continuing..."
+            )
             return True
+
 
     @staticmethod
     def get_email_address() -> str:
         return Prompt.ask(
-            "\n[white][-] Enter email address of the PGP key owner "
-            ).strip().lower()
+            f"{STATUS_ICONS['keyboard']}[white] Enter email address of the "
+            "PGP key owner "
+        ).strip().lower()
+
 
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:
         return console.print(
-            f"\n[green3][*] Action Successful\n[yellow3]The {text} file "
-            f"was saved as : {file_name}"
+            f"{STATUS_ICONS['success']}[green3] Action Successful\n"
+            f"[white]The {text} file was saved as : {file_name}"
             )
+
 
     @staticmethod
     def format_key_file_log(
@@ -222,12 +207,13 @@ class Functions:
             hash_value: str
     ) -> str:
         return (
-        "------------------------------------------\n"
-        f"[{timestamp}]\n"
-        f"Key file name : {key_path.name}\n"
-        f"Key file hash value (SHA-256) : {hash_value}\n"
-        "------------------------------------------"
+            "------------------------------------------\n"
+            f"[{timestamp}]\n"
+            f"Key file name : {key_path.name}\n"
+            f"Key file hash value (SHA-256) : {hash_value}\n"
+            "------------------------------------------"
         )
+
 
     @staticmethod
     def format_key_file_verification(
@@ -237,13 +223,52 @@ class Functions:
             key_file_hash_value: str
     ) -> str:
         return (
-    "[white]------------------------------------------\n\n"
-    f"[green3][-] ** Key file created **\n\n"
-    f"[white][-] Key file saved in : [yellow3]{key_file_dir}\n"
-    f"[white][-] Key file name     : [yellow3]{full_key_path.name}\n\n"
-    f"[green3][-] ** Key file hashed **\n\n"
-    f"[white][-] Key file hash verification saved in : [yellow3]{key_file_hash_file.parent}\n"
-    f"[white][-] Key file hash file name             : [yellow3]{key_file_hash_file.name}\n"
-    f"[white][-] Key file hash value (SHA256)        : [yellow3]{key_file_hash_value}\n\n"
-    "[white]------------------------------------------"
+            "\n[white]------------------------------------------\n\n"
+            f"[green3][-] ** Key file created **\n\n"
+            f"[white][-] Key file saved in : [yellow3]{key_file_dir}\n"
+            f"[white][-] Key file name     : [yellow3]{full_key_path.name}\n\n"
+            f"[green3][-] ** Key file hashed **\n\n"
+            f"[white][-] Key file hash verification saved in : "
+            f"[yellow3]{key_file_hash_file.parent}\n"
+            f"[white][-] Key file hash file name             : "
+            f"[yellow3]{key_file_hash_file.name}\n"
+            f"[white][-] Key file hash value (SHA256)        : "
+            f"[yellow3]{key_file_hash_value}\n\n"
+            "[white]------------------------------------------"
     )
+
+
+    @staticmethod
+    def print_not_file_error(target_file: Path) -> str:
+        return ( console.print(
+            f"{STATUS_ICONS['failure2']}[red] File validation for "
+            f"{target_file.name} failed : the file does not exist or is "
+            "not a file."
+            )
+        )
+
+
+    @staticmethod
+    def verify_file_access(target_file: Path | str) -> bool:
+        """Returns True if the user has permission to read the file."""
+        if not os.access(target_file, os.R_OK):
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] The current user does "
+                f"not have the correct permissions to process {target_file.name}"
+            )
+            return False
+        else:
+            return True
+
+
+    @staticmethod
+    def verify_is_directory(target_dir: Path | str) -> bool:
+        """Returns true if target_dir points to a directory."""
+        if not target_dir.is_dir():
+            console.print(
+                f"{STATUS_ICONS['failure2']}[red] {target_dir} does not exist "
+                "or is not a valid directory."
+            )
+            return False
+        else:
+            return True
