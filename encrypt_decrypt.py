@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 # DLU : 03-Aug-2026
 
-import logging
+
 from rich.console import Console
 import signal
 import sys
@@ -26,19 +26,17 @@ console = Console()
 
 class App:
 
-    def __init__(self):
-        setup_logging()
-        self.logger = logging.getLogger(__name__)
-
 
     @staticmethod
     def handle_sigint(sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         console.print(
             f"[!] Interrupted at line {frame.f_lineno} in "
-            f"{frame.f_code.co_filename}")
+            f"{frame.f_code.co_filename}"
+        )
         console.print(
-            "\n[bright_yellow][!] Operation cancelled by user. Exiting...")
+            "\n[bright_yellow][!] Operation cancelled by user. Exiting..."
+        )
         sys.exit(0)
 
 
@@ -47,9 +45,6 @@ class App:
         """Main function where the user can pick what option they want."""
 
         initial_choice = show_main_app_menu()
-
-        self.logger.info(
-            f"User selected {initial_choice}. Continuing...")
 
         match initial_choice:
 
@@ -60,7 +55,7 @@ class App:
                 match encryption_choice:
                     case "1":
                         Functions.clear_screen()
-                        KEY.get_key_action_choice(action=action)
+                        KEY.get_key_action(action=action)
                     case "2":
                         Functions.clear_screen()
                         AES.get_aes_action(action=action)
