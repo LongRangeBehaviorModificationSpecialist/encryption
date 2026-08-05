@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 04-Aug-2026
+# DLU : 05-Aug-2026
 
 
 import base64
@@ -9,7 +9,7 @@ from rich.prompt import Prompt
 from typing import List
 
 from . import console
-from resources.vars import ENCRYPTED_EXT_LIST
+from resources.vars import ENCRYPTED_EXT_LIST, STATUS_ICONS
 from resources.functions import Functions
 from resources.prompts import (
     show_main_menu,
@@ -24,23 +24,39 @@ class Action(StrEnum):
 
 class XOR:
 
-    _ACTION_MAP = {
-        "1": (Action.ENCRYPT, "message"),
-        "2": (Action.DECRYPT, "message"),
-        "3": (Action.ENCRYPT, "single"),
-        "4": (Action.DECRYPT, "single"),
-        "5": (Action.ENCRYPT, "folder"),
-        "6": (Action.DECRYPT, "folder")
+    """XOR-based file encryption/decryption class.
+
+    Provides single-file and directory-wide processing with automatic
+    output naming based on file suffix detection (.xor = encrypted).
+    """
+
+    # Class-level constant for menu routing
+    _XOR_ACTION_MAP = {
+        "1": "message",
+        "2": "message",
+        "3": "file",
+        "4": "file",
+        "5": "folder",
+        "6": "folder"
     }
 
+    def __init__(self, default_chunk_size: int = 64 * 1024):
+        """Initialize the XOR processor.
 
-    def get_xor_key_prompt(self) -> str:
-        """Returns prompt for user input of the XOR key."""
-        return Prompt.ask(
-            "\n[bright_white][-] Enter the key you want to use for the XOR "
-            "operation ",
+        Args:
+            default_chunk_size: Bytes to read/write per iteration for large file handling.
+        """
+        self.default_chunk_size = default_chunk_size
+
+
+    def get_xor_key(self) -> str:
+        """Returns a UTF-8 encoded XOR key."""
+        xor_key = Prompt.ask(
+            f"{STATUS_ICONS['info']}[white] Enter the key you want to use for "
+            "the XOR operation ",
             password=True
         )
+        return xor_key.encode("utf-8")
 
 
     def _xor_bytes(self, data: bytes, key: bytes) -> bytes:
@@ -49,15 +65,15 @@ class XOR:
         return bytes(b ^ key[i % key_len] for i, b in enumerate(data))
 
 
-    def _handle_xor_process_msg(self, action: Action) -> None:
+    def _handle_xor_process_msg(self) -> None:
         message = Prompt.ask(
-            "\n[bright_white][-] Enter the message string you "
-            "want to process with XOR ")
-        xor_key = self.get_xor_key_prompt()
+            f"{STATUS_ICONS['info']}[white] Enter the message you want to "
+            "process with XOR "
+        )
+        xor_key = self.get_xor_key()
         self.xor_process_msg(
             xor_key=xor_key,
             message=message,
-            action=action.value,
         )
 
 
@@ -66,7 +82,7 @@ class XOR:
             message: str,
             xor_key: str,
             action: str,
-            output_file: Path | str = "encrypted_msg.txt"
+            output_file: Path | str = "processed_msg.txt",
     ) -> str:
         """XOR encrypts or decrypts a text string, outputs Base64
         representation, and saves raw bytes to disk.
@@ -103,8 +119,8 @@ class XOR:
                 f.write(processed_data)
 
             console.print(
-                "[green][-] ** Action successful **\nThe Base64-encoded "
-                f"processed message is:\n\t[bright_white]{processed_data}\n\t"
+                "[green3][*] Action successful\nThe Base64-encoded "
+                f"processed message is:\n  [white]{processed_data}\n  "
                 f"[dim]Raw encrypted bytes saved to : {output_file.resolve()}"
             )
 
@@ -112,249 +128,257 @@ class XOR:
 
         except Exception as e:
             console.print(
-                f"Could not write encrypted message to {output_file} : {e}"
+                "[red][!] Could not write encrypted message to "
+                f"{output_file} : {e}"
             )
+
+
+    def _handle_xor_process_file(self) -> None:
+        target_file = Functions.get_file_path()
+        xor_key = self.get_xor_key()
+        self.xor_process_file(
+            target_file=target_file,
+            xor_key=xor_key,
+        )
 
 
     def xor_process_file(
             self,
             target_file: Path | str,
             xor_key: bytes,
-            full_dir: bool = False
-    ) -> None:
-        """XOR encrypts a file by reading/writing raw binary streams."""
-        target_file = Path(target_file)
+            output_path: Path | str | None = None,
+            chunk_size: int | None = None,
+    ) -> Path:
+        """Encrypts or decrypts a file using XOR with a repeating key.
 
-        if not xor_key:
-            raise ValueError("XOR encryption key cannot be empty.")
+        Since XOR is symmetric, encryption and decryption use the same
+        operation. Output naming is determined by the presence of .xor suffix.
+
+        Args:
+            target_file: Path to the file to process.
+            xor_key: The XOR key as bytes.
+            output_path: Custom output path. If None, derived from the input.
+            chunk_size: Bytes to read/write per iteration (default: 64 KB).
+
+        Returns:
+            Path: Path to the resulting processed file.
+
+        Raises:
+            FileNotFoundError: If the target file does not exist.
+            ValueError: If the key is empty.
+        """
+        target_file = Path(target_file).resolve()
 
         if not target_file.is_file():
             console.print(
-                f"\n[bright_red][!] {target_file.name} does not exist or "
-                "is a directory.")
-            raise FileNotFoundError(
-                f"Invalid target file: {target_file}")
+                f"[red]✗ {target_file.name} does not exist or is a "
+                "directory."
+            )
+            raise FileNotFoundError(f"Invalid target file : {target_file}")
 
-        if not full_dir:
-            output_file_path = target_file.with_name(
-                target_file.name + ".encrypted")
+        if not xor_key:
+            console.print("The XOR key must not be empty.")
+            raise ValueError("XOR key must not be empty.")
+
+        key_len = len(xor_key)
+        chunk_size = chunk_size or self.default_chunk_size
+
+        # --- Determine output path ---
+        if output_path:
+            output_file = Path(output_path).resolve()
+        elif target_file.suffix.lower() == ".xor":
+            # File looks encrypted → decrypt → strip .xor
+            output_file = target_file.with_suffix("")
         else:
-            parent_dir_path = target_file.parents[1]
-            current_dir_name = target_file.parent.stem
-            encrypted_dir_path = parent_dir_path/ f"{current_dir_name}_encrypted"
-            # Create directory if it doesn't exist
-            encrypted_dir_path.mkdir(parents=True, exist_ok=True)
-            output_file_path = encrypted_dir_path / (target_file.name + ".encrypted")
-
-
-        # key_bytes = xor_key.encode("utf-8")
-        key_bytes = xor_key
+            # File looks unencrypted → encrypt → add .xor
+            output_file = target_file.with_name(f"{target_file.name}.xor")
 
         try:
+            file_size = target_file.stat().st_size
             console.print(
-                "\n[bright_white][-] Reading file : [khaki3]"
-                f"{target_file.name}")
+                f"[white][-] Processing file : {target_file.name} "
+                f"({file_size:,} bytes)..."
+            )
 
-            plaintext = target_file.read_bytes()
+            bytes_processed = 0
+
+            with open(target_file, "rb") as fin, open(output_file, "wb") as fout:
+                while True:
+                    chunk = fin.read(chunk_size)
+                    if not chunk:
+                        break
+
+                    offset =bytes_processed % key_len
+                    xor_result = bytes(
+                        byte ^ xor_key[(offset + i) % key_len]
+                        for i, byte in enumerate(chunk)
+                    )
+
+                    fout.write(xor_result)
+                    bytes_processed += len(chunk)
+
+                    progress = (bytes_processed / file_size) * 100
+                    console.print(
+                        f"[white][-] Progress : {progress:.1f}%",
+                        end=""
+                    )
             console.print(
-                "[bright_white][-] File content read successfully")
+                f"\n[green3][*] Processed {target_file.name:34s}{'->':7s}"
+                f"{output_file.name}"
+            )
 
-            console.print(
-                f"[bright_white][-] Encrypting file data...")
-
-            encrypted_data = XOR._xor_bytes(plaintext, key_bytes)
-
-            output_file_path.write_bytes(encrypted_data)
-
-            console.print(
-                f"[green][*] Success : [khaki3]"
-                f"{target_file.name} -> {output_file_path.name}")
-
-            return output_file_path
+            return output_file
 
         except Exception as e:
+            # Clean up partial output on failure
+            if output_file.exists():
+                output_file.unlink(missing_ok=True)
             console.print(
-                f"\n[bright_red][!] Failed to encrypt {target_file.name} "
-                f": {e}")
+                f"[red][!] Failed to process {target_file.name} : {e}")
+            raise
 
+
+    def _handle_xor_process_folder(self) -> None:
+        target_dir = Functions.get_directory_path()
+        xor_key = self.get_xor_key()
+        recursive = Functions.select_recursive_option()
+        self.xor_process_folder(
+            target_dir=target_dir,
+            xor_key=xor_key,
+            recursive=recursive,
+
+        )
 
     def xor_process_folder(
             self,
             target_dir: Path | str,
-            xor_key: str,
-            action: str
+            xor_key: bytes | str,
+            recursive: bool = False,
+            chunk_size: int | None = None,
     ) -> List[Path]:
-        """XOR encrypts all files within a directory by reading/writing raw
-        binary streams.
+        """Processes all files in a directory using XOR.
+
+        Encryption and decryption use the same operation. Files with .xor
+        suffix are automatically detected and stripped during decryption.
+
+        Args:
+            target_dir: Path to the directory containing files.
+            xor_key: The XOR key as bytes.
+            recursive: Traverse subdirectories if True.
+            chunk_size: Bytes to read/write per iteration (for handling
+                large files).
+
+        Returns:
+            List[Path]: List of successfully processed file paths.
+
+        Raises:
+            FileNotFoundError: If target directory does not exist.
+            ValueError: If the action is invalid.
         """
-        results = {"success": [], "failed": [], "skipped": []}
         target_dir = Path(target_dir).resolve()
 
         if not Functions.verify_is_directory(target_dir=target_dir):
             console.print(
-                f"{target_dir} does not exist or is not a valid directory"
+                f"[red]✗ {target_dir} does not exist or is not a "
+                "valid directory"
             )
             return
 
         console.print(
-            f"\n[green][*] {target_dir} validated. Fetching targets..."
+            f"[green3]✓ {target_dir} validated. Fetching files to process..."
         )
 
         try:
+            # Build file iterator based on recursion flag
+            files_iterator = (
+                target_dir.rglob("*") if recursive else target_dir.iterdir()
+            )
+
             all_files = [
-                f for f in target_dir.rglob("*")
-                if f.is_file() and f.suffix != ".encrypted"
+                f for f in files_iterator
+                if f.is_file()
+                and f.suffix not in ENCRYPTED_EXT_LIST
             ]
+
         except Exception as e:
             console.print(
-                "\n[bright_red][!] Failed to retrieve files from "
-                f"{target_dir} : {e}"
+                f"[red]✗ Failed to retrieve files from {target_dir} : {e}"
             )
-            return
+            return []
 
         if not all_files:
             console.print(
-                f"\n[yellow][!] No valid files to encrypt in {target_dir}"
+                f"[yellow3]⚠️ No valid files to encrypt in {target_dir}"
             )
-            return
+            return []
 
-        for file_path in all_files:
+        successful_files: List[Path] = []
+        failed_files: List[Path] = []
+        total_files = len(all_files)
+
+
+        for idx, file_path in enumerate(all_files, start=1):
+            # Progress indicator
+            progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
+            console.print(
+                f"[cyan][{progress_bar}] Processing: {file_path.name}...",
+                end=""
+            )
+
             try:
-                encrypted_path = XOR.xor_process_file(
+                result_path = self.xor_process_file(
                     target_file=file_path,
                     xor_key=xor_key,
-                    full_dir=True)
-                results['success'].append({
-                    "original": str(file_path),
-                    "encrypted": str(encrypted_path)}
+                    chunk_size=chunk_size,
                 )
+                successful_files.append(result_path)
+
             except Exception as e:
                 console.print(
-                    f"[bright_red][!] Error encrypting {file_path.name} -> {e}"
+                    f"[red]✗ Error during processing {file_path.name} : {e}"
                 )
-                results['failed'].append({
-                    "path": str(file_path),
-                    "error": str(e)}
-                )
+                failed_files.append(file_path)
 
-        if results['success']:
+        # Summary reporting
+        console.print("\n" + "-" * 35)
+
+        if successful_files:
             console.print(
-                f"\n[green][*] Action Completed \nSuccessfully {action}ed "
-                f"{len(results['success'])} files in {target_dir} :"
+                f"[green3]✓ Action Completed\n"
+                f"[green3] Successfully processed {len(successful_files)} "
+                f"files in {target_dir}:"
             )
-            encrypted_paths = [
-                item['path'] for item in results['success']
-            ]
-            for path in encrypted_paths:
-                console.print(
-                    f"[green]  {str(path)}")
+            for file in successful_files:
+                console.print(f"[green]  {file.name}")
 
-        if results['failed']:
+        if failed_files:
             console.print(
-                "\n[bright_red][!] ** Warning **\nFailed to encrypt "
-                f"{len(results['failed'])} files :"
+                f"[red][!] ** Warning **"
+                f"[red]Failed to process {len(failed_files)} files:"
             )
-            failed_paths = [
-                item['path'] for item in results['failed']
-            ]
-            for path in failed_paths:
-                console.print(f"[bright_red]  {str(path)}")
+            for file in failed_files:
+                console.print(f"[red]  {file.name}")
 
-        console.print(results)
-
-        return results
+        return successful_files
 
 
-    def get_xor_message_to_decrypt(self) -> str:
-        return Prompt.ask(
-            "\n[bright_white][-] Enter the message string you want to decrypt "
-        )
-
-
-    def get_xor_file_to_decrypt(self) -> Path:
-        return Path(
-            Functions.get_file_path()
-        )
-
-
-    def get_xor_action(self, action: str) -> None:
+    @classmethod
+    def get_xor_action(cls) -> None:
         """Gets input from the user on what action to start next."""
         xor_choice = show_xor_menu()
         match xor_choice:
             case "1" | "2" | "3" | "4" | "5" | "6":
-                action, scope = self._ACTION_MAP[xor_choice]
+                scope = cls._XOR_ACTION_MAP[xor_choice]
                 if scope == "message":
-                    self._handle_xor_process_msg(action)
-                elif scope == "single":
-                    self._handle_xor_process_file(action)
+                    cls._handle_xor_process_msg(XOR)
+                elif scope == "file":
+                    cls._handle_xor_process_file(XOR)
                 else:
-                    self._handle_xor_process_folder(action)
+                    cls._handle_xor_process_folder(XOR)
             case "r":
+                Functions.clear_screen()
                 show_main_menu()
             case "q":
                 Functions.exit_application()
-
-
-
-
-
-
-
-
-        while True:
-            Functions.clear_screen()
-            try:
-                action = action.lower().strip()
-
-                if action == "encrypt":
-                    xor_encryption_choice = show_xor_encryption_menu()
-                    match xor_encryption_choice:
-                        case "1":
-                            message = Prompt.ask(
-                                "\n[bright_white][-] Enter the message string you "
-                                "want to XOR encrypt ")
-                            xor_key = XOR.get_xor_key_prompt()
-                            XOR.xor_encrypt_msg(
-                                xor_key=xor_key,
-                                message=message)
-                        case "2":
-                            target_file = Functions.get_file_path(
-                                text="encrypted")
-                            xor_key = XOR.get_xor_key_prompt()
-                            XOR.xor_process_file(
-                                target_file=target_file,
-                                xor_key=xor_key)
-                        case "3":
-                            target_dir = Functions.get_directory_path(
-                                text="encrypted")
-                            xor_key = XOR.get_xor_key_prompt()
-                            XOR.xor_process_folder(
-                                target_dir=target_dir,
-                                xor_key=xor_key)
-
-
-                elif action == "decrypt":
-                    xor_decryption_choice = show_xor_decryption_menu()
-                    match xor_decryption_choice:
-                        case "1":
-                            pass
-                        case "2":
-                            pass
-                        case "3":
-                            pass
-                        case "r":
-                            Functions.clear_screen()
-                            show_main_app_menu()
-                        case "q":
-                            Functions.exit_application()
-
-            except KeyboardInterrupt:
-                console.print(
-                    "\n[yellow][!] Operation cancelled by user.")
-                break
-
-            except Exception as e:
-                console.print(
-                    f"\n[bright_red][!] An error occured when processing : {e}")
-                Prompt.ask(
-                    "\n[bright_white][-] Press Enter to continue...")
+            case _:
+                console.print("[yellow3]⚠️ An invalid option was entered")

@@ -66,7 +66,7 @@ GnuPG."
     def print_status(self, status: gnupg.GPG) -> None:
         """Prints GPG action execution status to terminal."""
         if getattr(status, "ok", False):
-            c.print(f"""[green]
+            c.print(f"""[green3]
 [-] GPG operation successful.\n{status.stderr}"""
             )
         else:
@@ -75,7 +75,7 @@ GnuPG."
                 "status",
                 getattr(status, "stderr", "Unknown Error"),
             )
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [-] GPG operation WAS NOT successful : {status_msg}"""
             )
 
@@ -98,7 +98,7 @@ GnuPG."
                 f"Failed to export public key for Key ID '{keyid}'"
             )
 
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Public key exported successfully to {self.public_key_file.name}"""
         )
 
@@ -128,7 +128,7 @@ GnuPG."
                 f"Failed to export private key for Key ID '{keyid}'. \
 Check keyid/passphrase."
             )
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Private key exported successfully to {self.private_key_file.name}"""
         )
 
@@ -170,7 +170,7 @@ Check keyid/passphrase."
             )
 
         fingerprint = str(key.fingerprint)
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Generated Key Fingerprint: {fingerprint}."""
         )
 
@@ -214,7 +214,7 @@ Check keyid/passphrase."
                 "At least one recipient email or key ID must be provided."
             )
 
-        c.print(f"[bright_white][-] Encrypting data..."
+        c.print(f"[white][-] Encrypting data..."
         )
         encrypted_file_path = target_file.with_name(
             f"{target_file.name}.pgp"
@@ -256,7 +256,7 @@ GPG status: {error_msg}"
         if hasattr(self, "print_status"):
             self.print_status(status)
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 [-] PGP file encrypted successfully : {encrypted_file_path.name}"""
         )
 
@@ -289,7 +289,7 @@ GPG status: {error_msg}"
             files = [f for f in target_dir.rglob("*") if f.is_file()]
 
         except Exception as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Failed to retrieve files from {target_dir}: {e}."""
             )
             return []
@@ -301,7 +301,7 @@ GPG status: {error_msg}"
         ]
 
         if not files_to_encrypt:
-            c.print(f"""[yellow]
+            c.print(f"""[yellow3]
 [!] No valid files to encrypt in {target_dir}"""
             )
             return []
@@ -322,29 +322,29 @@ GPG status: {error_msg}"
                     f"Failed to PGP-encrypt file: {file_path}",
                     exc_info=True
                 )
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] Error encrypting {file_path.name}: {e}"""
                 )
                 failed_encryptions.append(file_path)
 
         if successful_encryptions:
-            c.print(f"""[green]
+            c.print(f"""[green3]
 ** Action Completed **
 Successfully PGP-encrypted {len(successful_encryptions)} files in \
 {target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
-                c.print(f"""[green]
+                c.print(f"""[green3]
     {encrypted_file.name}"""
                 )
 
         if failed_encryptions:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 ** Warning **
 Failed to encrypt {len(failed_encryptions)} files in {target_dir} :"""
             )
             for failed_file in failed_encryptions:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
     {failed_file.name}"""
                 )
 
@@ -361,13 +361,13 @@ Failed to encrypt {len(failed_encryptions)} files in {target_dir} :"""
 ---------------------------------------
 ENCRYPT FILE(S) USING PGP KEY
 ---------------------------------------\n
-[khaki3]Choose an option ->[bright_white]\n
+[yellow3]Choose an option ->[white]\n
 [1] Generate new PGP key pair
 [2] Encrypt files using PGP encryption
 [3] Encrypt all files in a directory using PGP keys\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[yellow3]ENTER CHOICE """,
                         choices=["1", "2", "3", "r", "q"],
                         show_choices=False,
                     )
@@ -390,10 +390,10 @@ ENCRYPT FILE(S) USING PGP KEY
                     email_address = Functions.get_email_address()
 
                     if not password.strip() or not email_address.strip():
-                        c.print("""[yellow]
+                        c.print("""[yellow3]
 [!] Key generation cancelled : Missing password or email."""
                         )
-                        Prompt.ask("""[bright_white]
+                        Prompt.ask("""[white]
 Press Enter to return to menu..."""
                         )
                         continue
@@ -409,14 +409,14 @@ Press Enter to return to menu..."""
                     if not raw_path or not raw_path.strip():
                         continue
 
-                    recipient = Prompt.ask("""[bright_white]
+                    recipient = Prompt.ask("""[white]
 [-] Enter recipient email or Key ID : """
                     ).strip()
                     if not recipient:
-                        c.print("""[yellow]
+                        c.print("""[yellow3]
 [!] Encryption cancelled : No recipient specified."""
                         )
-                        Prompt.ask("""[bright_white]
+                        Prompt.ask("""[white]
 Press Enter to continue..."""
                         )
                         continue
@@ -432,14 +432,14 @@ Press Enter to continue..."""
                     if not raw_dir or not raw_dir.strip():
                         continue
 
-                    recipient = Prompt.ask("""[bright_white]
+                    recipient = Prompt.ask("""[white]
 [-] Enter recipient email or Key ID """
                     ).strip()
                     if not recipient:
-                        c.print("""[yellow]
+                        c.print("""[yellow3]
 [!] Encryption cancelled : No recipient specified."""
                         )
-                        Prompt.ask("""[bright_white]
+                        Prompt.ask("""[white]
 Press Enter to continue..."""
                         )
                         continue
@@ -451,19 +451,19 @@ Press Enter to continue..."""
 
                 # Pause after task completion so user can read output before
                 # screen clears
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
-                c.print("""[yellow]
+                c.print("""[yellow3]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] An error occured during processing: {e}."""
                 )
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to continue..."""
                 )

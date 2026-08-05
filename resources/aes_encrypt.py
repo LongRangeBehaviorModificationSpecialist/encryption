@@ -65,7 +65,7 @@ class AESEncryptor:
                 f"Invalid mode : {mode}. Expected one of {valid_modes}"
             )
 
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Reading file : {target_file.name}...""")
         plaintext = target_file.read_bytes()
 
@@ -74,7 +74,7 @@ class AESEncryptor:
         iv = os.urandom(self.IV_LENGTH)
         key = self._derive_key(password, salt)
 
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Encrypting file data..."""
         )
         encrypted_file_path = target_file.with_name(
@@ -109,7 +109,7 @@ class AESEncryptor:
         encrypted_file_path.write_bytes(combined_payload)
 
         # UI Output
-        c.print(f"""[green]
+        c.print(f"""[green3]
 [-] Encrypted {target_file.name:34s}{'->':7s}{encrypted_file_path.name}"""
         )
         c.print(
@@ -151,7 +151,7 @@ class AESEncryptor:
         try:
             all_files = Functions.get_all_files(target_dir=target_dir)
         except Exception as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Failed to retrieve files from {target_dir} : {e}"""
             )
             return []
@@ -162,7 +162,7 @@ class AESEncryptor:
         ]
 
         if not files_to_encrypt:
-            c.print(f"""[yellow]
+            c.print(f"""[yellow3]
 [!] No valid files to encrypt in {target_dir}"""
             )
             return []
@@ -183,30 +183,30 @@ class AESEncryptor:
                     f"Failed to encrypt file : {file_path}",
                     exc_info=True
                 )
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] Error encrypting {file_path.name} : {e}."""
                 )
                 failed_encryptions.append(file_path)
 
         if successful_encryptions:
-            c.print(f"""[green]
+            c.print(f"""[green3]
 ** Action Completed **
 Successfully encrypted {len(successful_encryptions)} files in \
 {target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
-                c.print(f"""[green]
+                c.print(f"""[green3]
     {encrypted_file.name}"""
                 )
 
         if failed_encryptions:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 ** Warning **
 Failed to encrypt {len(failed_encryptions)} files :"""
             )
             for failed_file in failed_encryptions:
                 c.print(
-                    f"""[bright_red]
+                    f"""[red]
     {failed_file.name}"""
                 )
 
@@ -223,12 +223,12 @@ Failed to encrypt {len(failed_encryptions)} files :"""
 ----------------------------------------------------
 USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 ----------------------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[yellow3]Choose an option :[white]\n
 [1] Encrypt a single file using a password
 [2] Encrypt all files in a directory using a password\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[yellow3]ENTER CHOICE """,
                         choices=["1", "2", "r", "q"],
                         show_choices=False,
                     )
@@ -246,7 +246,7 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
                     return
 
                 encryption_option = (
-                    Prompt.ask("""[bright_white]
+                    Prompt.ask("""[white]
 [-] Select encryption method """,
                         choices=["1=AES-CBC", "2=AES-GCM", "R=Back"],
                         show_choices=True,
@@ -294,19 +294,19 @@ USE PASSWORD TO ENCRYPT FILE(S) [AES-CBC / AES-GCM]
 
                 # Pause after task completion so user can read output before
                 # screen clears
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
-                c.print("""[yellow]
+                c.print("""[yellow3]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] An error occured during processing : {e}"""
                 )
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to continue..."""
                 )

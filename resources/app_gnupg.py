@@ -35,11 +35,11 @@ class PGP:
 
     def print_status(self, status):
         if status.ok == True:
-            c.print(f"""[khaki3]
+            c.print(f"""[yellow3]
 [-] File encryption successful.
     {status.stderr}""")
         else:
-            c.print(f"""[red1]
+            c.print(f"""[red]
 [-] File encryption WAS NOT successful: {status.status}. Please try again.""")
 
 
@@ -57,7 +57,7 @@ class PGP:
             keyids=keyid,
             output=str(self.public_key_file)
         )
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Public key exported successfully""")
         return public_key
 
@@ -79,7 +79,7 @@ class PGP:
             passphrase=password,
             output=str(self.private_key_file)
         )
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Private key exported successfully""")
         return private_key
 
@@ -105,7 +105,7 @@ class PGP:
         key = self.gpg.gen_key(input_data)
         keyid = str(key)
 
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Generated Key ID: {keyid}""")
 
         self.pgp_export_public_key(keyid=keyid)
@@ -150,21 +150,21 @@ class PGP:
 
     def pgp_encrypt_folder(self, folder_path: Path) -> None:
         folder = Path(folder_path)
-        delete_originals = Prompt.ask(f"""[khaki3]
+        delete_originals = Prompt.ask(f"""[yellow3]
 [-] Do you want to delete the original files after encryption (y/n)? """).strip().lower()
 
         if delete_originals not in ["y", "n"]:
-            c.print("""[khaki3]\n[!] Seriously, you did not enter a valid \
+            c.print("""[yellow3]\n[!] Seriously, you did not enter a valid \
 option. Exiting...""")
             sys.exit(0)
 
         if delete_originals == "y":
-            choice = Prompt.ask(f"""[khaki3]
+            choice = Prompt.ask(f"""[yellow3]
 [-] All of the original files in this directory will be [orange_red1]\
-PERMANENTLY DELETED! [khaki3]Are you sure you wish to continue (y/n)? """).strip().lower()
+PERMANENTLY DELETED! [yellow3]Are you sure you wish to continue (y/n)? """).strip().lower()
 
             if choice != "y":
-                c.print("[khaki3]Exiting program. Please wait...")
+                c.print("[yellow3]Exiting program. Please wait...")
                 sys.exit(0)
 
         status = None

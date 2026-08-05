@@ -66,14 +66,14 @@ class DataEncryptor:
                         )
 
                     console.print(
-                        f"""[bright_white]
+                        f"""[white]
 [-] Reading file : {target_file.name}..."""
                     )
                     # Read plaintext data
                     plaintext = target_file.read_bytes()
 
                     console.print(
-                        f"""[bright_white]
+                        f"""[white]
 [-] Encrypting file data...""")
 
                     if "KEY" in encryption_type:
@@ -102,7 +102,7 @@ class DataEncryptor:
                         )
 
                     console.print(
-                        """[bright_white]
+                        """[white]
 [-] Writing encrypted data to file..."""
                     )
 
@@ -113,7 +113,7 @@ class DataEncryptor:
                         )
                         encrypted_file_path.write_bytes(encrypted_data)
                         console.print(
-                            f"""[green]
+                            f"""[green3]
 [-] Encrypted {target_file.name:34s}{'->':7s}{encrypted_file_path.name}"""
                         )
                     else:
@@ -136,7 +136,7 @@ class DataEncryptor:
 
             except Exception as e:
                 console.print(
-                    f"""[bright_red]
+                    f"""[red]
 [!] An unexpected error occured during encryption : {e}"""
                 )
 

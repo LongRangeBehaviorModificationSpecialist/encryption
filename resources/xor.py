@@ -28,11 +28,11 @@ class XOREncryption:
         with open(xor_enc_msg_file, "w") as f:
             f.write(encrypted_text)
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 ==========================================
 ** ACTION SUCCESSFUL **\n
 The encrypted message is:\n
-    [bright_white]{encrypted_text}\n
+    [white]{encrypted_text}\n
 ==========================================""")
 
 
@@ -55,7 +55,7 @@ The encrypted message is:\n
         with open(xor_enc_file, "w", encoding="utf-8") as f:
             f.write(encrypted_data)
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 ==========================================
 ** ACTION SUCCESSFUL **\n
     File Encrypted with XOR key
@@ -77,11 +77,11 @@ class XORDecryptor:
             decrypted_message += chr(
                 ord(text_to_decrypt) ^ ord(key_to_decrypt))
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 ==========================================
 ** ACTION SUCCESSFUL **\n
 The original message is:\n
-    [bright_white]{decrypted_message}\n
+    [white]{decrypted_message}\n
 ==========================================""")
 
 
@@ -107,7 +107,7 @@ The original message is:\n
         with open(decrypted_file, "w") as f:
             f.write(decrypted_data)
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 ==========================================
 ** ACTION SUCCESSFUL **\n
     File Decrypted with XOR key

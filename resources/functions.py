@@ -41,7 +41,7 @@ class Functions:
     @staticmethod
     def exit_application() -> None:
         console.print(
-            "\n\n[green][-] Exiting the application...\n"
+            "\n\n[green3][-] Exiting the application...\n"
             )
         sys.exit(0)
 
@@ -58,7 +58,7 @@ class Functions:
     @staticmethod
     def get_file_path() -> str:
         return Prompt.ask(
-            "\n[bright_white][-] Enter the path of the file to be processed "
+            "\n[white][-] Enter the path of the file to be processed "
             ).strip("\"'")
 
     @staticmethod
@@ -66,7 +66,7 @@ class Functions:
         """Returns True if the path points to a regular file."""
         if not target_file.is_file():
             console.print(
-                f"[bright_red][!] {target_file.name} does not exist or "
+                f"[red][!] {target_file.name} does not exist or "
                 "is a directory."
                 )
             return False
@@ -78,7 +78,7 @@ class Functions:
         """Returns True if the user has permission to read the file."""
         if not os.access(target_file, os.R_OK):
             console.print(
-                "[bright_red][!] The logged in user does not have read "
+                "[red][!] The logged in user does not have read "
                 f"permissions for {target_file.name}"
                 )
             return False
@@ -88,7 +88,7 @@ class Functions:
     @staticmethod
     def get_directory_path() -> str:
         return Prompt.ask(
-            "\n[bright_white][-] Enter the full path of the directory "
+            "\n[white][-] Enter the full path of the directory "
             "containing the files to be processed "
             ).strip("\"'")
 
@@ -98,7 +98,7 @@ class Functions:
         """Returns true if target_dir points to a directory."""
         if not target_dir.is_dir():
             console.print(
-                f"[bright_red][!] {target_dir} does not exist or is not a "
+                f"[red][!] {target_dir} does not exist or is not a "
                 "valid directory.")
             return False
         else:
@@ -109,7 +109,7 @@ class Functions:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input =Prompt.ask(
-                "\n[bright_white][?] Process subdirectories recursively? ",
+                "\n[white][?] Process subdirectories recursively? ",
                 choices=["y", "n"],
                 show_choices=True
                 ).strip().lower()
@@ -119,7 +119,7 @@ class Functions:
                 case "n":
                     return False
             console.print(
-                "\n[bright_red][!] Invalid input. Enter either 'y' or 'n'."
+                "\n[red][!] Invalid input. Enter either 'y' or 'n'."
                 )
 
     @staticmethod
@@ -143,7 +143,7 @@ class Functions:
                 password_bytes[i] = 0
 
             console.print(
-                "\n[bright_red][!] Not a valid password. Please try again."
+                "\n[red][!] Not a valid password. Please try again."
                 )
 
     @staticmethod
@@ -185,7 +185,7 @@ class Functions:
                 and has_upper
                 and has_lower
                 and has_symbol):
-            console.print("""[bright_red]
+            console.print("""[red]
     Your password did not meet the minimun requirements. Please try again.\n
     Your password must meet the following criteria :\n
     [-] Is at least ten (10) characters long
@@ -197,7 +197,7 @@ class Functions:
             return False
         else:
             console.print(
-                f"\n[bright_white][-] Your password meets the minimum "
+                f"\n[white][-] Your password meets the minimum "
                 "requirements. Continuing..."
                 )
             return True
@@ -205,13 +205,13 @@ class Functions:
     @staticmethod
     def get_email_address() -> str:
         return Prompt.ask(
-            "\n[bright_white][-] Enter email address of the PGP key owner "
+            "\n[white][-] Enter email address of the PGP key owner "
             ).strip().lower()
 
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:
         return console.print(
-            f"\n[green][*] Action Successful\n[khaki3]The {text} file "
+            f"\n[green3][*] Action Successful\n[yellow3]The {text} file "
             f"was saved as : {file_name}"
             )
 
@@ -237,13 +237,13 @@ class Functions:
             key_file_hash_value: str
     ) -> str:
         return (
-    "[bright_white]------------------------------------------\n\n"
-    f"[green][-] ** Key file created **\n\n"
-    f"[bright_white][-] Key file saved in : [khaki3]{key_file_dir}\n"
-    f"[bright_white][-] Key file name     : [khaki3]{full_key_path.name}\n\n"
-    f"[green][-] ** Key file hashed **\n\n"
-    f"[bright_white][-] Key file hash verification saved in : [khaki3]{key_file_hash_file.parent}\n"
-    f"[bright_white][-] Key file hash file name             : [khaki3]{key_file_hash_file.name}\n"
-    f"[bright_white][-] Key file hash value (SHA256)        : [khaki3]{key_file_hash_value}\n\n"
-    "[bright_white]------------------------------------------"
+    "[white]------------------------------------------\n\n"
+    f"[green3][-] ** Key file created **\n\n"
+    f"[white][-] Key file saved in : [yellow3]{key_file_dir}\n"
+    f"[white][-] Key file name     : [yellow3]{full_key_path.name}\n\n"
+    f"[green3][-] ** Key file hashed **\n\n"
+    f"[white][-] Key file hash verification saved in : [yellow3]{key_file_hash_file.parent}\n"
+    f"[white][-] Key file hash file name             : [yellow3]{key_file_hash_file.name}\n"
+    f"[white][-] Key file hash value (SHA256)        : [yellow3]{key_file_hash_value}\n\n"
+    "[white]------------------------------------------"
     )

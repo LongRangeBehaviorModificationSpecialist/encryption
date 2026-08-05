@@ -95,7 +95,7 @@ class AESDecryptor:
                 f"Invalid mode : {mode}. Expected one of {valid_modes}."
             )
 
-        c.print(f"""[bright_white]
+        c.print(f"""[white]
 [-] Reading encrypted file : {target_file.name}..."""
         )
         encrypted_data = target_file.read_bytes()
@@ -113,7 +113,7 @@ class AESDecryptor:
 ({min_expected_size} bytes)."
             )
 
-        c.print("""[bright_white]
+        c.print("""[white]
 [-] Deriving key and decrypting..."""
         )
 
@@ -173,7 +173,7 @@ file is corrupted."
 
         decrypted_file_path.write_bytes(plaintext)
 
-        c.print("""[green]
+        c.print("""[green3]
 [-] File decrypted successfully."""
         )
 
@@ -204,7 +204,7 @@ file is corrupted."
         try:
             all_files = Functions.get_all_files(target_dir=target_dir)
         except Exception as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Failed to retrieve files from {target_dir} : {e}"""
             )
             return []
@@ -215,7 +215,7 @@ file is corrupted."
         ]
 
         if not files_to_decrypt:
-            c.print(f"""[yellow]
+            c.print(f"""[yellow3]
 [!] No valid files to decrypt in {target_dir}"""
             )
             return []
@@ -236,29 +236,29 @@ file is corrupted."
                     f"Failed to decrypt file : {file_path}",
                     exc_info=True
                 )
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] Error decrypting {file_path.name} : {e}"""
                 )
                 failed_decryptions.append(file_path)
 
         if successful_decryptions:
-            c.print(f"""[green]
+            c.print(f"""[green3]
 ** Action Completed **
 [-] Successfully decrypted {len(successful_decryptions)} files in \
 {target_dir} :"""
             )
             for decrypted_file in successful_decryptions:
-                c.print(f"""[green]
+                c.print(f"""[green3]
     {decrypted_file.name}"""
                 )
 
         if failed_decryptions:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 ** Warning **
 Failed to decrypt {len(failed_decryptions)} files :"""
             )
             for failed_file in failed_decryptions:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
     {failed_file.name}"""
                 )
 
@@ -275,12 +275,12 @@ Failed to decrypt {len(failed_decryptions)} files :"""
 ----------------------------------------------------
 USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
 ----------------------------------------------------\n
-[khaki3]Options :[bright_white]\n
+[yellow3]Options :[white]\n
 [1] Decrypt a single file using a password
 [2] Decrypt all files in a directory using a password\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """),
+[yellow3]ENTER CHOICE """),
                         choices=["1", "2", "r", "q"],
                         show_choices=False,
                     )
@@ -298,7 +298,7 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
                     return
 
                 decryption_option = (
-                    Prompt.ask("""[bright_white]
+                    Prompt.ask("""[white]
 [-] Select decryption method """,
                         choices=["1=AES-CBC", "2=AES-GCM", "R-Back"],
                         show_choices=True,
@@ -348,19 +348,19 @@ USE PASSWORD TO DECRYPT FILE(S) [AES-GCM mode]
 
                 # Pause after task completion so user can read output before
                 # screen clears
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to return to the menu..."""
                 )
 
             except KeyboardInterrupt:
-                c.print("""[yellow]
+                c.print("""[yellow3]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] An error occured during processing : {e}"""
                 )
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to continue..."""
                 )

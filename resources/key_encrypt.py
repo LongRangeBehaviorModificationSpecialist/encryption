@@ -34,7 +34,7 @@ class KeyFileEncryptor:
     def _load_fernet(self, key_file_path: Path | str) -> bytes:
 
         if not key_file_path.is_file():
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Key file not found : {key_file_path}"""
             )
             # self.return_to_main_menu()
@@ -50,7 +50,7 @@ class KeyFileEncryptor:
             bytes: The generated key.
         """
         key_file_dir = Path(
-            Prompt.ask("""[bright_white]
+            Prompt.ask("""[white]
 [-] Where do you want to save the key file? """
             )
             .strip()
@@ -58,7 +58,7 @@ class KeyFileEncryptor:
         )
 
         key_file_name = (
-            Prompt.ask("""[bright_white]
+            Prompt.ask("""[white]
 [-] Enter a name for the key file (w/o file extension) """
             )
             .strip()
@@ -88,24 +88,24 @@ class KeyFileEncryptor:
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 ------------------------------------------\n
-[green][-] Key file created\n[bright_white]
-[-] Key file saved in : [khaki3]{key_file_dir}[bright_white]
-[-] Key file name : [khaki3]{full_key_path.name}\n
-[green][-] Key file hashed\n[bright_white]
-[-] Key file hash verification saved in : [khaki3]\
-{key_file_hash_file.parent}[bright_white]
-[-] Key file hash file name : [khaki3]\
-{key_file_hash_file.name}[bright_white]
-[-] Key file hash value (SHA256) : [khaki3]{key_file_hash_value}
+[green3][-] Key file created\n[white]
+[-] Key file saved in : [yellow3]{key_file_dir}[white]
+[-] Key file name : [yellow3]{full_key_path.name}\n
+[green3][-] Key file hashed\n[white]
+[-] Key file hash verification saved in : [yellow3]\
+{key_file_hash_file.parent}[white]
+[-] Key file hash file name : [yellow3]\
+{key_file_hash_file.name}[white]
+[-] Key file hash value (SHA256) : [yellow3]{key_file_hash_value}
 ------------------------------------------"""
             )
 
             return full_key_path
 
         except IOError as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Failed to write key data to file : {e}"""
             )
             raise
@@ -115,7 +115,7 @@ class KeyFileEncryptor:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
             key_file = (
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 [-] Enter the path to the .key file to use to encrypt the file """
                 )
             )
@@ -135,19 +135,19 @@ class KeyFileEncryptor:
 
         # Validation checks
         if not target_file.is_file():
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Target file not found : {target_file}"""
             )
             # self.return_to_main_menu()
             return
 
         try:
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Reading file : {target_file.name}..."""
                 )
             file_data = target_file.read_bytes()
 
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Encrypting file data..."""
             )
             encrypted_data = fernet.encrypt(file_data)
@@ -156,17 +156,17 @@ class KeyFileEncryptor:
                 f"{target_file.name}.encrypted"
             )
 
-            c.print("""[bright_white]
+            c.print("""[white]
 [-] Writing encrypted data to file..."""
             )
             encrypted_file_path.write_bytes(encrypted_data)
 
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Encrypted {target_file.name:34s}{'->':7s}{encrypted_file_path.name}"""
             )
 
         except Exception as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] An error occured during encryption : {e}"""
             )
 
@@ -195,13 +195,13 @@ class KeyFileEncryptor:
                 if f.is_file() and not f.suffix == ".encrypted"
             ]
         except Exception as e:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] Failed to retrieve files from {target_dir} : {e}"""
                 )
                 return []
 
         if not all_files:
-            c.print(f"""[yellow]
+            c.print(f"""[yellow3]
 [!] No valid files to encrypt in {target_dir}"""
             )
             return []
@@ -210,7 +210,7 @@ class KeyFileEncryptor:
         failed_encryptions: List[Path] = []
 
         for file_path in all_files:
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Reading file : {file_path.name}..."""
                 )
 
@@ -220,30 +220,30 @@ class KeyFileEncryptor:
             )
             successful_encryptions.append(encrypted_path)
 
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Error encrypting {file_path.name} : {e}."""
             )
             failed_encryptions.append(file_path)
 
         if successful_encryptions:
-            c.print(f"""[green]
+            c.print(f"""[green3]
 ** Action Completed **
 Successfully encrypted {len(successful_encryptions)} files in \
 {target_dir} :"""
             )
             for encrypted_file in successful_encryptions:
-                c.print(f"""[green]
+                c.print(f"""[green3]
     {encrypted_file.name}"""
                 )
 
         if failed_encryptions:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 ** Warning **
 Failed to encrypt {len(failed_encryptions)} files :"""
             )
             for failed_file in failed_encryptions:
                 c.print(
-                    f"""[bright_red]
+                    f"""[red]
     {failed_file.name}"""
                 )
 
@@ -259,12 +259,12 @@ Failed to encrypt {len(failed_encryptions)} files :"""
 ----------------------------------------
 ENCRYPT FILE(S) WITH A .KEY FILE
 ----------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[yellow3]Choose an option :[white]\n
 [1] Create a [bold]new[/bold] .key then encrypt
 [2] Use [bold]existing[/bold] .key to encrypt\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[yellow3]ENTER CHOICE """,
                 choices=["1", "2", "r", "q"],
                 show_choices=False,
             )
@@ -283,12 +283,12 @@ ENCRYPT FILE(S) WITH A .KEY FILE
 ---------------------------------
 ENCRYPT FILE(S) WITH A .KEY FILE
 ---------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[yellow3]Choose an option :[white]\n
 [1] Encrypt a single file using a .key file
 [2] Encrypt all files in a directory using a .key file\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[yellow3]ENTER CHOICE """,
                     choices=["1", "2", "r", "q"],
                     show_choices=False,
                 )

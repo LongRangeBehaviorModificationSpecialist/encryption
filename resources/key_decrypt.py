@@ -31,7 +31,7 @@ class KeyFileDecryptor:
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
-            key_file = Prompt.ask("""[bright_white]
+            key_file = Prompt.ask("""[white]
 [-] Enter the path to the .key file to use """
             )
             path = Path(key_file)
@@ -56,14 +56,14 @@ class KeyFileDecryptor:
 
         # Validation checks
         if not target_file.is_file():
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Target file not found : {target_file}"""
             )
             # self.return_to_main_menu()
             return
 
         if not key_file_path.is_file():
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Key file not found : {key_file_path}"""
             )
             # self.return_to_main_menu()
@@ -71,7 +71,7 @@ class KeyFileDecryptor:
 
         # Prevent decrypting a file that isn't marked as encrypted
         if target_file.suffix != ".encrypted":
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] The target file does not appear to be an .encrypted file."""
             )
             # self.return_to_main_menu()
@@ -80,16 +80,16 @@ class KeyFileDecryptor:
         try:
             # Load the key and initialize Fernet
             fernet = Fernet(key_file_path.read_bytes())
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Key file ({key_file_path.name}) loaded successfully."""
             )
 
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Reading encrypted file : {target_file.name}..."""
             )
             encrypted_data = target_file.read_bytes()
 
-            c.print("""[bright_white]
+            c.print("""[white]
 [-] Decrypting data..."""
             )
             # This will throw an InvalidToken exception if the key is wrong
@@ -109,11 +109,11 @@ class KeyFileDecryptor:
             )
 
         except InvalidToken:
-            c.print("""[bright_red]
+            c.print("""[red]
 [!] Decryption failed! The key provided is invalid for this file."""
             )
         except Exception as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] An error occurred during decryption : {e}"""
             )
 
@@ -126,14 +126,14 @@ class KeyFileDecryptor:
 
         # Validation checks
         if not target_dir.is_dir():
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Target directory not found : {target_dir}"""
             )
             # self.return_to_main_menu()
             return
 
         if not key_file_path.is_file():
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Key file not found : {key_file_path}"""
             )
             # self.return_to_main_menu()
@@ -142,7 +142,7 @@ class KeyFileDecryptor:
         try:
             # Load the key and initialize Fernet
             fernet = Fernet(key_file_path.read_bytes())
-            c.print(f"""[bright_white]
+            c.print(f"""[white]
 [-] Key file ({key_file_path.name}) loaded successfully"""
             )
 
@@ -152,12 +152,12 @@ class KeyFileDecryptor:
             ]
 
             for file in files:
-                c.print(f"""[bright_white]
+                c.print(f"""[white]
 [-] Reading file : {file.name}"""
                 )
                 encrypted_data = file.read_bytes()
 
-                c.print(f"""[bright_white]
+                c.print(f"""[white]
 [-] Decrypting {file.name} data..."""
                 )
                 # This will throw an InvalidToken exception if the key is wrong
@@ -169,20 +169,20 @@ class KeyFileDecryptor:
 
                 # Save the decrypted file
                 decrypted_file_path.write_bytes(decrypted_data)
-                c.print(f"""[bright_white]
+                c.print(f"""[white]
 [-] Decrypted {file.name} -> {decrypted_file_path.name}"""
                 )
 
-            c.print(f"""[green]
+            c.print(f"""[green3]
 [+] Successfully decrypted {len(files)} files"""
             )
 
         except InvalidToken:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Decryption Failed! The key provided is invalid for {file.name}"""
             )
         except Exception as e:
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Failed processing directory batch encryption : {e}"""
             )
 
@@ -195,12 +195,12 @@ class KeyFileDecryptor:
 ---------------------------------------
 DECRYPT FILE WITH PROVIDED .KEY
 ---------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[yellow3]Choose an option :[white]\n
 [1] Decrypt a file using a .key file
 [2] Decrypt files in a folder using a .key file\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[yellow3]ENTER CHOICE """,
                     choices=["1", "2", "r", "q"],
                     show_choices=False,
                 )

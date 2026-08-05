@@ -1,6 +1,15 @@
 # !/usr/bin/env python3
-# DLU : 04-Aug-2026
+# DLU : 05-Aug-2026
 
+
+# Import the console object from the main __init__.py file
+from . import console
+from resources.vars import ENCRYPTED_EXT_LIST, STATUS_ICONS
+from resources.functions import Functions
+from resources.prompts import (
+    show_main_menu,
+    show_aes_menu
+)
 
 HAS_CRYPTO = False
 try:
@@ -9,20 +18,14 @@ try:
     from cryptography.exceptions import InvalidTag
     HAS_CRYPTO = True
 except ImportError:
-    pass
+    console.print(
+        "[yellow3][!] Missing dependency: 'cryptography'. "
+        "It can be installed using -> 'pip install cryptography'"
+    )
 
 from enum import StrEnum
 import os
 from pathlib import Path
-
-# Import the console object from the main __init__.py file
-from . import console
-from resources.vars import ENCRYPTED_EXT_LIST
-from resources.functions import Functions
-from resources.prompts import (
-    show_main_menu,
-    show_aes_menu
-)
 
 
 class Action(StrEnum):
@@ -32,7 +35,7 @@ class Action(StrEnum):
 
 class AES:
 
-    _ACTION_MAP = {
+    _AES_ACTION_MAP = {
         "1": (Action.ENCRYPT, "single"),
         "2": (Action.DECRYPT, "single"),
         "3": (Action.ENCRYPT, "folder"),
@@ -65,7 +68,7 @@ class AES:
 
     def _handle_aes_process_file(self, action: Action) -> None:
         """Collect user inputs and call aes_process_file."""
-        target_file = Functions.get_file_path(sction=action.value)
+        target_file = Functions.get_file_path()
         password = Functions.get_password()
         self.aes_process_file(
             action=action.value,
@@ -113,16 +116,16 @@ class AES:
 
         try:
             console.print(
-                f"[bright_white][-] Reading file : {target_file.name}..."
+                f"[white][-] Reading file : {target_file.name}..."
             )
 
             original_file_data = target_file.read_bytes()
             console.print(
-                "[bright_white][-] File content read successfully..."
+                "[white][-] File content read successfully..."
             )
 
             console.print(
-                f"[bright_white][-] {action.capitalize()}ing file data..."
+                f"[white][-] {action.capitalize()}ing file data..."
             )
 
             if action == "encrypt":
@@ -136,7 +139,7 @@ class AES:
                 key = self._derive_key(password, salt)
 
                 console.print(
-                    f"[bright_white][-] Encrypting file data..."
+                    f"[white][-] Encrypting file data..."
                 )
 
                 aesgcm = AESGCM(key)
@@ -197,7 +200,7 @@ class AES:
 
                 except InvalidTag:
                     console.print(
-                        "\n[bright_red]\n[!] Decryption failed : Invalid "
+                        "\n[red]\n[!] Decryption failed : Invalid "
                         "password or corrupted payload (authentication tag "
                         "check failed)."
                     )
@@ -211,7 +214,7 @@ class AES:
                         password_bytes[i] = 0
 
             console.print(
-                f"[green][-] {action.capitalize()}ed "
+                f"[green3][-] {action.capitalize()}ed "
                 f"{target_file.name:34s}{'->':7s}{output_file.name}"
             )
 
@@ -219,7 +222,7 @@ class AES:
 
         except Exception as e:
             console.print(
-                f"[bright_red][!] Failed to {action} {target_file.name} "
+                f"[red][!] Failed to {action} {target_file.name} "
                 f": {e}"
             )
 
@@ -268,13 +271,13 @@ class AES:
 
         if not Functions.verify_is_directory(target_dir=target_dir):
             console.print(
-                f"\n[yellow][!] {target_dir} does not exist or is not a "
+                f"\n[yellow3][!] {target_dir} does not exist or is not a "
                 "valid directory"
             )
             return
 
         console.print(
-            f"\n[green][*] {target_dir} validated. Fetching targets for "
+            f"\n[green3][*] {target_dir} validated. Fetching targets for "
             f"{action}ion...")
 
         try:
@@ -299,13 +302,13 @@ class AES:
                 ]
         except Exception as e:
             console.print(
-                "[bright_red][!] Failed to retrieve files from "
+                "[red][!] Failed to retrieve files from "
                 f"{target_dir} : {e}"
             )
 
         if not all_files:
             console.print(
-                f"[yellow][!] No valid files to {action} in {target_dir}"
+                f"[yellow3][!] No valid files to {action} in {target_dir}"
             )
             return
 
@@ -322,7 +325,7 @@ class AES:
                 )
             except Exception as e:
                 console.print(
-                    f"[bright_red][!] Error {action}ing {file_path.name} "
+                    f"[red][!] Error {action}ing {file_path.name} "
                     f"-> {e}"
                 )
                 results['failed'].append({
@@ -332,42 +335,46 @@ class AES:
 
         if results['success']:
             console.print(
-                f"\n[green][*] Action Completed \nSuccessfully {action}ed "
+                f"\n[green3][*] Action Completed \nSuccessfully {action}ed "
                 f"{len(results['success'])} files in {target_dir} :"
             )
             processed_paths = [
                 item['path'] for item in results['success']
             ]
             for path in processed_paths:
-                console.print(f"[green]  {str(path)}")
+                console.print(f"[green3]  {str(path)}")
 
         if results['failed']:
             console.print(
-                f"\n[bright_red][!] ** Warning **\nFailed to {action} "
+                f"\n[red][!] ** Warning **\nFailed to {action} "
                 f"{len(results['failed'])} files :"
             )
             failed_paths = [
                 item['path'] for item in results['failed']
             ]
             for path in failed_paths:
-                console.print(f"[bright_red]  {str(path)}")
+                console.print(f"[red]  {str(path)}")
 
         console.print(results)
 
         return results
 
 
-    def get_aes_action(self, action: str) -> None:
+    @classmethod
+    def get_aes_action(cls) -> None:
         """Gets input from the user on what action to start next."""
         aes_choice = show_aes_menu()
         match aes_choice:
             case "1" | "2" | "3" | "4":
-                action, scope = self._ACTION_MAP[aes_choice]
+                action, scope = cls._AES_ACTION_MAP[aes_choice]
                 if scope == "single":
-                    self._handle_aes_process_file(action)
+                    cls._handle_aes_process_file(AES, action)
                 else:
-                    self._handle_aes_process_folder(action)
+                    cls._handle_aes_process_folder(AES, action)
             case "r":
+                Functions.clear_screen()
                 show_main_menu()
             case "q":
                 Functions.exit_application()
+            case _:
+                console.print("[yellow][!] An invalid option was entered")

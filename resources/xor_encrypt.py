@@ -77,10 +77,10 @@ class XOREncryptor:
                 f"Could not write encrypted message to {out_path} : {e}"
             ) from e
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 [-] ** Action successful **\n
 The Base64-encoded encrypted message is:\n
-    [bright_white]{b64_encoded_msg}\n
+    [white]{b64_encoded_msg}\n
     [dim]Raw encrypted bytes saved to : {out_path.resolve()}"""
         )
 
@@ -130,7 +130,7 @@ The Base64-encoded encrypted message is:\n
                 f"Failed XOR file encryption on {target_path} : {e}",
                 exc_info=True,
             )
-            c.print(f"""[bright_red]
+            c.print(f"""[red]
 [!] Error encrypting file "{target_path.name}" : {e}"""
             )
             # Clean up potentially broken destination output file
@@ -140,7 +140,7 @@ The Base64-encoded encrypted message is:\n
                 f"Error encrypting file {target_path.name} : {e}"
             ) from e
 
-        c.print(f"""[green]
+        c.print(f"""[green3]
 [-] ** Action successful ** File Encrypted with XOR key.\n
 [dim]Output saved to: {destination_path.name}"""
         )
@@ -157,12 +157,12 @@ The Base64-encoded encrypted message is:\n
 ---------------------------------------
 ENCRYPT FILE(S) USING AN XOR KEY
 ---------------------------------------\n
-[khaki3]Choose an option :[bright_white]\n
+[yellow3]Choose an option :[white]\n
 [1] Encrypt a single message string
 [2] Encrypt a file\n
 [R] Return to the main menu
 [Q] Quit the application\n\n
-[khaki3]ENTER CHOICE """,
+[yellow3]ENTER CHOICE """,
                         choices=["1", "2", "r", "q"],
                         show_choices=False,
                     )
@@ -188,14 +188,14 @@ ENCRYPT FILE(S) USING AN XOR KEY
                     pass
 
             except KeyboardInterrupt:
-                c.print("""[yellow]
+                c.print("""[yellow3]
 [!] Operation cancelled by user."""
                 )
                 break
             except Exception as e:
-                c.print(f"""[bright_red]
+                c.print(f"""[red]
 [!] An error occured during processing: {e}"""
                 )
-                Prompt.ask("""[bright_white]
+                Prompt.ask("""[white]
 Press Enter to continue..."""
                 )
