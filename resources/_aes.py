@@ -105,7 +105,7 @@ class AES:
             return
 
         if not Functions.verify_file_access(target_file=target_file):
-            self.logger.debug(
+            console.print(
                 f"Validation for {target_file.name} failed : insufficient "
                 "file access permission"
             )
@@ -314,7 +314,8 @@ class AES:
                 processed_path = self.aes_process_file(
                     target_file=file_path,
                     password=password,
-                    action=action)
+                    action=action,
+                )
                 results['success'].append({
                     "original": str(file_path),
                     f"{action}ed": str(processed_path)}
@@ -338,8 +339,7 @@ class AES:
                 item['path'] for item in results['success']
             ]
             for path in processed_paths:
-                console.print(
-                    f"[green]  {str(path)}")
+                console.print(f"[green]  {str(path)}")
 
         if results['failed']:
             console.print(
@@ -371,50 +371,3 @@ class AES:
                 show_main_menu()
             case "q":
                 Functions.exit_application()
-
-
-
-        if action == "encrypt":
-            aes_encryption_choice = show_aes_encryption_menu()
-            match aes_encryption_choice:
-                case "1":
-                    target_file = Functions.get_file_path(text="encrypted")
-                    password = Functions.get_password()
-                    self.aes_process_file(
-                        action=action,
-                        target_file=target_file,
-                        password=password)
-                case "2":
-                    target_dir = Functions.get_directory_path(text="encrypted")
-                    password = Functions.get_password()
-                    recursive = Functions.select_recursive_option()
-                    self.aes_process_folder(
-                        action=action,
-                        target_dir=target_dir,
-                        password=password,
-                        recursive=recursive)
-
-        elif action == "decrypt":
-            aes_decryption_choice = show_aes_decryption_menu()
-            match aes_decryption_choice:
-                case "1":
-                    target_file = Functions.get_file_path(text="decrypted")
-                    password = Functions.get_password()
-                    AES.aes_process_file(
-                        action=action,
-                        target_file=target_file,
-                        password=password)
-                case "2":
-                    target_dir = Functions.get_directory_path(text="decrypted")
-                    password = Functions.get_password()
-                    recursive = Functions.select_recursive_option()
-                    AES.aes_process_folder(
-                        action=action,
-                        target_dir=target_dir,
-                        password=password,
-                        recursive=recursive)
-                case "r":
-                    Functions.clear_screen()
-                    show_main_app_menu()
-                case "q":
-                    Functions.exit_application()
