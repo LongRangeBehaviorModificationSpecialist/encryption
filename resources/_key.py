@@ -25,7 +25,6 @@ class Action(StrEnum):
     DECRYPT = "decrypt"
 
 
-
 class KEY:
 
     _ACTION_MAP = {
@@ -97,7 +96,7 @@ class KEY:
                     key_file_dir=key_file_dir,
                     full_key_path=full_key_path,
                     key_file_hash_file=key_file_hash_file,
-                    key_file_hash_value=key_file_hash_value
+                    key_file_hash_value=key_file_hash_value,
                 )
             )
 
@@ -114,7 +113,8 @@ class KEY:
         """Prompts for a key file path and loop-validates its existence."""
         while True:
             key_file = Prompt.ask(
-                "[bright_white][-] Enter the path of the .key file to use ")
+                "[bright_white][-] Enter the path of the .key file to use "
+            )
             path = Path(key_file)
             if path.is_file():
                 return path
@@ -158,7 +158,8 @@ class KEY:
         if not target_file.is_file():
             console.print(
                 f"[bright_red][!] {target_file.name} does not exist or "
-                "is a directory.")
+                "is a directory."
+            )
             raise FileNotFoundError(f"Invalid target file : {target_file}")
 
         # Ensure key_file_path is resolved to prevent key self-encryption
@@ -172,32 +173,39 @@ class KEY:
         if not resolved_key_file_path.is_file():
             console.print(
                 "[bright_red][!] Key file not found : "
-                f"{resolved_key_file_path}")
+                f"{resolved_key_file_path}"
+            )
             raise FileNotFoundError(
-                f"Invalid .key file : {resolved_key_file_path}")
+                f"Invalid .key file : {resolved_key_file_path}"
+            )
 
         # Prevent self-encryption guard
         if target_file == resolved_key_file_path:
             console.print(
-                "[bright_red][!] Target file is the active key file. Aborting.")
+                "[bright_red][!] Target file is the active key file. Aborting."
+            )
             raise ValueError(
-                "Cannot encrypt or decrypt the active key file.")
+                "Cannot encrypt or decrypt the active key file."
+            )
 
         try:
             console.print(
-                f"[bright_white][-] Reading file : {target_file.name}...")
+                f"[bright_white][-] Reading file : {target_file.name}..."
+            )
             original_file_data = target_file.read_bytes()
 
             fernet_obj = self._load_fernet(key_file_path=resolved_key_file_path)
 
             console.print("[bright_white][-] File content read successfully...")
             console.print(
-                f"[bright_white][-] {action.capitalize()}ing file data...")
+                f"[bright_white][-] {action.capitalize()}ing file data..."
+            )
 
             if action == "encrypt":
                 encrypted_data = fernet_obj.encrypt(original_file_data)
                 output_file = target_file.with_name(
-                    f"{target_file.name}.encrypted")
+                    f"{target_file.name}.encrypted"
+                )
                 output_file.write_bytes(encrypted_data)
             else:
                 # Will throw an InvalidToken exception if the key is wrong
@@ -206,23 +214,27 @@ class KEY:
                     output_file = target_file.with_suffix("")
                 else:
                     output_file = target_file.with_name(
-                        f"decrypted_{target_file.name}")
+                        f"decrypted_{target_file.name}"
+                    )
                 output_file.write_bytes(decrypted_data)
 
             console.print(
                 f"[green][-] {action.capitalize()}ed "
-                f"{target_file.name:34s}{'->':7s}{output_file.name}")
+                f"{target_file.name:34s}{'->':7s}{output_file.name}"
+            )
 
             return output_file
 
         except InvalidToken:
             console.print(
                 f"[bright_red][!] Decryption failed! The key provided is "
-                f"invalid for {target_file.name}")
+                f"invalid for {target_file.name}"
+            )
             raise
         except Exception as e:
             console.print(
-                f"[bright_red][!] Failed to {action} {target_file.name} : {e}")
+                f"[bright_red][!] Failed to {action} {target_file.name} : {e}"
+            )
             raise
 
 
@@ -269,41 +281,48 @@ class KEY:
 
         console.print(
             f"\n[green][*] {target_dir} validated. Fetching targets "
-            f"for {action}ion...")
+            f"for {action}ion..."
+        )
 
         # Ensure key_file_path is resolved to prevent key self-encryption
         if key_file_path:
             key_file_path = Path(key_file_path).resolve()
         else:
             key_file_path = Path(
-                self.get_existing_key_file_path()).resolve()
+                self.get_existing_key_file_path()
+            ).resolve()
 
         try:
             # Dynamically filter files based on the requested action
             files_iterator = (
                 target_dir.rglob("*")
-                if recursive else target_dir.iterdir())
+                if recursive else target_dir.iterdir()
+            )
 
             if action == "decrypt":
                 all_files = [
                     f for f in files_iterator
-                    if f.is_file() and f.suffix in {".encrypted", ".enc"}]
+                    if f.is_file() and f.suffix in {".encrypted", ".enc"}
+                ]
             else:
                 # Encrypt files EXCEPT those ending with certain extensions
                 all_files = [
                     f for f in files_iterator
-                        if f.is_file()
-                        and f.suffix.lower() not in ENCRYPTED_EXT_LIST
-                        and f.resolve() != key_file_path]
+                    if f.is_file()
+                    and f.suffix.lower() not in ENCRYPTED_EXT_LIST
+                    and f.resolve() != key_file_path
+                ]
         except Exception as e:
             console.print(
                 "[bright_red][!] Failed to retrieve files from "
-                f"{target_dir} : {e}")
+                f"{target_dir} : {e}"
+            )
             return []
 
         if not all_files:
             console.print(
-                f"[yellow][!] No valid files to {action} in {target_dir}")
+                f"[yellow][!] No valid files to {action} in {target_dir}"
+            )
             return []
 
         successful_files: List[Path] = []
@@ -314,28 +333,32 @@ class KEY:
                 processed_path = self.key_process_single_file(
                     key_file_path=key_file_path,
                     target_file=file_path,
-                    action=action)
+                    action=action,
+                )
                 successful_files.append(processed_path)
             except Exception as e:
                 console.print(
                     f"[bright_red][!] Error during {action}ing "
-                    f"{file_path.name} : {e}")
+                    f"{file_path.name} : {e}"
+                )
                 failed_files.append(file_path)
 
         # Summary reporting
         if successful_files:
             console.print(
                 f"[green][-] ** Action Completed **\nSuccessfully {action}ed "
-                f"{len(successful_files)} files in {target_dir} :")
+                f"{len(successful_files)} files in {target_dir} :"
+            )
             for processed_file in successful_files:
-                console.print(f"[green]\t{processed_file.name}")
+                console.print(f"[green]  {processed_file.name}")
 
         if failed_files:
             console.print(
                 f"[bright_red][!] ** Warning **\nFailed to {action} "
-                f"{len(failed_files)} files :")
+                f"{len(failed_files)} files :"
+            )
             for failed_file in failed_files:
-                console.print(f"[bright_red]\t{failed_file.name}")
+                console.print(f"[bright_red]  {failed_file.name}")
 
         return successful_files
 
