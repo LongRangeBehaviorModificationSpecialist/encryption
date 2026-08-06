@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 05-Aug-2026
+# DLU : 06-Aug-2026
 
 
 from datetime import datetime
@@ -52,13 +52,21 @@ class Functions:
 
 
     @staticmethod
-    def get_date_time() -> str:
+    def get_date_time(format: str) -> str:
+        """Gets local date/time info."""
+        date_time_formats = {
+            "display": "%d-%b-%Y %H:%M:%S",
+            "file": "%Y-%m-%d_%H.%M.%S"
+        }
         local_time = datetime.now().astimezone()
-        offset = local_time.strftime("%z")
-        formatted_offset = f"UTC{offset[0]}{int(offset[1:3])}"
+        # offset = local_time.strftime("%z")
+        # formatted_offset = f"UTC{offset[0]}{int(offset[1:3])}"
+        dt_format = date_time_formats[f'{format}']
         current_time = local_time.strftime(
-            f"%d-%b-%Y %H:%M:%S.%f ({formatted_offset})"
+            # f"{dt_format} ({local_time})"
+            f"{dt_format}"
         )
+
         return current_time
 
 
@@ -94,7 +102,7 @@ class Functions:
                 case "n":
                     return False
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Invalid input. Enter either "
+                f"{STATUS_ICONS['failure']}[red] Invalid input. Enter either "
                 "'y' or 'n'."
             )
 
@@ -107,7 +115,7 @@ class Functions:
         while True:
             # Prompt user and convert directly to a mutable bytearray
             raw_password = Prompt.ask(
-                f"{STATUS_ICONS['key']}[white] Enter the PASSWORD you want "
+                f"{STATUS_ICONS['keyboard']}[white] Enter the PASSWORD you want "
                 "to use ",
                 password=True
             ).encode("utf-8")
@@ -122,7 +130,7 @@ class Functions:
                 password_bytes[i] = 0
 
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Not a valid password. "
+                f"{STATUS_ICONS['failure']}[red] Not a valid password. "
                 "Please try again."
             )
 
@@ -166,7 +174,7 @@ class Functions:
                 and has_upper
                 and has_lower
                 and has_symbol):
-            console.print(f"""{STATUS_ICONS['failure2']}[red]
+            console.print(f"""{STATUS_ICONS['failure']}[red]
     Your password did not meet the minimun requirements. Please try again.\n
     Your password must meet the following criteria :\n
     [-] Is at least ten (10) characters long
@@ -241,7 +249,7 @@ class Functions:
     @staticmethod
     def print_not_file_error(target_file: Path) -> str:
         return ( console.print(
-            f"{STATUS_ICONS['failure2']}[red] File validation for "
+            f"{STATUS_ICONS['failure']}[red] File validation for "
             f"{target_file.name} failed : the file does not exist or is "
             "not a file."
             )
@@ -253,7 +261,7 @@ class Functions:
         """Returns True if the user has permission to read the file."""
         if not os.access(target_file, os.R_OK):
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] The current user does "
+                f"{STATUS_ICONS['failure']}[red] The current user does "
                 f"not have the correct permissions to process {target_file.name}"
             )
             return False
@@ -266,9 +274,167 @@ class Functions:
         """Returns true if target_dir points to a directory."""
         if not target_dir.is_dir():
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] {target_dir} does not exist "
+                f"{STATUS_ICONS['failure']}[red] {target_dir} does not exist "
                 "or is not a valid directory."
             )
             return False
         else:
             return True
+
+
+    @staticmethod
+    def get_pgp_key_expire_date() -> str | None:
+        """Get expiration from user, return as GNU format string."""
+        expire_option = Prompt.ask(
+            f"{STATUS_ICONS['question']}[white] Do you want to set an "
+            "expiration date?",
+            choices=["y", "n"],
+            show_choices=True
+        )
+
+        if expire_option == "y":
+            expire_type = Prompt.ask(
+                f"{STATUS_ICONS['question']}[white] Expiration type (1 = "
+                "Days, 2 = Date)",
+                choices=["1", "2"],
+                show_choices=True
+            )
+
+            if expire_type == "1":
+                # GNU format: "365d", "1y", "6m" - most compatible!
+                days = Prompt.ask("Enter number of days").strip()
+                if days.isdigit() and int(days) > 0:
+                    num_days = int(days)
+                    # Convert to appropriate unit for shorter strings
+                    if num_days >= 365:
+                        years = num_days // 365
+                        remainder = num_days % 365
+                        if remainder == 0:
+                            return f"{years}y"
+                        else:
+                            return f"{years}y{remainder}d"
+                    elif num_days >= 30:
+                        months = num_days // 30
+                        remainder = num_days % 30
+                        if remainder == 0:
+                            return f"{months}m"
+                        else:
+                            return f"{months}m{remainder}d"
+                    else:
+                        return f"{num_days}d"
+                else:
+                    console.print(
+                        f"{STATUS_ICONS['warning']}[yellow] Invalid number."
+                    )
+                    return None
+            else:
+                date_str = Prompt.ask("Enter date (YYYYMMDD)").strip()
+                try:
+                    from datetime import datetime
+                    parsed = datetime.strptime(date_str, "%Y%m%d").date()
+                    if parsed <= datetime.now().date():
+                        console.print(
+                            f"{STATUS_ICONS['warning']}[yellow] Date "
+                            "must be in future."
+                        )
+                        return None
+                    # Add time with "T" separator
+                    return f"{date_str}T000000"
+                except ValueError:
+                    console.print(
+                        f"{STATUS_ICONS['warning']}[yellow] Invalid date "
+                        "format."
+                    )
+                    return None
+        return None
+
+
+    @staticmethod
+    def get_confirmed_password() -> str | None:
+        """Prompt user for passphrase until confirmation matches."""
+        max_attempts = 3  # prevent infinite loops
+        attempts = 0
+
+        while True:
+            attempts += 1
+
+            if attempts > max_attempts:
+                console.print(
+                    f"{STATUS_ICONS['failure']}[red] Too many failed attempts. "
+                    "Exiting..."
+                )
+                raise ValueError("Max passphrase attempts exceeded.")
+
+            password = Prompt.ask(
+                f"{STATUS_ICONS['keyboard']}[white] Enter passphrase for the "
+                "private key ",
+                password=True
+            )
+
+            if not password:
+                console.print(
+                    f"{STATUS_ICONS['warning']}[yellow] Passphrase cannot be "
+                    "empty."
+                )
+                continue
+
+            # Confirmation entry
+            confirm_password = Prompt.ask(
+                f"{STATUS_ICONS['keyboard']}[white] Re-enter passphrase to "
+                "confirm",
+                password=True
+            )
+
+            if not confirm_password:
+                console.print(
+                    f"{STATUS_ICONS['warning']}[yellow] Passphrase cannot be "
+                    "empty."
+                )
+                continue
+
+            # Check if they match
+            if password == confirm_password:
+                console.print(
+                    f"{STATUS_ICONS['success']}[green] Passphrases confirmed!"
+                )
+                return password
+            else:
+                console.print(
+                    f"{STATUS_ICONS['failure']}[red] Passphrases do not match! "
+                    f"Try again (attempt {attempts}/{max_attempts})"
+                )
+
+
+    @staticmethod
+    def get_pgp_full_name() -> str:
+        """Get full name of the PGP key owner."""
+        full_name = Prompt.ask(
+            f"{STATUS_ICONS['input']}[white] Enter full name of the PGP "
+            "key owner "
+        ).strip()
+
+        if not full_name:
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3] A valid name is required."
+            )
+            raise ValueError("Full name must be provided.")
+        return full_name
+
+
+    @ staticmethod
+    def get_pgp_email_address() -> str:
+        """Get email address of the PGP key owner."""
+        email_address = Prompt.ask(
+            f"{STATUS_ICONS['email']}[white] Enter email address of the "
+            "PGP key owner "
+        ).strip().lower()
+
+        if not email_address or "@" not in email_address:
+            console.print(
+                f"{STATUS_ICONS['warning']}[yellow3] Invalid or missing "
+                f"email address provided : {email_address}"
+            )
+            raise ValueError(
+                f"Invalid or missing email address provided : {email_address}"
+            )
+        return email_address

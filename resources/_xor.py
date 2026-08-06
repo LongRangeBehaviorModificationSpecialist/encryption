@@ -1,11 +1,12 @@
 # !/usr/bin/env python3
-# DLU : 05-Aug-2026
+# DLU : 06-Aug-2026
 
 
 import base64
 from enum import StrEnum
 from pathlib import Path
 from rich.prompt import Prompt
+from rich.traceback import install
 from typing import List
 
 from . import console
@@ -15,6 +16,9 @@ from resources.prompts import (
     show_main_menu,
     show_xor_menu
 )
+
+
+install(show_locals=True)
 
 
 class Action(StrEnum):
@@ -78,11 +82,30 @@ class XOR:
         )
 
 
+    def _handle_xor_process_file(self) -> None:
+        target_file = Functions.get_file_path()
+        xor_key = self.get_xor_key()
+        self.xor_process_file(
+            target_file=target_file,
+            xor_key=xor_key,
+        )
+
+
+    def _handle_xor_process_folder(self) -> None:
+        target_dir = Functions.get_directory_path()
+        xor_key = self.get_xor_key()
+        recursive = Functions.select_recursive_option()
+        self.xor_process_folder(
+            target_dir=target_dir,
+            xor_key=xor_key,
+            recursive=recursive,
+        )
+
+
     def xor_process_msg(
             self,
             message: str,
             xor_key: str,
-            action: str,
             output_file: Path | str = "processed_msg.txt",
     ) -> str:
         """XOR encrypts or decrypts a text string, outputs Base64
@@ -138,18 +161,9 @@ class XOR:
 
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Could not write processed "
+                f"{STATUS_ICONS['failure']}[red] Could not write processed "
                 f"message to {output_file} : {e}"
             )
-
-
-    def _handle_xor_process_file(self) -> None:
-        target_file = Functions.get_file_path()
-        xor_key = self.get_xor_key()
-        self.xor_process_file(
-            target_file=target_file,
-            xor_key=xor_key,
-        )
 
 
     def xor_process_file(
@@ -248,20 +262,9 @@ class XOR:
             if output_file.exists():
                 output_file.unlink(missing_ok=True)
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to process "
+                f"{STATUS_ICONS['failure']}[red] Failed to process "
                 f"{target_file.name} : {e}")
             raise
-
-
-    def _handle_xor_process_folder(self) -> None:
-        target_dir = Functions.get_directory_path()
-        xor_key = self.get_xor_key()
-        recursive = Functions.select_recursive_option()
-        self.xor_process_folder(
-            target_dir=target_dir,
-            xor_key=xor_key,
-            recursive=recursive,
-        )
 
 
     def xor_process_folder(
@@ -314,7 +317,7 @@ class XOR:
 
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to retrieve files "
+                f"{STATUS_ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
@@ -350,7 +353,7 @@ class XOR:
 
             except Exception as e:
                 console.print(
-                    f"{STATUS_ICONS['failure2']}[red] Error during processing "
+                    f"{STATUS_ICONS['failure']}[red] Error during processing "
                     f"{file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
@@ -369,7 +372,7 @@ class XOR:
 
         if failed_files:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Warning:\n"
+                f"{STATUS_ICONS['failure']}[red] Warning:\n"
                 f"Failed to process {len(failed_files)} files :"
             )
             for file in failed_files:
@@ -378,19 +381,18 @@ class XOR:
         return successful_files
 
 
-    @classmethod
-    def get_xor_action(cls) -> None:
+    def get_xor_action(self) -> None:
         """Gets input from the user on what action to start next."""
         xor_choice = show_xor_menu()
         match xor_choice:
             case "1" | "2" | "3" | "4" | "5" | "6":
-                scope = cls._XOR_ACTION_MAP[xor_choice]
+                scope = self._XOR_ACTION_MAP[xor_choice]
                 if scope == "message":
-                    cls._handle_xor_process_msg(XOR)
+                    self._handle_xor_process_msg()
                 elif scope == "file":
-                    cls._handle_xor_process_file(XOR)
+                    self._handle_xor_process_file()
                 else:
-                    cls._handle_xor_process_folder(XOR)
+                    self._handle_xor_process_folder()
             case "r":
                 Functions.clear_screen()
                 show_main_menu()
@@ -401,3 +403,17 @@ class XOR:
                     f"{STATUS_ICONS['warning']}[yellow] An invalid option "
                     "was entered"
                 )
+
+
+#! ------------------------------------
+#!  VERIFICATIONS CHECKS
+#!
+#!  Option "1" --
+#!  Option "2" --
+#!  Option "3" --
+#!  Option "4" --
+#!  Option "5" --
+#!  Option "6" --
+#!  Option "r" --
+#!  Option "q" --
+#!

@@ -1,15 +1,6 @@
 # !/usr/bin/env python3
-# DLU : 05-Aug-2026
+# DLU : 06-Aug-2026
 
-
-from cryptography.fernet import Fernet, InvalidToken
-from datetime import datetime
-from enum import StrEnum
-import hashlib
-from pathlib import Path
-from rich.prompt import Prompt
-from rich.traceback import install
-from typing import List
 
 # Import the console object from the main __init__.py file
 from . import console
@@ -19,6 +10,25 @@ from resources.prompts import (
     show_main_menu,
     show_key_menu
 )
+
+HAS_CRYPTO = False
+try:
+    from cryptography.fernet import Fernet, InvalidToken
+    HAS_CRYPTO = True
+except ImportError:
+    console.print(
+        f"{STATUS_ICONS['warning']}[yellow3] Missing dependency: "
+        "currently missing the 'cryptography' package.\n"
+        "It can be installed using the 'pip install cryptography' command"
+    )
+
+from datetime import datetime
+from enum import StrEnum
+import hashlib
+from pathlib import Path
+from rich.prompt import Prompt
+from rich.traceback import install
+from typing import List
 
 
 install(show_locals=True)
@@ -89,7 +99,7 @@ class KEY:
             key_file_hash_file = full_key_path.with_suffix(".key.sha256")
 
             log_content = Functions.format_key_file_log(
-                timestamp= Functions.get_date_time(),
+                timestamp= Functions.get_date_time(format="display"),
                 key_path=full_key_path,
                 hash_value=key_file_hash_value,
             )
@@ -109,7 +119,7 @@ class KEY:
 
         except IOError as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to write key data "
+                f"{STATUS_ICONS['failure']}[red] Failed to write key data "
                 f"to file : {e}"
             )
             raise
@@ -121,22 +131,31 @@ class KEY:
             f"{STATUS_ICONS['key']}[white] Enter the path of the .key "
             "file to use "
         ).strip("\"'")
-        # path = Path(key_file)
-        # if path.is_file():
-        #     return path
 
 
     def _handle_key_process_file(self, action: Action) -> None:
         """Helper function to process encryption or decryption of a file."""
-        key_file_path = KEY.get_existing_key_file_path(self)
-        # key_file_path = r"C:\Users\mikes\Desktop\2026-08-05_165951_mas-new-key.key"
+        key_file_path = self.get_existing_key_file_path()
         target_file = Functions.get_file_path()
-        # target_file = r"C:\Users\mikes\Desktop\test\OSHA.docx"
-        KEY.key_process_file(
-            self,
+        self.key_process_file(
             key_file_path=key_file_path,
             target_file=target_file,
             action=action.value,
+        )
+
+
+    def _handle_key_process_folder(self, action: Action) -> None:
+        """Helper function to process encryption or decryption of files
+        in a folder.
+        """
+        key_file_path = self.get_existing_key_file_path()
+        target_dir = Functions.get_directory_path()
+        recursive = Functions.select_recursive_option()
+        self.key_process_folder(
+            target_dir=target_dir,
+            key_file_path=key_file_path,
+            action=action.value,
+            recursive=recursive,
         )
 
 
@@ -182,7 +201,7 @@ class KEY:
 
         if not key_file_path.is_file():
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Key file not found : "
+                f"{STATUS_ICONS['failure']}[red] Key file not found : "
                 f"{key_file_path}"
             )
             raise FileNotFoundError(
@@ -204,8 +223,7 @@ class KEY:
             )
             original_file_data = target_file.read_bytes()
 
-            fernet_obj = KEY._load_fernet(
-                self,
+            fernet_obj = self._load_fernet(
                 key_file_path=key_file_path,
             )
 
@@ -244,32 +262,16 @@ class KEY:
 
         except InvalidToken:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Decryption failed! The key "
+                f"{STATUS_ICONS['failure']}[red] Decryption failed! The key "
                 f"provided is invalid for {target_file.name}"
             )
             raise
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to {action} "
+                f"{STATUS_ICONS['failure']}[red] Failed to {action} "
                 f"{target_file.name} : {e}"
             )
             raise
-
-
-    def _handle_key_process_folder(self, action: Action) -> None:
-        """Helper function to process encryption or decryption of files
-        in a folder.
-        """
-        key_file_path = KEY.get_existing_key_file_path(self)
-        target_dir = Functions.get_directory_path()
-        recursive = Functions.select_recursive_option()
-        KEY.key_process_folder(
-            self,
-            target_dir=target_dir,
-            key_file_path=key_file_path,
-            action=action.value,
-            recursive=recursive,
-        )
 
 
     def key_process_folder(
@@ -312,7 +314,7 @@ class KEY:
             key_file_path = Path(key_file_path).resolve()
         else:
             key_file_path = Path(
-                KEY.get_existing_key_file_path(self)
+                self.get_existing_key_file_path()
             ).resolve()
 
         try:
@@ -337,7 +339,7 @@ class KEY:
                 ]
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to retrieve files "
+                f"{STATUS_ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
@@ -354,8 +356,7 @@ class KEY:
 
         for file_path in all_files:
             try:
-                processed_path = KEY.key_process_file(
-                    self,
+                processed_path = self.key_process_file(
                     key_file_path=key_file_path,
                     target_file=file_path,
                     action=action,
@@ -363,7 +364,7 @@ class KEY:
                 successful_files.append(processed_path)
             except Exception as e:
                 console.print(
-                    f"{STATUS_ICONS['failure2']}[red] Error during "
+                    f"{STATUS_ICONS['failure']}[red] Error during "
                     f"{action}ing {file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
@@ -396,13 +397,13 @@ class KEY:
         key_choice = show_key_menu()
         match key_choice:
             case "1":
-                KEY.generate_and_save_key(self)
+                self.generate_and_save_key()
             case "2" | "3" | "4" | "5":
                 action, scope = self._KEY_ACTION_MAP[key_choice]
                 if scope == "file":
-                    KEY._handle_key_process_file(self, action=action)
+                    self._handle_key_process_file(action=action)
                 else:
-                    KEY._handle_key_process_folder(self, action=action)
+                    self._handle_key_process_folder(action=action)
             case "r":
                 Functions.clear_screen()
                 show_main_menu()
@@ -418,11 +419,11 @@ class KEY:
 #! ------------------------------------
 #!  VERIFICATIONS CHECKS
 #!
-#!  Option "1" -- working 08-05-26
-#!  Option "2" -- working 08-05-26
-#!  Option "3" -- working 08-05-26
-#!  Option "4" -- working 08-05-26
-#!  Option "5" -- working 08-05-26
+#!  Option "1" --
+#!  Option "2" --
+#!  Option "3" --
+#!  Option "4" --
+#!  Option "5" --
 #!  OPTION "r" -- NEED TO FIX.  Returns to the main menu, but when an
 #!                option is entered, the program exits.
 #!  OPTION "q" -- working 08-05-26

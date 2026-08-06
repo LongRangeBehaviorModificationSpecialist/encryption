@@ -6,15 +6,16 @@ from rich.console import Console
 import signal
 import sys
 from resources.functions import Functions
-from resources._aes import AES
-from resources._pgp import PGP
-from resources._key import KEY
-from resources._xor import XOR
 from resources.vars import STATUS_ICONS
 from resources.prompts import show_main_menu
 
+from resources._key import KEY
+from resources._aes import AES
+from resources._pgp import PGP
+from resources._xor import XOR
+
 __author__ = "[@mikespon]"
-__last_updated__ = "05-Aug-2026"
+__last_updated__ = "06-Aug-2026"
 
 
 console = Console()
@@ -22,42 +23,55 @@ console = Console()
 
 class App:
 
+    """Main application class."""
+
+    def __init__(self):
+        """Initialize the application and register signal handlers."""
+        # Register SIGINT handler during initialization
+        signal.signal(signal.SIGINT, self.handle_sigint)
+
+        # Initialize subsystems
+        self.key = KEY()
+        self.aes = AES()
+        self.pgp = PGP()
+        self.xor = XOR()
+
 
     def handle_sigint(sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
-        # console.print(
-        #     f"\n\n{STATUS_ICONS['warning']}[red] Interrupted at line "
-        #     f"{frame.f_lineno} in {frame.f_code.co_filename}"
-        # )
         console.print(
-            f"\n\n{STATUS_ICONS['warning']}[red] Operation cancelled by "
-            f"user. Exiting..."
+            f"\n\n\n{STATUS_ICONS['warning']}[red] Operation cancelled by "
+            f"user. Exiting...\n"
         )
         sys.exit(0)
 
 
     def main(self) -> None:
+        """Main function where the user can pick their option."""
         Functions.clear_screen()
-        """Main function where the user can pick what option they want."""
         initial_choice = show_main_menu()
         Functions.clear_screen()
+
         match initial_choice:
             case "1":
-                KEY.get_key_action(KEY)
+                self.key.get_key_action()
             case "2":
-                AES.get_aes_action(AES)
+                self.aes.get_aes_action()
             case "3":
-                PGP.get_pgp_action(PGP)
+                self.pgp.get_pgp_action()
             case "4":
-                XOR.get_xor_action(XOR)
+                self.xor.get_xor_action()
             case "q":
                 Functions.exit_application()
-
-    # Register the SIGINT handler
-    signal.signal(signal.SIGINT, handle_sigint)
+            case _:
+                console.print(
+                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    "was entered"
+                )
 
 
 if __name__ == "__main__":
-    App().main()
+    app = App()
+    app.main()
 
 

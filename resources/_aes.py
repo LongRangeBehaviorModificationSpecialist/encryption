@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 05-Aug-2026
+# DLU : 06-Aug-2026
 
 
 # Import the console object from the main __init__.py file
@@ -21,7 +21,7 @@ try:
 except ImportError:
     console.print(
         f"{STATUS_ICONS['warning']}[yellow3] Missing dependency: "
-        "'cryptography'.\n"
+        "currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
 
@@ -47,9 +47,12 @@ class AES:
         "4": (Action.DECRYPT, "folder")
     }
 
-    IV_LENGTH = 12
-    TAG_LENGTH = 16
-    SALT_LENGTH = 16
+
+    def __init__(self) -> None:
+        # Standard 96-bit IV for AES-GCM
+        self.IV_LENGTH = 12
+        self.TAG_LENGTH = 16
+        self.SALT_LENGTH = 16
 
 
     def _derive_key(
@@ -71,13 +74,23 @@ class AES:
     def _handle_aes_process_file(self, action: Action) -> None:
         """Collect user inputs and call aes_process_file."""
         target_file = Functions.get_file_path()
-        # password = Functions.get_password()
-        password = "password"  # Just for testing
-        AES.aes_process_file(
-            self,
+        password = Functions.get_password()
+        self.aes_process_file(
             target_file=target_file,
             password=password,
             action=action.value,
+        )
+
+
+    def _handle_aes_process_folder(self, action: Action) -> None:
+        target_dir = Functions.get_directory_path()
+        password = Functions.get_password()
+        recursive = Functions.select_recursive_option()
+        self.aes_process_folder(
+            target_dir=target_dir,
+            password=password,
+            action=action,
+            recursive=recursive,
         )
 
 
@@ -124,7 +137,7 @@ class AES:
             )
 
             console.print(
-                f"{STATUS_ICONS['info']}[white] {action.capitalize()}ing "
+                f"{STATUS_ICONS['processing']}[white] {action.capitalize()}ing "
                 "file data..."
             )
 
@@ -134,14 +147,9 @@ class AES:
                     f"{target_file.name}.{FILE_EXT}"
                 )
                 # Generate fresh, random cryptographic parameters
-                salt = os.urandom(AES.SALT_LENGTH)
-                iv = os.urandom(AES.IV_LENGTH)  # 96-bit IV is standard for GCM
-                key = AES._derive_key(self, password, salt)
-
-                console.print(
-                    f"{STATUS_ICONS['processing']}[white] Encrypting file "
-                    "data..."
-                )
+                salt = os.urandom(self.SALT_LENGTH)
+                iv = os.urandom(self.IV_LENGTH)  # 96-bit IV is standard for GCM
+                key = self._derive_key(self, password, salt)
 
                 aesgcm = AESGCM(key)
 
@@ -167,10 +175,10 @@ class AES:
                 # Convert string to mutable bytearray
                 password_bytes = bytearray(password.encode("utf-8"))
 
-                min_length = AES.SALT_LENGTH + AES.IV_LENGTH + 16
+                min_length = self.SALT_LENGTH + self.IV_LENGTH + 16
                 if len(original_file_data) < min_length:
                     console.print(
-                        f"{STATUS_ICONS['failure2']}[red]File is corrupted or "
+                        f"{STATUS_ICONS['failure']}[red]File is corrupted or "
                         "too short to be a valid AES-GCM payload."
                     )
                     raise ValueError("File corrupted or too short")
@@ -178,16 +186,16 @@ class AES:
                 try:
                     # Parse payload layout:
                     # [ SALT ] [ IV ] [ CIPHERTEXT + TAG ]
-                    salt = original_file_data[: AES.SALT_LENGTH]
+                    salt = original_file_data[: self.SALT_LENGTH]
                     iv = original_file_data[
-                        AES.SALT_LENGTH : AES.SALT_LENGTH + AES.IV_LENGTH
+                        self.SALT_LENGTH : self.SALT_LENGTH + self.IV_LENGTH
                     ]
                     ciphertext_with_tag = original_file_data[
-                        AES.SALT_LENGTH + AES.IV_LENGTH :
+                        self.SALT_LENGTH + self.IV_LENGTH :
                     ]
 
                     # Derive key and decrypt/verify
-                    key = AES._derive_key(self, password_bytes, salt)
+                    key = self._derive_key(password_bytes, salt)
 
                     aesgcm = AESGCM(key)
 
@@ -202,7 +210,7 @@ class AES:
 
                 except InvalidTag:
                     console.print(
-                        f"{STATUS_ICONS['failure2']}[red] Decryption failed : "
+                        f"{STATUS_ICONS['failure']}[red] Decryption failed : "
                         "Invalid password or corrupted payload (authentication "
                         "tag check failed) (Invalid tag)."
                     )
@@ -224,22 +232,9 @@ class AES:
 
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to {action} "
+                f"{STATUS_ICONS['failure']}[red] Failed to {action} "
                 f"{target_file.name} : {e}"
             )
-
-
-    def _handle_aes_process_folder(self, action: Action) -> None:
-        target_dir = Functions.get_directory_path()
-        password = Functions.get_password()
-        recursive = Functions.select_recursive_option()
-        AES.aes_process_folder(
-            self,
-            target_dir=target_dir,
-            password=password,
-            action=action,
-            recursive=recursive,
-        )
 
 
     def aes_process_folder(
@@ -301,7 +296,7 @@ class AES:
                 ]
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Failed to retrieve files "
+                f"{STATUS_ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
 
@@ -314,20 +309,19 @@ class AES:
 
         for file_path in all_files:
             try:
-                processed_path = AES.aes_process_file(
-                    self,
+                processed_path = self.aes_process_file(
                     target_file=file_path,
                     password=password,
                     action=action,
                 )
                 results['success'].append({
                     "original": str(file_path),
-                    f"{action}ed": str(processed_path)}
+                    f"processed": str(processed_path)}
                 )
             except Exception as e:
                 console.print(
-                    f"{STATUS_ICONS['failure2']}[red] Error {action}ing "
-                    f"{file_path.name} -> {e}"
+                    f"{STATUS_ICONS['failure']}[red] Error {action}ing "
+                    f"{file_path.name}  ->  {e}"
                 )
                 results['failed'].append({
                     "path": str(file_path),
@@ -341,23 +335,23 @@ class AES:
                 f"{target_dir} :"
             )
             processed_paths = [
-                item['path'] for item in results['success']
+                item['processed'] for item in results['success']
             ]
             for path in processed_paths:
-                console.print(f"[green3]  {str(path)}")
+                console.print(f"[green3]    {str(path)}")
 
         if results['failed']:
             console.print(
-                f"{STATUS_ICONS['failure2']}[red] Warning:\n"
+                f"{STATUS_ICONS['failure']}[red] Warning:\n"
                 f"Failed to {action} {len(results['failed'])} files :"
             )
             failed_paths = [
                 item["path"] for item in results["failed"]
             ]
             for path in failed_paths:
-                console.print(f"[red]  {str(path)}")
+                console.print(f"[red]    {str(path)}")
 
-        console.print(results)
+        # console.print(results)
 
         return results
 
@@ -369,9 +363,9 @@ class AES:
             case "1" | "2" | "3" | "4":
                 action, scope = self._AES_ACTION_MAP[aes_choice]
                 if scope == "single":
-                    AES._handle_aes_process_file(self, action=action)
+                    self._handle_aes_process_file(action=action)
                 else:
-                    AES._handle_aes_process_folder(self, action=action)
+                    self._handle_aes_process_folder(action=action)
             case "r":
                 Functions.clear_screen()
                 show_main_menu()
@@ -387,10 +381,11 @@ class AES:
 #! ------------------------------------
 #!  VERIFICATIONS CHECKS
 #!
-#!  Option "1" -- working 08-05-26
-#!  Option "2" -- working 08-05-26
+#!  Option "1" --
+#!  Option "2" --
 #!  Option "3" --
 #!  Option "4" --
-#!  Option "r" --
+#!  Option "r" -- NEED TO FIX.  Returns to the main menu, but when an
+#!                option is entered, the program exits.
 #!  Option "q" --
 #!

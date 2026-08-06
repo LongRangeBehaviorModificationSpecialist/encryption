@@ -3,5 +3,3 @@ __pycache__
 temp
 *.asc
 .vscode
-hold.py
-all_types.py

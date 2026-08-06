@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 05-Aug-2026
+# DLU : 06-Aug-2026
 
 
 from rich.prompt import Prompt
@@ -10,7 +10,7 @@ from resources.functions import Functions
 from resources.vars import STATUS_ICONS
 
 
-VERSION = "0.3.17076096"
+VERSION = "0.4.1785974400"
 
 
 def display_menu(
@@ -36,26 +36,26 @@ def display_menu(
 
 
 def show_main_menu() -> str:
-    MAIN_MENU_CHOICES = {"1", "2", "3", "4", "q"}
+    MAIN_MENU_CHOICES = {"1","2","3","4","q"}
 
-    MAIN_MENU = f"""[dodger_blue1]
+    MAIN_MENU = (f"""[dodger_blue1]
 ----------------------------
 ENCRYPT/DECRYPT APP MENU
 v.{VERSION}
 ----------------------------\n
-[yellow3]What method do you want to use? (select one) :[white]\n
+[yellow3]What method do you want to use? (select one):[white]\n
 [1] Use a .key file
-[2] Use a password
+[2] Use a password (AES.GCM)
 [3] Use PGP
 [4] Use XOR\n
-[Q] Quit the Application\n\n
-[yellow3]ENTER CHOICE """
+[Q] Quit the Application\n
+[yellow3]ENTER CHOICE""")
 
     return display_menu(choices=MAIN_MENU_CHOICES, menu_text=MAIN_MENU)
 
 
 def show_key_menu() -> str:
-    KEY_MENU_CHOICES = {"1", "2", "3", "4", "5", "r", "q"}
+    KEY_MENU_CHOICES = {"1","2","3","4","5","r","q"}
 
     KEY_MENU = """[dodger_blue1]
 ----------------------------
@@ -69,14 +69,14 @@ WITH A .KEY FILE
 [4] ENCRYPT all files in a folder using a .key
 [5] DECRYPT all files in a folder using a .key\n
 [R] Return to the main menu
-[Q] Quit the application\n\n
-[yellow3]ENTER CHOICE """
+[Q] Quit the application\n
+[yellow3]ENTER CHOICE"""
 
     return display_menu(choices=KEY_MENU_CHOICES, menu_text=KEY_MENU)
 
 
 def show_aes_menu() -> str:
-    AES_MENU_CHOICES = {"1", "2", "3", "4", "r", "q"}
+    AES_MENU_CHOICES = {"1","2","3","4","r","q"}
 
     AES_MENU = """[dodger_blue1]
 ----------------------------
@@ -89,14 +89,14 @@ WITH A PASSWORD [AES-GCM]
 [3] ENCRYPT all files in a folder
 [4] DECRYPT all files in a folder\n
 [R] Return to the main menu
-[Q] Quit the application\n\n
-[yellow3]ENTER CHOICE """
+[Q] Quit the application\n
+[yellow3]ENTER CHOICE"""
 
     return display_menu(choices=AES_MENU_CHOICES, menu_text=AES_MENU)
 
 
 def show_pgp_menu() -> str:
-    PGP_MENU_CHOICES = {"1", "2", "3", "4", "5", "6", "7", "r", "q"}
+    PGP_MENU_CHOICES = {"1","2","3","4","5","6","7","a","r","q"}
 
     PGP_MENU = """[dodger_blue1]
 ----------------------------
@@ -104,6 +104,7 @@ ENCRYPT/DECRYPT FILE(S)
 WITH PGP KEY
 ----------------------------\n
 [yellow3]Options:[white]\n
+[A] Debug PGP setup\n
 [1] Create new PGP key pair\n
 [2] ENCRYPT a file using PGP
 [3] DECRYPT a file using PGP\n
@@ -112,14 +113,14 @@ WITH PGP KEY
 [6] Sign a document with PGP
 [7] Verify a PGP signature\n
 [R] Return to the main menu
-[Q] Quit the application\n\n
-[yellow3]ENTER CHOICE """
+[Q] Quit the application\n
+[yellow3]ENTER CHOICE"""
 
     return display_menu(choices=PGP_MENU_CHOICES, menu_text=PGP_MENU)
 
 
 def show_xor_menu() -> str:
-    XOR_MENU_CHOICES = {"1", "2", "3", "4", "5", "6", "r", "q"}
+    XOR_MENU_CHOICES = {"1","2","3","4","5","6","r","q"}
 
     XOR_MENU = """[dodger_blue1]
 ----------------------------
@@ -134,7 +135,7 @@ FILE(S) USING AN XOR KEY
 [5] ENCRYPT all files in a folder
 [6] DECRYPT all files in a folder\n
 [R] Return to the main menu
-[Q] Quit the application\n\n
-[yellow3]ENTER CHOICE """
+[Q] Quit the application\n
+[yellow3]ENTER CHOICE"""
 
     return display_menu(choices=XOR_MENU_CHOICES, menu_text=XOR_MENU)
