@@ -302,7 +302,9 @@ class Functions:
 
             if expire_type == "1":
                 # GNU format: "365d", "1y", "6m" - most compatible!
-                days = Prompt.ask("Enter number of days").strip()
+                days = Prompt.ask(
+                    f"{STATUS_ICONS['keyboard']}[white] Enter number of days"
+                ).strip()
                 if days.isdigit() and int(days) > 0:
                     num_days = int(days)
                     # Convert to appropriate unit for shorter strings
@@ -328,7 +330,9 @@ class Functions:
                     )
                     return None
             else:
-                date_str = Prompt.ask("Enter date (YYYYMMDD)").strip()
+                date_str = Prompt.ask(
+                    f"{STATUS_ICONS['keyboard']}[white] Enter date (YYYYMMDD)"
+                ).strip()
                 try:
                     from datetime import datetime
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()

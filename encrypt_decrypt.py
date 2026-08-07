@@ -37,7 +37,7 @@ class App:
         self.xor = XOR()
 
 
-    def handle_sigint(sig, frame) -> None:
+    def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         console.print(
             f"\n\n\n{STATUS_ICONS['warning']}[red] Operation cancelled by "
