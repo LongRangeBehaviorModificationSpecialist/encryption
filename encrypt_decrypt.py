@@ -1,12 +1,12 @@
 # !/usr/bin/env python3
-# DLU : 05-Aug-2026
+# DLU : 07-Aug-2026
 
 
 from rich.console import Console
 import signal
 import sys
 from resources.functions import Functions
-from resources.vars import STATUS_ICONS
+from resources.vars import ICONS
 from resources.prompts import show_main_menu
 
 from resources._key import KEY
@@ -15,7 +15,7 @@ from resources._pgp import PGP
 from resources._xor import XOR
 
 __author__ = "[@mikespon]"
-__last_updated__ = "06-Aug-2026"
+__last_updated__ = "07-Aug-2026"
 
 
 console = Console()
@@ -40,7 +40,7 @@ class App:
     def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         console.print(
-            f"\n\n\n{STATUS_ICONS['warning']}[red] Operation cancelled by "
+            f"\n\n\n{ICONS['warning']}[red] Operation cancelled by "
             f"user. Exiting...\n"
         )
         sys.exit(0)
@@ -65,7 +65,7 @@ class App:
                 Functions.exit_application()
             case _:
                 console.print(
-                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    f"{ICONS['warning']}[yellow] An invalid option "
                     "was entered"
                 )
 

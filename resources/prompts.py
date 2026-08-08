@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 06-Aug-2026
+# DLU : 07-Aug-2026
 
 
 from rich.prompt import Prompt
@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 # Import the console object from the main __init__.py file
 from . import console
 from resources.functions import Functions
-from resources.vars import STATUS_ICONS
+from resources.vars import ICONS
 
 
 VERSION = "0.4.1785974400"
@@ -28,7 +28,7 @@ def display_menu(
         if clear_on_invalid:
             Functions.clear_screen()
         console.print(
-            f"\n\n{STATUS_ICONS['warning']}[yellow3] \"{user_input}\" is not "
+            f"\n\n{ICONS['warning']}[yellow3] \"{user_input}\" is not "
             "a valid option. [/]"
             f"""[white]Valid options for this menu are: {', '.join(
                 f"'{c}'" for c in sorted(choices))}.\n\n"""
@@ -96,7 +96,7 @@ WITH A PASSWORD [AES-GCM]
 
 
 def show_pgp_menu() -> str:
-    PGP_MENU_CHOICES = {"1","2","3","4","5","6","7","a","r","q"}
+    PGP_MENU_CHOICES = {"1","2","3","4","5","6","7","8","a","r","q"}
 
     PGP_MENU = """[dodger_blue1]
 ----------------------------
@@ -105,13 +105,14 @@ WITH PGP KEY
 ----------------------------\n
 [yellow3]Options:[white]\n
 [A] Debug PGP setup\n
-[1] Create new PGP key pair\n
-[2] ENCRYPT a file using PGP
-[3] DECRYPT a file using PGP\n
-[4] ENCRYPT all files in a folder using PGP
-[5] DECRYPT all files in a folder using PGP\n
-[6] Sign a document with PGP
-[7] Verify a PGP signature\n
+[1] Create new PGP key pair
+[2] Import a PGP key\n
+[3] ENCRYPT a file using PGP
+[4] DECRYPT a file using PGP\n
+[5] ENCRYPT all files in a folder using PGP
+[6] DECRYPT all files in a folder using PGP\n
+[7] Sign a document with PGP
+[8] Verify a PGP signature\n
 [R] Return to the main menu
 [Q] Quit the application\n
 [yellow3]ENTER CHOICE"""
@@ -120,7 +121,7 @@ WITH PGP KEY
 
 
 def show_xor_menu() -> str:
-    XOR_MENU_CHOICES = {"1","2","3","4","5","6","r","q"}
+    XOR_MENU_CHOICES = {"1","2","r","q"}
 
     XOR_MENU = """[dodger_blue1]
 ----------------------------
@@ -130,12 +131,16 @@ FILE(S) USING AN XOR KEY
 [yellow3]Options:[white]\n
 [1] ENCRYPT a single message string
 [2] DECRYPT a single message string\n
-[3] ENCRYPT a file
-[4] DECRYPT a file\n
-[5] ENCRYPT all files in a folder
-[6] DECRYPT all files in a folder\n
 [R] Return to the main menu
 [Q] Quit the application\n
 [yellow3]ENTER CHOICE"""
 
     return display_menu(choices=XOR_MENU_CHOICES, menu_text=XOR_MENU)
+
+
+"""
+[3] ENCRYPT a file
+[4] DECRYPT a file\n
+[5] ENCRYPT all files in a folder
+[6] DECRYPT all files in a folder\n
+"""

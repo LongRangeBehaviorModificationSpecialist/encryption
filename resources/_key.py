@@ -4,7 +4,7 @@
 
 # Import the console object from the main __init__.py file
 from . import console
-from resources.vars import ENCRYPTED_EXT_LIST, STATUS_ICONS
+from resources.vars import ENCRYPTED_EXT_LIST, ICONS
 from resources.functions import Functions
 from resources.prompts import (
     show_main_menu,
@@ -17,7 +17,7 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     console.print(
-        f"{STATUS_ICONS['warning']}[yellow3] Missing dependency: "
+        f"{ICONS['warning']}[yellow3] Missing dependency: "
         "currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
@@ -74,13 +74,13 @@ class KEY:
         """
         key_file_dir = Path(
             Prompt.ask(
-                f"{STATUS_ICONS['question']}[white] Where do you want to "
+                f"{ICONS['question']}[white] Where do you want to "
                 "save the key file? "
             ).strip().strip('"\'')
         )
 
         key_file_name = Prompt.ask(
-            f"{STATUS_ICONS['key']}[white] Enter a name for the key "
+            f"{ICONS['key']}[white] Enter a name for the key "
             "file (w/o file extension) "
         ).strip()
 
@@ -119,7 +119,7 @@ class KEY:
 
         except IOError as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to write key data "
+                f"{ICONS['failure']}[red] Failed to write key data "
                 f"to file : {e}"
             )
             raise
@@ -128,7 +128,7 @@ class KEY:
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         return Prompt.ask(
-            f"{STATUS_ICONS['key']}[white] Enter the path of the .key "
+            f"{ICONS['key']}[white] Enter the path of the .key "
             "file to use "
         ).strip("\"'")
 
@@ -201,7 +201,7 @@ class KEY:
 
         if not key_file_path.is_file():
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Key file not found : "
+                f"{ICONS['failure']}[red] Key file not found : "
                 f"{key_file_path}"
             )
             raise FileNotFoundError(
@@ -211,14 +211,14 @@ class KEY:
         # Prevent self-encryption guard
         if target_file == key_file_path:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] Target file is the "
+                f"{ICONS['warning']}[yellow3] Target file is the "
                 "active key file. Aborting."
             )
             raise ValueError("Cannot encrypt or decrypt the active key file.")
 
         try:
             console.print(
-                f"{STATUS_ICONS['file']}[white] Reading file : "
+                f"{ICONS['file']}[white] Reading file : "
                 f"{target_file.name}..."
             )
             original_file_data = target_file.read_bytes()
@@ -228,11 +228,11 @@ class KEY:
             )
 
             console.print(
-                f"{STATUS_ICONS['success']}[white] File content read "
+                f"{ICONS['success']}[white] File content read "
                 "successfully..."
             )
             console.print(
-                f"{STATUS_ICONS['processing']}[white] {action.capitalize()}ing "
+                f"{ICONS['processing']}[white] {action.capitalize()}ing "
                 "file data..."
             )
 
@@ -254,7 +254,7 @@ class KEY:
                 output_file.write_bytes(decrypted_data)
 
             console.print(
-                f"{STATUS_ICONS['success']}[green3] {action.capitalize()}ed "
+                f"{ICONS['success']}[green3] {action.capitalize()}ed "
                 f"{target_file.name}  ->  {output_file.name}"
             )
 
@@ -262,13 +262,13 @@ class KEY:
 
         except InvalidToken:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Decryption failed! The key "
+                f"{ICONS['failure']}[red] Decryption failed! The key "
                 f"provided is invalid for {target_file.name}"
             )
             raise
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to {action} "
+                f"{ICONS['failure']}[red] Failed to {action} "
                 f"{target_file.name} : {e}"
             )
             raise
@@ -302,10 +302,10 @@ class KEY:
             return []
 
         console.print(
-            f"{STATUS_ICONS['success']}[green3] {target_dir} validated."
+            f"{ICONS['success']}[green3] {target_dir} validated."
         )
         console.print(
-            f"{STATUS_ICONS['processing']}[white] Fetching targets for "
+            f"{ICONS['processing']}[white] Fetching targets for "
             f"{action}ion..."
         )
 
@@ -339,14 +339,14 @@ class KEY:
                 ]
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to retrieve files "
+                f"{ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] No valid files to "
+                f"{ICONS['warning']}[yellow3] No valid files to "
                 f"{action} in {target_dir}"
             )
             return []
@@ -364,7 +364,7 @@ class KEY:
                 successful_files.append(processed_path)
             except Exception as e:
                 console.print(
-                    f"{STATUS_ICONS['failure']}[red] Error during "
+                    f"{ICONS['failure']}[red] Error during "
                     f"{action}ing {file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
@@ -411,7 +411,7 @@ class KEY:
                 Functions.exit_application()
             case _:
                 console.print(
-                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    f"{ICONS['warning']}[yellow] An invalid option "
                     "was entered"
                 )
 

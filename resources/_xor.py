@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 06-Aug-2026
+# DLU : 07-Aug-2026
 
 
 import base64
@@ -10,7 +10,7 @@ from rich.traceback import install
 from typing import List
 
 from . import console
-from resources.vars import ENCRYPTED_EXT_LIST, STATUS_ICONS
+from resources.vars import ENCRYPTED_EXT_LIST, ICONS
 from resources.functions import Functions
 from resources.prompts import (
     show_main_menu,
@@ -36,12 +36,12 @@ class XOR:
 
     # Class-level constant for menu routing
     _XOR_ACTION_MAP = {
-        "1": "message",
-        "2": "message",
-        "3": "file",
-        "4": "file",
-        "5": "folder",
-        "6": "folder"
+        "1": (Action.ENCRYPT, "message"),
+        "2": (Action.DECRYPT, "message"),
+        # "3": (Action.ENCRYPT, "file"),
+        # "4": (Action.DECRYPT, "file"),
+        # "5": (Action.ENCRYPT, "folder"),
+        # "6": (Action.DECRYPT, "folder")
     }
 
     def __init__(self, default_chunk_size: int = 64 * 1024):
@@ -57,8 +57,8 @@ class XOR:
     def get_xor_key(self) -> str:
         """Returns a UTF-8 encoded XOR key."""
         xor_key = Prompt.ask(
-            f"{STATUS_ICONS['key']}[white] Enter the key you want to use for "
-            "the XOR operation ",
+            f"{ICONS['key']}[white] Enter the key you want to use for the "
+            "XOR operation",
             password=True
         )
         return xor_key.encode("utf-8")
@@ -70,28 +70,44 @@ class XOR:
         return bytes(b ^ key[i % key_len] for i, b in enumerate(data))
 
 
-    def _handle_xor_process_msg(self) -> None:
+    def _handle_xor_process_msg(self, action: Action) -> None:
         message = Prompt.ask(
-            f"{STATUS_ICONS['keyboard']}[white] Enter the message you want to "
-            "process with XOR "
+            f"\n{ICONS['keyboard']}[white] Enter the message you want to XOR"
         )
+
+        if not message:
+            console.print(
+                f"{ICONS['warning']}[yellow3] The message to process cannot "
+                "be empty"
+            )
+            raise ValueError("The message cannot be empty.")
+
         xor_key = self.get_xor_key()
+
+        if not xor_key:
+            console.print(
+                f"{ICONS['warning']}[yellow3] The XOR key cannot be empty"
+            )
+            raise ValueError("The XOR key cannot be empty.")
+
         self.xor_process_msg(
             xor_key=xor_key,
             message=message,
+            action=action.value,
         )
 
 
-    def _handle_xor_process_file(self) -> None:
+    def _handle_xor_process_file(self, action: Action) -> None:
         target_file = Functions.get_file_path()
         xor_key = self.get_xor_key()
         self.xor_process_file(
             target_file=target_file,
             xor_key=xor_key,
+            action=action.value,
         )
 
 
-    def _handle_xor_process_folder(self) -> None:
+    def _handle_xor_process_folder(self, action: Action) -> None:
         target_dir = Functions.get_directory_path()
         xor_key = self.get_xor_key()
         recursive = Functions.select_recursive_option()
@@ -99,6 +115,7 @@ class XOR:
             target_dir=target_dir,
             xor_key=xor_key,
             recursive=recursive,
+            action=action.value,
         )
 
 
@@ -106,70 +123,115 @@ class XOR:
             self,
             message: str,
             xor_key: str,
-            output_file: Path | str = "processed_msg.txt",
+            action: str
     ) -> str:
-        """XOR encrypts or decrypts a text string, outputs Base64
-        representation, and saves raw bytes to disk.
+        """XOR encrypts or decrypts a text string.
+
+        For encryption: plaintext → XOR → Base64-encoded output
+        For decryption: Base64-encoded input → XOR → plaintext
+
+        Args:
+            message: The text to process (plaintext for encrypt, Base64
+                for decrypt).
+            xor_key: The XOR key as a string.
+            action: Either 'encrypt' or 'decrypt'.
+
+        Returns:
+            str: The processed result (Base64 string for encrypt, plaintext
+                for decrypt).
+
+        Raises:
+            ValueError: If action is invalid or decryption fails (bad
+                Base64/encoding).
         """
-        if not message:
-            console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] The message to process "
-                "cannot be an empty string"
+        action = action.lower().strip()
+
+        if action not in ("encrypt", "decrypt"):
+            raise ValueError(
+                f"Invalid action '{action}'. Must be 'encrypt' or 'decrypt'."
             )
-            raise ValueError("The message cannot be empty.")
-        if not xor_key:
-            console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] The XOR key cannot be an "
-                "empty string"
-            )
-            raise ValueError("The XOR key cannot be empty.")
-
-        # Write raw encrypted bytes safely
-        output_file = Path(output_file)
-
-        # if action == "encrypt":
-        message_bytes = message.encode("utf-8")
-        key_bytes = xor_key.encode("utf-8")
-
-        # Fast byte-level XOR processing
-        processed_bytes = self._xor_bytes(message_bytes, key_bytes)
-
-        # Encode to Base64 for safe terminal display and transport
-        processed_data = base64.b64encode(processed_bytes).decode("ascii")
-        # else:
-        #     # Decode Base64 string back into raw encrypted bytes
-        #     encrypted_bytes = base64.b64decode(message.strip())
-        #     key_bytes = xor_key.encode("utf-8")
-
-        #     # 2. XOR Decryption
-        #     decrypted_bytes = self._xor_bytes(encrypted_bytes, key_bytes)
-        #     processed_data = decrypted_bytes.decode("utf-8")
 
         try:
-            output_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_file, "wb") as f:
-                f.write(processed_data)
+            if action == "encrypt":
+                # Plaintext → UTF-8 bytes → XOR → Base64
+                message_bytes = message.encode("utf-8")
+                # Fast byte-level XOR processing
+                processed_bytes = self._xor_bytes(message_bytes, xor_key)
+                # Encode to Base64 for safe terminal display and transport
+                processed_data = base64.b64encode(
+                    processed_bytes).decode("ascii")
+            else:
+                # Base64 → decode → XOR → UTF-8 plaintext
+                try:
+                    decoded_bytes = base64.b64decode(message, validate=True)
+                except (base64.binascii.Error, ValueError) as e:
+                    raise ValueError(
+                        "Input is not valid Base64 -- cannot decrypt."
+                    ) from e
 
-            console.print(
-                f"{STATUS_ICONS['success']}[green3]Action Successful\n"
-                f"The Base64-encoded processed message is:\n  "
-                f"[white]{processed_data}\n  "
-                f"[dim]Raw encrypted bytes saved to : {output_file.resolve()}"
-            )
+                processed_bytes = self._xor_bytes(decoded_bytes, xor_key)
 
-            return output_file
+                try:
+                    processed_data = processed_bytes.decode("utf-8")
+                except UnicodeDecodeError as e:
+                    raise ValueError(
+                        "Decryption produced invalid text - wrong key or "
+                        "corrupted data."
+                    ) from e
 
+        except ValueError:
+            raise
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Could not write processed "
-                f"message to {output_file} : {e}"
+                f"{ICONS['failure']}[red] Error during {action}ion -> {e}"
             )
+            raise
+
+        save_output = Prompt.ask(
+            f"{ICONS['question']}[white] Do you want to save the {action}ed "
+            "message to a file?",
+            choices=["y", "n"],
+            show_choices=True
+        )
+
+        if save_output == "y":
+            output_file_input = Prompt.ask(
+                f"{ICONS['question']}[white] Enter the file path to save the "
+                "results"
+            )
+            output_file = Path(output_file_input)
+
+            try:
+                output_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(output_file, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(processed_data)
+
+                console.print(
+                    f"{ICONS['tray_in']}[green] {action.capitalize()}ed "
+                    f"message saved to -> {output_file.resolve()}"
+                )
+
+            except Exception as e:
+                console.print(
+                    f"{ICONS['failure']}[red] Could not write processed "
+                    f"message to {output_file} -> {e}"
+                )
+
+        else:
+            console.print(
+                f"\n{ICONS['success']}[green3] Action Successful\n"
+                f"\nThe {action}ed message is:\n"
+                f"\n    [white]{processed_data}\n"
+            )
+
+        return processed_data
 
 
     def xor_process_file(
             self,
             target_file: Path | str,
             xor_key: bytes,
+            action: str,
             output_path: Path | str | None = None,
             chunk_size: int | None = None,
     ) -> Path:
@@ -181,6 +243,7 @@ class XOR:
         Args:
             target_file: Path to the file to process.
             xor_key: The XOR key as bytes.
+            action: Either 'encrypt' or 'decrypt'.
             output_path: Custom output path. If None, derived from the input.
             chunk_size: Bytes to read/write per iteration (default: 64 KB).
 
@@ -191,6 +254,9 @@ class XOR:
             FileNotFoundError: If the target file does not exist.
             ValueError: If the key is empty.
         """
+
+        console.print(f"\n\nThe random XOR key is -> {xor_key}\n\n")
+
         target_file = Path(target_file).resolve()
 
         if not target_file.is_file():
@@ -202,13 +268,14 @@ class XOR:
 
         if not xor_key:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3[ The XOR key must not "
-                "be empty."
+                f"{ICONS['warning']}[yellow3] The XOR key must not be empty"
             )
             raise ValueError("XOR key must not be empty.")
 
         key_len = len(xor_key)
         chunk_size = chunk_size or self.default_chunk_size
+
+
 
         # --- Determine output path ---
         if output_path:
@@ -223,7 +290,7 @@ class XOR:
         try:
             file_size = target_file.stat().st_size
             console.print(
-                f"{STATUS_ICONS['processing']}[white] Processing file : {target_file.name} "
+                f"{ICONS['processing']}[white] Processing file : {target_file.name} "
                 f"({file_size:,} bytes)..."
             )
 
@@ -235,7 +302,8 @@ class XOR:
                     if not chunk:
                         break
 
-                    offset =bytes_processed % key_len
+                    offset = bytes_processed % key_len
+        # return bytes(b ^ key[i % key_len] for i, b in enumerate(data))
                     xor_result = bytes(
                         byte ^ xor_key[(offset + i) % key_len]
                         for i, byte in enumerate(chunk)
@@ -246,13 +314,13 @@ class XOR:
 
                     progress = (bytes_processed / file_size) * 100
                     console.print(
-                        f"{STATUS_ICONS['processing']}[white] Progress : "
+                        f"{ICONS['info']}[white] Progress : "
                         f"{progress:.1f}%",
                         end=""
                     )
             console.print(
-                f"{STATUS_ICONS['success']}[green3] Processed "
-                f"{target_file.name:34s}{'->':7s}{output_file.name}"
+                f"\n{ICONS['success']}[green3] Processed "
+                f"{target_file.name}  ->'  {output_file.name}"
             )
 
             return output_file
@@ -262,7 +330,7 @@ class XOR:
             if output_file.exists():
                 output_file.unlink(missing_ok=True)
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to process "
+                f"{ICONS['failure']}[red] Failed to process "
                 f"{target_file.name} : {e}")
             raise
 
@@ -299,7 +367,7 @@ class XOR:
             return
 
         console.print(
-            f"{STATUS_ICONS['success']}[green3] {target_dir} validated. "
+            f"{ICONS['success']}[green3] {target_dir} validated. "
             "Fetching files to process..."
         )
 
@@ -317,14 +385,14 @@ class XOR:
 
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to retrieve files "
+                f"{ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] No valid files to encrypt "
+                f"{ICONS['warning']}[yellow3] No valid files to encrypt "
                 f"in {target_dir}"
             )
             return []
@@ -338,7 +406,7 @@ class XOR:
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
             console.print(
-                f"{STATUS_ICONS['processing']}[cyan][{progress_bar}] "
+                f"{ICONS['processing']}[cyan][{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""
             )
@@ -353,7 +421,7 @@ class XOR:
 
             except Exception as e:
                 console.print(
-                    f"{STATUS_ICONS['failure']}[red] Error during processing "
+                    f"{ICONS['failure']}[red] Error during processing "
                     f"{file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
@@ -363,7 +431,7 @@ class XOR:
 
         if successful_files:
             console.print(
-                f"{STATUS_ICONS['success']}[green3] Action Completed\n"
+                f"{ICONS['success']}[green3] Action Completed\n"
                 f"Successfully processed {len(successful_files)} files in "
                 f"{target_dir}:"
             )
@@ -372,7 +440,7 @@ class XOR:
 
         if failed_files:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Warning:\n"
+                f"{ICONS['failure']}[red] Warning:\n"
                 f"Failed to process {len(failed_files)} files :"
             )
             for file in failed_files:
@@ -385,14 +453,16 @@ class XOR:
         """Gets input from the user on what action to start next."""
         xor_choice = show_xor_menu()
         match xor_choice:
-            case "1" | "2" | "3" | "4" | "5" | "6":
-                scope = self._XOR_ACTION_MAP[xor_choice]
+            # case "1" | "2" | "3" | "4" | "5" | "6":
+            case "1" | "2":
+
+                action, scope = self._XOR_ACTION_MAP[xor_choice]
                 if scope == "message":
-                    self._handle_xor_process_msg()
-                elif scope == "file":
-                    self._handle_xor_process_file()
-                else:
-                    self._handle_xor_process_folder()
+                    self._handle_xor_process_msg(action=action)
+                # elif scope == "file":
+                #     self._handle_xor_process_file(action=action)
+                # else:
+                #     self._handle_xor_process_folder(action=action)
             case "r":
                 Functions.clear_screen()
                 show_main_menu()
@@ -400,7 +470,7 @@ class XOR:
                 Functions.exit_application()
             case _:
                 console.print(
-                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    f"{ICONS['warning']}[yellow] An invalid option "
                     "was entered"
                 )
 
@@ -408,12 +478,12 @@ class XOR:
 #! ------------------------------------
 #!  VERIFICATIONS CHECKS
 #!
-#!  Option "1" --
-#!  Option "2" --
-#!  Option "3" --
-#!  Option "4" --
-#!  Option "5" --
-#!  Option "6" --
+#!  Option "1" -- working 08-07-26
+#!  Option "2" -- working 08-07-26
+#!  Option "3" -- removed
+#!  Option "4" -- removed
+#!  Option "5" -- removed
+#!  Option "6" -- removed
 #!  Option "r" --
-#!  Option "q" --
+#!  Option "q" -- working 08-07-26
 #!

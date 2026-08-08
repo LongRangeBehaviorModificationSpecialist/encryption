@@ -1,5 +1,5 @@
 # !/usr/bin/env python3
-# DLU : 06-Aug-2026
+# DLU : 07-Aug-2026
 
 
 from datetime import datetime
@@ -14,7 +14,7 @@ import time
 
 # Import the console object from the main __init__.py file
 from . import console
-from resources.vars import STATUS_ICONS
+from resources.vars import ICONS
 
 
 class Functions:
@@ -28,7 +28,7 @@ class Functions:
             end_time = time.perf_counter()
             total_time = end_time - start_time
             console.print(
-                f"{STATUS_ICONS['success']}[green3] Operation [ "
+                f"{ICONS['success']}[green3] Operation [ "
                 f"{func.__name__}() ] was completed in {total_time:.4f} seconds"
             )
             return result
@@ -45,7 +45,7 @@ class Functions:
     def exit_application() -> None:
         """Print message to screen then exit the application."""
         console.print(
-            f"\n\n{STATUS_ICONS['arrow_right']}[green3]  Exiting the "
+            f"\n\n{ICONS['arrow_right']}[green3]  Exiting the "
             "application...\n"
         )
         sys.exit(0)
@@ -73,7 +73,7 @@ class Functions:
     @staticmethod
     def get_file_path() -> str:
         return Prompt.ask(
-            f"{STATUS_ICONS['keyboard']}[white] Enter the path of the "
+            f"{ICONS['keyboard']}[white] Enter the path of the "
             "file to be processed "
         ).strip("\"'")
 
@@ -81,7 +81,7 @@ class Functions:
     @staticmethod
     def get_directory_path() -> str:
         return Prompt.ask(
-            f"{STATUS_ICONS['keyboard']}[white] Enter the full path of the "
+            f"{ICONS['keyboard']}[white] Enter the full path of the "
             "directory containing the files to be processed "
         ).strip("\"'")
 
@@ -91,7 +91,7 @@ class Functions:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input =Prompt.ask(
-                f"{STATUS_ICONS['question']}[white] Process subdirectories "
+                f"{ICONS['question']}[white] Process subdirectories "
                 "recursively? ",
                 choices=["y", "n"],
                 show_choices=True
@@ -102,7 +102,7 @@ class Functions:
                 case "n":
                     return False
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Invalid input. Enter either "
+                f"{ICONS['failure']}[red] Invalid input. Enter either "
                 "'y' or 'n'."
             )
 
@@ -115,7 +115,7 @@ class Functions:
         while True:
             # Prompt user and convert directly to a mutable bytearray
             raw_password = Prompt.ask(
-                f"{STATUS_ICONS['keyboard']}[white] Enter the PASSWORD you want "
+                f"{ICONS['keyboard']}[white] Enter the PASSWORD you want "
                 "to use ",
                 password=True
             ).encode("utf-8")
@@ -130,7 +130,7 @@ class Functions:
                 password_bytes[i] = 0
 
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Not a valid password. "
+                f"{ICONS['failure']}[red] Not a valid password. "
                 "Please try again."
             )
 
@@ -174,7 +174,7 @@ class Functions:
                 and has_upper
                 and has_lower
                 and has_symbol):
-            console.print(f"""{STATUS_ICONS['failure']}[red]
+            console.print(f"""{ICONS['failure']}[red]
     Your password did not meet the minimun requirements. Please try again.\n
     Your password must meet the following criteria :\n
     [-] Is at least ten (10) characters long
@@ -186,7 +186,7 @@ class Functions:
             return False
         else:
             console.print(
-                f"{STATUS_ICONS['success']}[white] Your password meets "
+                f"{ICONS['success']}[white] Your password meets "
                 "the minimum requirements. Continuing..."
             )
             return True
@@ -195,7 +195,7 @@ class Functions:
     @staticmethod
     def get_email_address() -> str:
         return Prompt.ask(
-            f"{STATUS_ICONS['keyboard']}[white] Enter email address of the "
+            f"{ICONS['keyboard']}[white] Enter email address of the "
             "PGP key owner "
         ).strip().lower()
 
@@ -203,7 +203,7 @@ class Functions:
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:
         return console.print(
-            f"{STATUS_ICONS['success']}[green3] Action Successful\n"
+            f"{ICONS['success']}[green3] Action Successful\n"
             f"[white]The {text} file was saved as : {file_name}"
             )
 
@@ -249,7 +249,7 @@ class Functions:
     @staticmethod
     def print_not_file_error(target_file: Path) -> str:
         return ( console.print(
-            f"{STATUS_ICONS['failure']}[red] File validation for "
+            f"{ICONS['failure']}[red] File validation for "
             f"{target_file.name} failed : the file does not exist or is "
             "not a file."
             )
@@ -261,7 +261,7 @@ class Functions:
         """Returns True if the user has permission to read the file."""
         if not os.access(target_file, os.R_OK):
             console.print(
-                f"{STATUS_ICONS['failure']}[red] The current user does "
+                f"{ICONS['failure']}[red] The current user does "
                 f"not have the correct permissions to process {target_file.name}"
             )
             return False
@@ -274,7 +274,7 @@ class Functions:
         """Returns true if target_dir points to a directory."""
         if not target_dir.is_dir():
             console.print(
-                f"{STATUS_ICONS['failure']}[red] {target_dir} does not exist "
+                f"{ICONS['failure']}[red] {target_dir} does not exist "
                 "or is not a valid directory."
             )
             return False
@@ -286,7 +286,7 @@ class Functions:
     def get_pgp_key_expire_date() -> str | None:
         """Get expiration from user, return as GNU format string."""
         expire_option = Prompt.ask(
-            f"{STATUS_ICONS['question']}[white] Do you want to set an "
+            f"{ICONS['question']}[white] Do you want to set an "
             "expiration date?",
             choices=["y", "n"],
             show_choices=True
@@ -294,7 +294,7 @@ class Functions:
 
         if expire_option == "y":
             expire_type = Prompt.ask(
-                f"{STATUS_ICONS['question']}[white] Expiration type (1 = "
+                f"{ICONS['question']}[white] Expiration type (1 = "
                 "Days, 2 = Date)",
                 choices=["1", "2"],
                 show_choices=True
@@ -303,7 +303,7 @@ class Functions:
             if expire_type == "1":
                 # GNU format: "365d", "1y", "6m" - most compatible!
                 days = Prompt.ask(
-                    f"{STATUS_ICONS['keyboard']}[white] Enter number of days"
+                    f"{ICONS['keyboard']}[white] Enter number of days"
                 ).strip()
                 if days.isdigit() and int(days) > 0:
                     num_days = int(days)
@@ -326,19 +326,19 @@ class Functions:
                         return f"{num_days}d"
                 else:
                     console.print(
-                        f"{STATUS_ICONS['warning']}[yellow] Invalid number."
+                        f"{ICONS['warning']}[yellow] Invalid number."
                     )
                     return None
             else:
                 date_str = Prompt.ask(
-                    f"{STATUS_ICONS['keyboard']}[white] Enter date (YYYYMMDD)"
+                    f"{ICONS['keyboard']}[white] Enter date (YYYYMMDD)"
                 ).strip()
                 try:
                     from datetime import datetime
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()
                     if parsed <= datetime.now().date():
                         console.print(
-                            f"{STATUS_ICONS['warning']}[yellow] Date "
+                            f"{ICONS['warning']}[yellow] Date "
                             "must be in future."
                         )
                         return None
@@ -346,7 +346,7 @@ class Functions:
                     return f"{date_str}T000000"
                 except ValueError:
                     console.print(
-                        f"{STATUS_ICONS['warning']}[yellow] Invalid date "
+                        f"{ICONS['warning']}[yellow] Invalid date "
                         "format."
                     )
                     return None
@@ -364,34 +364,33 @@ class Functions:
 
             if attempts > max_attempts:
                 console.print(
-                    f"{STATUS_ICONS['failure']}[red] Too many failed attempts. "
+                    f"{ICONS['failure']}[red] Too many failed attempts. "
                     "Exiting..."
                 )
                 raise ValueError("Max passphrase attempts exceeded.")
 
             password = Prompt.ask(
-                f"{STATUS_ICONS['keyboard']}[white] Enter passphrase for the "
-                "private key ",
+                f"{ICONS['keyboard']}[white] Enter passphrase ",
                 password=True
             )
 
             if not password:
                 console.print(
-                    f"{STATUS_ICONS['warning']}[yellow] Passphrase cannot be "
+                    f"{ICONS['warning']}[yellow] Passphrase cannot be "
                     "empty."
                 )
                 continue
 
             # Confirmation entry
             confirm_password = Prompt.ask(
-                f"{STATUS_ICONS['keyboard']}[white] Re-enter passphrase to "
+                f"{ICONS['keyboard']}[white] Re-enter passphrase to "
                 "confirm",
                 password=True
             )
 
             if not confirm_password:
                 console.print(
-                    f"{STATUS_ICONS['warning']}[yellow] Passphrase cannot be "
+                    f"{ICONS['warning']}[yellow] Passphrase cannot be "
                     "empty."
                 )
                 continue
@@ -399,12 +398,12 @@ class Functions:
             # Check if they match
             if password == confirm_password:
                 console.print(
-                    f"{STATUS_ICONS['success']}[green] Passphrases confirmed!"
+                    f"{ICONS['success']}[green] Passphrases confirmed!"
                 )
                 return password
             else:
                 console.print(
-                    f"{STATUS_ICONS['failure']}[red] Passphrases do not match! "
+                    f"{ICONS['failure']}[red] Passphrases do not match! "
                     f"Try again (attempt {attempts}/{max_attempts})"
                 )
 
@@ -413,13 +412,13 @@ class Functions:
     def get_pgp_full_name() -> str:
         """Get full name of the PGP key owner."""
         full_name = Prompt.ask(
-            f"{STATUS_ICONS['input']}[white] Enter full name of the PGP "
+            f"{ICONS['input']}[white] Enter full name of the PGP "
             "key owner "
         ).strip()
 
         if not full_name:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] A valid name is required."
+                f"{ICONS['warning']}[yellow3] A valid name is required."
             )
             raise ValueError("Full name must be provided.")
         return full_name
@@ -429,13 +428,13 @@ class Functions:
     def get_pgp_email_address() -> str:
         """Get email address of the PGP key owner."""
         email_address = Prompt.ask(
-            f"{STATUS_ICONS['email']}[white] Enter email address of the "
+            f"{ICONS['email']}[white] Enter email address of the "
             "PGP key owner "
         ).strip().lower()
 
         if not email_address or "@" not in email_address:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] Invalid or missing "
+                f"{ICONS['warning']}[yellow3] Invalid or missing "
                 f"email address provided : {email_address}"
             )
             raise ValueError(

@@ -5,7 +5,7 @@
 # Import the console object from the main __init__.py file
 from . import console
 from rich.traceback import install
-from resources.vars import ENCRYPTED_EXT_LIST, STATUS_ICONS
+from resources.vars import ENCRYPTED_EXT_LIST, ICONS
 from resources.functions import Functions
 from resources.prompts import (
     show_main_menu,
@@ -20,7 +20,7 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     console.print(
-        f"{STATUS_ICONS['warning']}[yellow3] Missing dependency: "
+        f"{ICONS['warning']}[yellow3] Missing dependency: "
         "currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
@@ -126,18 +126,18 @@ class AES:
 
         try:
             console.print(
-                f"{STATUS_ICONS['file']}[white] Reading file : "
+                f"{ICONS['file']}[white] Reading file : "
                 f"{target_file.name}..."
             )
 
             original_file_data = target_file.read_bytes()
             console.print(
-                f"{STATUS_ICONS['success']}[white] File content read "
+                f"{ICONS['success']}[white] File content read "
                 "successfully..."
             )
 
             console.print(
-                f"{STATUS_ICONS['processing']}[white] {action.capitalize()}ing "
+                f"{ICONS['processing']}[white] {action.capitalize()}ing "
                 "file data..."
             )
 
@@ -178,7 +178,7 @@ class AES:
                 min_length = self.SALT_LENGTH + self.IV_LENGTH + 16
                 if len(original_file_data) < min_length:
                     console.print(
-                        f"{STATUS_ICONS['failure']}[red]File is corrupted or "
+                        f"{ICONS['failure']}[red]File is corrupted or "
                         "too short to be a valid AES-GCM payload."
                     )
                     raise ValueError("File corrupted or too short")
@@ -210,7 +210,7 @@ class AES:
 
                 except InvalidTag:
                     console.print(
-                        f"{STATUS_ICONS['failure']}[red] Decryption failed : "
+                        f"{ICONS['failure']}[red] Decryption failed : "
                         "Invalid password or corrupted payload (authentication "
                         "tag check failed) (Invalid tag)."
                     )
@@ -224,7 +224,7 @@ class AES:
                         password_bytes[i] = 0
 
             console.print(
-                f"{STATUS_ICONS['success']}[green3] {action.capitalize()}ed "
+                f"{ICONS['success']}[green3] {action.capitalize()}ed "
                 f"{target_file.name}  ->  {output_file.name}"
             )
 
@@ -232,7 +232,7 @@ class AES:
 
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to {action} "
+                f"{ICONS['failure']}[red] Failed to {action} "
                 f"{target_file.name} : {e}"
             )
 
@@ -271,7 +271,7 @@ class AES:
             return
 
         console.print(
-            f"{STATUS_ICONS['success']}[green3] {target_dir} validated. "
+            f"{ICONS['success']}[green3] {target_dir} validated. "
             f"Fetching targets for {action}ion...")
 
         try:
@@ -296,13 +296,13 @@ class AES:
                 ]
         except Exception as e:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Failed to retrieve files "
+                f"{ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
 
         if not all_files:
             console.print(
-                f"{STATUS_ICONS['warning']}[yellow3] No valid files to "
+                f"{ICONS['warning']}[yellow3] No valid files to "
                 f"{action} in {target_dir}"
             )
             return
@@ -320,7 +320,7 @@ class AES:
                 )
             except Exception as e:
                 console.print(
-                    f"{STATUS_ICONS['failure']}[red] Error {action}ing "
+                    f"{ICONS['failure']}[red] Error {action}ing "
                     f"{file_path.name}  ->  {e}"
                 )
                 results['failed'].append({
@@ -330,7 +330,7 @@ class AES:
 
         if results['success']:
             console.print(
-                f"{STATUS_ICONS['success']}[green3] Action Completed\n"
+                f"{ICONS['success']}[green3] Action Completed\n"
                 f"Successfully {action}ed {len(results['success'])} files in "
                 f"{target_dir} :"
             )
@@ -342,7 +342,7 @@ class AES:
 
         if results['failed']:
             console.print(
-                f"{STATUS_ICONS['failure']}[red] Warning:\n"
+                f"{ICONS['failure']}[red] Warning:\n"
                 f"Failed to {action} {len(results['failed'])} files :"
             )
             failed_paths = [
@@ -373,7 +373,7 @@ class AES:
                 Functions.exit_application()
             case _:
                 console.print(
-                    f"{STATUS_ICONS['warning']}[yellow] An invalid option "
+                    f"{ICONS['warning']}[yellow] An invalid option "
                     "was entered"
                 )
 
