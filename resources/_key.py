@@ -1,29 +1,22 @@
 # !/usr/bin/env python3
-# DLU : 06-Aug-2026
-
 
 # Import the console object from the main __init__.py file
-from . import console
+from . import c
 from resources.vars import ENCRYPTED_EXT_LIST, ICONS
-from resources.functions import Functions
-from resources.prompts import (
-    show_main_menu,
-    show_key_menu
-)
+from resources.utils import Utils
 
 HAS_CRYPTO = False
 try:
     from cryptography.fernet import Fernet, InvalidToken
     HAS_CRYPTO = True
 except ImportError:
-    console.print(
+    c.print(
         f"{ICONS['warning']}[yellow3] Missing dependency: "
         "currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
 
 from datetime import datetime
-from enum import StrEnum
 import hashlib
 from pathlib import Path
 from rich.prompt import Prompt
@@ -31,23 +24,10 @@ from rich.traceback import install
 from typing import List
 
 
-install(show_locals=True)
-
-
-class Action(StrEnum):
-    ENCRYPT = "encrypt"
-    DECRYPT = "decrypt"
+install(show_locals=True, console=c)
 
 
 class KEY:
-
-    _KEY_ACTION_MAP = {
-        "2": (Action.ENCRYPT, "file"),
-        "3": (Action.DECRYPT, "file"),
-        "4": (Action.ENCRYPT, "folder"),
-        "5": (Action.DECRYPT, "folder")
-    }
-
 
     def _load_fernet(self, key_file_path: Path | str) -> Fernet:
         """Load and initialize a Fernet instance from a key file.
@@ -98,16 +78,16 @@ class KEY:
             key_file_hash_value = hashlib.sha256(key).hexdigest().upper()
             key_file_hash_file = full_key_path.with_suffix(".key.sha256")
 
-            log_content = Functions.format_key_file_log(
-                timestamp= Functions.get_date_time(format="display"),
+            log_content = Utils.format_key_file_log(
+                timestamp= Utils.get_date_time(format="display"),
                 key_path=full_key_path,
                 hash_value=key_file_hash_value,
             )
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
 
-            console.print(
-                Functions.format_key_file_verification(
+            c.print(
+                Utils.format_key_file_verification(
                     key_file_dir=key_file_dir,
                     full_key_path=full_key_path,
                     key_file_hash_file=key_file_hash_file,
@@ -118,7 +98,7 @@ class KEY:
             return full_key_path
 
         except IOError as e:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Failed to write key data "
                 f"to file : {e}"
             )
@@ -133,28 +113,28 @@ class KEY:
         ).strip("\"'")
 
 
-    def _handle_key_process_file(self, action: Action) -> None:
+    def _handle_key_process_file(self, action: str) -> None:
         """Helper function to process encryption or decryption of a file."""
         key_file_path = self.get_existing_key_file_path()
-        target_file = Functions.get_file_path()
+        target_file = Utils.get_file_path()
         self.key_process_file(
             key_file_path=key_file_path,
             target_file=target_file,
-            action=action.value,
+            action=action,
         )
 
 
-    def _handle_key_process_folder(self, action: Action) -> None:
+    def _handle_key_process_folder(self, action: str) -> None:
         """Helper function to process encryption or decryption of files
         in a folder.
         """
         key_file_path = self.get_existing_key_file_path()
-        target_dir = Functions.get_directory_path()
-        recursive = Functions.select_recursive_option()
+        target_dir = Utils.get_directory_path()
+        recursive = Utils.select_recursive_option()
         self.key_process_folder(
             target_dir=target_dir,
             key_file_path=key_file_path,
-            action=action.value,
+            action=action,
             recursive=recursive,
         )
 
@@ -185,10 +165,10 @@ class KEY:
         key_file_path = Path(key_file_path).resolve()
 
         if not target_file.is_file():
-            Functions.print_not_file_error(target_file=target_file)
+            Utils.print_not_file_error(target_file=target_file)
             raise FileNotFoundError(f"Invalid target file : {target_file}")
 
-        if not Functions.verify_file_access(target_file=target_file):
+        if not Utils.verify_file_access(target_file=target_file):
             return
 
         # Ensure key_file_path is resolved to prevent key self-encryption
@@ -200,7 +180,7 @@ class KEY:
         #     ).resolve()
 
         if not key_file_path.is_file():
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Key file not found : "
                 f"{key_file_path}"
             )
@@ -210,14 +190,14 @@ class KEY:
 
         # Prevent self-encryption guard
         if target_file == key_file_path:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] Target file is the "
                 "active key file. Aborting."
             )
             raise ValueError("Cannot encrypt or decrypt the active key file.")
 
         try:
-            console.print(
+            c.print(
                 f"{ICONS['file']}[white] Reading file : "
                 f"{target_file.name}..."
             )
@@ -227,11 +207,11 @@ class KEY:
                 key_file_path=key_file_path,
             )
 
-            console.print(
+            c.print(
                 f"{ICONS['success']}[white] File content read "
                 "successfully..."
             )
-            console.print(
+            c.print(
                 f"{ICONS['processing']}[white] {action.capitalize()}ing "
                 "file data..."
             )
@@ -253,7 +233,7 @@ class KEY:
                     )
                 output_file.write_bytes(decrypted_data)
 
-            console.print(
+            c.print(
                 f"{ICONS['success']}[green3] {action.capitalize()}ed "
                 f"{target_file.name}  ->  {output_file.name}"
             )
@@ -261,13 +241,13 @@ class KEY:
             return output_file
 
         except InvalidToken:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Decryption failed! The key "
                 f"provided is invalid for {target_file.name}"
             )
             raise
         except Exception as e:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Failed to {action} "
                 f"{target_file.name} : {e}"
             )
@@ -298,13 +278,13 @@ class KEY:
         target_dir = Path(target_dir).resolve()
         key_file_path = Path(key_file_path).resolve()
 
-        if not Functions.verify_is_directory(target_dir=target_dir):
+        if not Utils.verify_is_directory(target_dir=target_dir):
             return []
 
-        console.print(
+        c.print(
             f"{ICONS['success']}[green3] {target_dir} validated."
         )
-        console.print(
+        c.print(
             f"{ICONS['processing']}[white] Fetching targets for "
             f"{action}ion..."
         )
@@ -338,14 +318,14 @@ class KEY:
                     and f.resolve() != key_file_path
                 ]
         except Exception as e:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] No valid files to "
                 f"{action} in {target_dir}"
             )
@@ -363,7 +343,7 @@ class KEY:
                 )
                 successful_files.append(processed_path)
             except Exception as e:
-                console.print(
+                c.print(
                     f"{ICONS['failure']}[red] Error during "
                     f"{action}ing {file_path.name} : {e}"
                 )
@@ -371,59 +351,22 @@ class KEY:
 
         # Summary reporting
         if successful_files:
-            console.print(
+            c.print(
                 "\n" + "[green]-" * 45 + "\n",
                 f"[green3]** Action Completed **\n"
                 f"    Successfully {action}ed {len(successful_files)} files "
                 f"in {target_dir}:"
             )
             for processed_file in successful_files:
-                console.print(f"[green3]        {processed_file.name}")
+                c.print(f"[green3]        {processed_file.name}")
 
         if failed_files:
-            console.print(
+            c.print(
                 "\n" + "-" * 45 + "\n",
                 f"[red]** Warning **\n"
                 f"    Failed to {action} {len(failed_files)} files:"
             )
             for failed_file in failed_files:
-                console.print(f"[red]        {failed_file.name}")
+                c.print(f"[red]        {failed_file.name}")
 
         return successful_files
-
-
-    def get_key_action(self) -> None:
-        """Gets input from the user on what action to start next."""
-        key_choice = show_key_menu()
-        match key_choice:
-            case "1":
-                self.generate_and_save_key()
-            case "2" | "3" | "4" | "5":
-                action, scope = self._KEY_ACTION_MAP[key_choice]
-                if scope == "file":
-                    self._handle_key_process_file(action=action)
-                else:
-                    self._handle_key_process_folder(action=action)
-            case "r":
-                Functions.clear_screen()
-                show_main_menu()
-            case "q":
-                Functions.exit_application()
-            case _:
-                console.print(
-                    f"{ICONS['warning']}[yellow] An invalid option "
-                    "was entered"
-                )
-
-
-#! ------------------------------------
-#!  VERIFICATIONS CHECKS
-#!
-#!  Option "1" --
-#!  Option "2" --
-#!  Option "3" --
-#!  Option "4" --
-#!  Option "5" --
-#!  OPTION "r" -- NEED TO FIX.  Returns to the main menu, but when an
-#!                option is entered, the program exits.
-#!  OPTION "q" -- working 08-05-26

@@ -1,29 +1,17 @@
 # !/usr/bin/env python3
-# DLU : 07-Aug-2026
-
 
 import base64
-from enum import StrEnum
 from pathlib import Path
 from rich.prompt import Prompt
 from rich.traceback import install
 from typing import List
 
-from . import console
+from . import c
 from resources.vars import ENCRYPTED_EXT_LIST, ICONS
-from resources.functions import Functions
-from resources.prompts import (
-    show_main_menu,
-    show_xor_menu
-)
+from resources.utils import Utils
 
 
-install(show_locals=True)
-
-
-class Action(StrEnum):
-    ENCRYPT = "encrypt"
-    DECRYPT = "decrypt"
+install(show_locals=True, console=c)
 
 
 class XOR:
@@ -33,16 +21,6 @@ class XOR:
     Provides single-file and directory-wide processing with automatic
     output naming based on file suffix detection (.xor = encrypted).
     """
-
-    # Class-level constant for menu routing
-    _XOR_ACTION_MAP = {
-        "1": (Action.ENCRYPT, "message"),
-        "2": (Action.DECRYPT, "message"),
-        # "3": (Action.ENCRYPT, "file"),
-        # "4": (Action.DECRYPT, "file"),
-        # "5": (Action.ENCRYPT, "folder"),
-        # "6": (Action.DECRYPT, "folder")
-    }
 
     def __init__(self, default_chunk_size: int = 64 * 1024):
         """Initialize the XOR processor.
@@ -70,13 +48,13 @@ class XOR:
         return bytes(b ^ key[i % key_len] for i, b in enumerate(data))
 
 
-    def _handle_xor_process_msg(self, action: Action) -> None:
+    def _handle_xor_process_msg(self, action: str) -> None:
         message = Prompt.ask(
             f"\n{ICONS['keyboard']}[white] Enter the message you want to XOR"
         )
 
         if not message:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] The message to process cannot "
                 "be empty"
             )
@@ -85,37 +63,36 @@ class XOR:
         xor_key = self.get_xor_key()
 
         if not xor_key:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] The XOR key cannot be empty"
             )
             raise ValueError("The XOR key cannot be empty.")
 
-        self.xor_process_msg(
-            xor_key=xor_key,
-            message=message,
-            action=action.value,
+        self.xor_process_msg(xor_key=xor_key,
+                             message=message,
+                             action=action,
         )
 
 
-    def _handle_xor_process_file(self, action: Action) -> None:
-        target_file = Functions.get_file_path()
+    def _handle_xor_process_file(self, action: str) -> None:
+        target_file = Utils.get_file_path()
         xor_key = self.get_xor_key()
         self.xor_process_file(
             target_file=target_file,
             xor_key=xor_key,
-            action=action.value,
+            action=action,
         )
 
 
-    def _handle_xor_process_folder(self, action: Action) -> None:
-        target_dir = Functions.get_directory_path()
+    def _handle_xor_process_folder(self, action: str) -> None:
+        target_dir = Utils.get_directory_path()
         xor_key = self.get_xor_key()
-        recursive = Functions.select_recursive_option()
+        recursive = Utils.select_recursive_option()
         self.xor_process_folder(
             target_dir=target_dir,
             xor_key=xor_key,
             recursive=recursive,
-            action=action.value,
+            action=action,
         )
 
 
@@ -182,7 +159,7 @@ class XOR:
         except ValueError:
             raise
         except Exception as e:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Error during {action}ion -> {e}"
             )
             raise
@@ -206,19 +183,19 @@ class XOR:
                 with open(output_file, "w", encoding="utf-8", newline="\n") as f:
                     f.write(processed_data)
 
-                console.print(
+                c.print(
                     f"{ICONS['tray_in']}[green] {action.capitalize()}ed "
                     f"message saved to -> {output_file.resolve()}"
                 )
 
             except Exception as e:
-                console.print(
+                c.print(
                     f"{ICONS['failure']}[red] Could not write processed "
                     f"message to {output_file} -> {e}"
                 )
 
         else:
-            console.print(
+            c.print(
                 f"\n{ICONS['success']}[green3] Action Successful\n"
                 f"\nThe {action}ed message is:\n"
                 f"\n    [white]{processed_data}\n"
@@ -255,19 +232,19 @@ class XOR:
             ValueError: If the key is empty.
         """
 
-        console.print(f"\n\nThe random XOR key is -> {xor_key}\n\n")
+        c.print(f"\n\nThe random XOR key is -> {xor_key}\n\n")
 
         target_file = Path(target_file).resolve()
 
         if not target_file.is_file():
-            Functions.print_not_file_error(target_file=target_file)
+            Utils.print_not_file_error(target_file=target_file)
             raise FileNotFoundError(f"Invalid target file : {target_file}")
 
-        if not Functions.verify_file_access(target_file=target_file):
+        if not Utils.verify_file_access(target_file=target_file):
             return
 
         if not xor_key:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] The XOR key must not be empty"
             )
             raise ValueError("XOR key must not be empty.")
@@ -289,7 +266,7 @@ class XOR:
 
         try:
             file_size = target_file.stat().st_size
-            console.print(
+            c.print(
                 f"{ICONS['processing']}[white] Processing file : {target_file.name} "
                 f"({file_size:,} bytes)..."
             )
@@ -313,12 +290,12 @@ class XOR:
                     bytes_processed += len(chunk)
 
                     progress = (bytes_processed / file_size) * 100
-                    console.print(
+                    c.print(
                         f"{ICONS['info']}[white] Progress : "
                         f"{progress:.1f}%",
                         end=""
                     )
-            console.print(
+            c.print(
                 f"\n{ICONS['success']}[green3] Processed "
                 f"{target_file.name}  ->'  {output_file.name}"
             )
@@ -329,7 +306,7 @@ class XOR:
             # Clean up partial output on failure
             if output_file.exists():
                 output_file.unlink(missing_ok=True)
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Failed to process "
                 f"{target_file.name} : {e}")
             raise
@@ -363,10 +340,10 @@ class XOR:
         """
         target_dir = Path(target_dir).resolve()
 
-        if not Functions.verify_is_directory(target_dir=target_dir):
+        if not Utils.verify_is_directory(target_dir=target_dir):
             return
 
-        console.print(
+        c.print(
             f"{ICONS['success']}[green3] {target_dir} validated. "
             "Fetching files to process..."
         )
@@ -384,14 +361,14 @@ class XOR:
             ]
 
         except Exception as e:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] No valid files to encrypt "
                 f"in {target_dir}"
             )
@@ -405,7 +382,7 @@ class XOR:
         for idx, file_path in enumerate(all_files, start=1):
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
-            console.print(
+            c.print(
                 f"{ICONS['processing']}[cyan][{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""
@@ -420,70 +397,30 @@ class XOR:
                 successful_files.append(result_path)
 
             except Exception as e:
-                console.print(
+                c.print(
                     f"{ICONS['failure']}[red] Error during processing "
                     f"{file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
 
         # Summary reporting
-        console.print("\n" + "-" * 35)
+        c.print("\n" + "-" * 35)
 
         if successful_files:
-            console.print(
+            c.print(
                 f"{ICONS['success']}[green3] Action Completed\n"
                 f"Successfully processed {len(successful_files)} files in "
                 f"{target_dir}:"
             )
             for file in successful_files:
-                console.print(f"[green]  {file.name}")
+                c.print(f"[green]  {file.name}")
 
         if failed_files:
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Warning:\n"
                 f"Failed to process {len(failed_files)} files :"
             )
             for file in failed_files:
-                console.print(f"[red]  {file.name}")
+                c.print(f"[red]  {file.name}")
 
         return successful_files
-
-
-    def get_xor_action(self) -> None:
-        """Gets input from the user on what action to start next."""
-        xor_choice = show_xor_menu()
-        match xor_choice:
-            # case "1" | "2" | "3" | "4" | "5" | "6":
-            case "1" | "2":
-
-                action, scope = self._XOR_ACTION_MAP[xor_choice]
-                if scope == "message":
-                    self._handle_xor_process_msg(action=action)
-                # elif scope == "file":
-                #     self._handle_xor_process_file(action=action)
-                # else:
-                #     self._handle_xor_process_folder(action=action)
-            case "r":
-                Functions.clear_screen()
-                show_main_menu()
-            case "q":
-                Functions.exit_application()
-            case _:
-                console.print(
-                    f"{ICONS['warning']}[yellow] An invalid option "
-                    "was entered"
-                )
-
-
-#! ------------------------------------
-#!  VERIFICATIONS CHECKS
-#!
-#!  Option "1" -- working 08-07-26
-#!  Option "2" -- working 08-07-26
-#!  Option "3" -- removed
-#!  Option "4" -- removed
-#!  Option "5" -- removed
-#!  Option "6" -- removed
-#!  Option "r" --
-#!  Option "q" -- working 08-07-26
-#!

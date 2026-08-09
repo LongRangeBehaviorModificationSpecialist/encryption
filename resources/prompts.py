@@ -1,12 +1,10 @@
 # !/usr/bin/env python3
-# DLU : 07-Aug-2026
-
 
 from rich.prompt import Prompt
 
 # Import the console object from the main __init__.py file
-from . import console
-from resources.functions import Functions
+from . import c
+from resources.utils import Utils
 from resources.vars import ICONS
 
 
@@ -26,8 +24,8 @@ def display_menu(
             return user_input
 
         if clear_on_invalid:
-            Functions.clear_screen()
-        console.print(
+            Utils.clear_screen()
+        c.print(
             f"\n\n{ICONS['warning']}[yellow3] \"{user_input}\" is not "
             "a valid option. [/]"
             f"""[white]Valid options for this menu are: {', '.join(
@@ -136,11 +134,3 @@ FILE(S) USING AN XOR KEY
 [yellow3]ENTER CHOICE"""
 
     return display_menu(choices=XOR_MENU_CHOICES, menu_text=XOR_MENU)
-
-
-"""
-[3] ENCRYPT a file
-[4] DECRYPT a file\n
-[5] ENCRYPT all files in a folder
-[6] DECRYPT all files in a folder\n
-"""

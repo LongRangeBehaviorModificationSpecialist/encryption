@@ -1,6 +1,4 @@
 # !/usr/bin/env python3
-# DLU : 07-Aug-2026
-
 
 from datetime import datetime
 from functools import wraps
@@ -13,11 +11,11 @@ import sys
 import time
 
 # Import the console object from the main __init__.py file
-from . import console
+from . import c
 from resources.vars import ICONS
 
 
-class Functions:
+class Utils:
 
     @staticmethod
     def timeit(func):
@@ -27,7 +25,7 @@ class Functions:
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
-            console.print(
+            c.print(
                 f"{ICONS['success']}[green3] Operation [ "
                 f"{func.__name__}() ] was completed in {total_time:.4f} seconds"
             )
@@ -44,7 +42,7 @@ class Functions:
     @staticmethod
     def exit_application() -> None:
         """Print message to screen then exit the application."""
-        console.print(
+        c.print(
             f"\n\n{ICONS['arrow_right']}[green3]  Exiting the "
             "application...\n"
         )
@@ -101,7 +99,7 @@ class Functions:
                     return True
                 case "n":
                     return False
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Invalid input. Enter either "
                 "'y' or 'n'."
             )
@@ -122,14 +120,14 @@ class Functions:
             password_bytes = bytearray(raw_password)
 
             # If the password passes validation, break the loop and return it
-            if Functions.validate_password(password_bytes):
+            if Utils.validate_password(password_bytes):
                 return password_bytes
 
             # If invalid, clear memory of the attempt before prompting again
             for i in range(len(password_bytes)):
                 password_bytes[i] = 0
 
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] Not a valid password. "
                 "Please try again."
             )
@@ -174,7 +172,7 @@ class Functions:
                 and has_upper
                 and has_lower
                 and has_symbol):
-            console.print(f"""{ICONS['failure']}[red]
+            c.print(f"""{ICONS['failure']}[red]
     Your password did not meet the minimun requirements. Please try again.\n
     Your password must meet the following criteria :\n
     [-] Is at least ten (10) characters long
@@ -185,7 +183,7 @@ class Functions:
         ! @ # % & * ( ) ? < > - + = [ ] ~ ^ |""")
             return False
         else:
-            console.print(
+            c.print(
                 f"{ICONS['success']}[white] Your password meets "
                 "the minimum requirements. Continuing..."
             )
@@ -202,7 +200,7 @@ class Functions:
 
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:
-        return console.print(
+        return c.print(
             f"{ICONS['success']}[green3] Action Successful\n"
             f"[white]The {text} file was saved as : {file_name}"
             )
@@ -231,24 +229,21 @@ class Functions:
             key_file_hash_value: str
     ) -> str:
         return (
-            "\n[white]------------------------------------------\n\n"
-            f"[green3][-] ** Key file created **\n\n"
-            f"[white][-] Key file saved in : [yellow3]{key_file_dir}\n"
-            f"[white][-] Key file name     : [yellow3]{full_key_path.name}\n\n"
-            f"[green3][-] ** Key file hashed **\n\n"
-            f"[white][-] Key file hash verification saved in : "
-            f"[yellow3]{key_file_hash_file.parent}\n"
-            f"[white][-] Key file hash file name             : "
-            f"[yellow3]{key_file_hash_file.name}\n"
-            f"[white][-] Key file hash value (SHA256)        : "
-            f"[yellow3]{key_file_hash_value}\n\n"
-            "[white]------------------------------------------"
+            "\n[white][dim]" + "-" * 45 +"[/dim]\n"
+            f"[bold green3][-] ** Key file created **\n\n"
+            f"[white][-] Key file saved as:\n"
+            f"    [bold yellow3]{key_file_dir}\{full_key_path.name}\n"
+            f"[white][-] Key file hash verification saved as:\n"
+            f"    [bold yellow3]{key_file_hash_file}\n"
+            f"[white][-] Key file hash value (SHA256):\n"
+            f"    [bold yellow3]{key_file_hash_value}\n\n"
+            "[white][dim]" + "-" * 45 +"[/dim]"
     )
 
 
     @staticmethod
     def print_not_file_error(target_file: Path) -> str:
-        return ( console.print(
+        return ( c.print(
             f"{ICONS['failure']}[red] File validation for "
             f"{target_file.name} failed : the file does not exist or is "
             "not a file."
@@ -260,7 +255,7 @@ class Functions:
     def verify_file_access(target_file: Path | str) -> bool:
         """Returns True if the user has permission to read the file."""
         if not os.access(target_file, os.R_OK):
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] The current user does "
                 f"not have the correct permissions to process {target_file.name}"
             )
@@ -273,7 +268,7 @@ class Functions:
     def verify_is_directory(target_dir: Path | str) -> bool:
         """Returns true if target_dir points to a directory."""
         if not target_dir.is_dir():
-            console.print(
+            c.print(
                 f"{ICONS['failure']}[red] {target_dir} does not exist "
                 "or is not a valid directory."
             )
@@ -325,7 +320,7 @@ class Functions:
                     else:
                         return f"{num_days}d"
                 else:
-                    console.print(
+                    c.print(
                         f"{ICONS['warning']}[yellow] Invalid number."
                     )
                     return None
@@ -337,7 +332,7 @@ class Functions:
                     from datetime import datetime
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()
                     if parsed <= datetime.now().date():
-                        console.print(
+                        c.print(
                             f"{ICONS['warning']}[yellow] Date "
                             "must be in future."
                         )
@@ -345,7 +340,7 @@ class Functions:
                     # Add time with "T" separator
                     return f"{date_str}T000000"
                 except ValueError:
-                    console.print(
+                    c.print(
                         f"{ICONS['warning']}[yellow] Invalid date "
                         "format."
                     )
@@ -363,7 +358,7 @@ class Functions:
             attempts += 1
 
             if attempts > max_attempts:
-                console.print(
+                c.print(
                     f"{ICONS['failure']}[red] Too many failed attempts. "
                     "Exiting..."
                 )
@@ -375,7 +370,7 @@ class Functions:
             )
 
             if not password:
-                console.print(
+                c.print(
                     f"{ICONS['warning']}[yellow] Passphrase cannot be "
                     "empty."
                 )
@@ -389,7 +384,7 @@ class Functions:
             )
 
             if not confirm_password:
-                console.print(
+                c.print(
                     f"{ICONS['warning']}[yellow] Passphrase cannot be "
                     "empty."
                 )
@@ -397,12 +392,12 @@ class Functions:
 
             # Check if they match
             if password == confirm_password:
-                console.print(
+                c.print(
                     f"{ICONS['success']}[green] Passphrases confirmed!"
                 )
                 return password
             else:
-                console.print(
+                c.print(
                     f"{ICONS['failure']}[red] Passphrases do not match! "
                     f"Try again (attempt {attempts}/{max_attempts})"
                 )
@@ -417,7 +412,7 @@ class Functions:
         ).strip()
 
         if not full_name:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] A valid name is required."
             )
             raise ValueError("Full name must be provided.")
@@ -433,7 +428,7 @@ class Functions:
         ).strip().lower()
 
         if not email_address or "@" not in email_address:
-            console.print(
+            c.print(
                 f"{ICONS['warning']}[yellow3] Invalid or missing "
                 f"email address provided : {email_address}"
             )
