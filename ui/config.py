@@ -93,12 +93,14 @@ MAIN_CATEGORIES_CONFIG = {
             "1": SubMenuItem(
                 key="1",
                 label="Create a new .key file",
+                description="",
                 handler_module="key",
                 handler_method="generate_and_save_key",
             ),
             "2": SubMenuItem(
                 key="2",
                 label="ENCRYPT a single file using a .key",
+                description="",
                 handler_module="key",
                 handler_method="_handle_key_process_file",
                 handler_kwargs={"action": "encrypt"},
@@ -106,6 +108,7 @@ MAIN_CATEGORIES_CONFIG = {
             "3": SubMenuItem(
                 key="3",
                 label="DECRYPT a single file using a .key",
+                description="",
                 handler_module="key",
                 handler_method="_handle_key_process_file",
                 handler_kwargs={"action": "decrypt"},
@@ -113,6 +116,7 @@ MAIN_CATEGORIES_CONFIG = {
             "4": SubMenuItem(
                 key="4",
                 label="ENCRYPT all files in a folder using a .key",
+                description="",
                 handler_module="key",
                 handler_method="_handle_key_process_folder",
                 handler_kwargs={"action": "encrypt"},
@@ -120,6 +124,7 @@ MAIN_CATEGORIES_CONFIG = {
             "5": SubMenuItem(
                 key="5",
                 label="DECRYPT all files in a folder using a .key",
+                description="",
                 handler_module="key",
                 handler_method="_handle_key_process_folder",
                 handler_kwargs={"action": "decrypt"},
@@ -135,6 +140,7 @@ MAIN_CATEGORIES_CONFIG = {
             "1": SubMenuItem(
                 key="1",
                 label="ENCRYPT a single file with password",
+                description="",
                 handler_module="aes",
                 handler_method="_handle_aes_process_file",
                 handler_kwargs={"action": "encrypt"},
@@ -142,6 +148,7 @@ MAIN_CATEGORIES_CONFIG = {
             "2": SubMenuItem(
                 key="2",
                 label="DECRYPT a single file with password",
+                description="",
                 handler_module="aes",
                 handler_method="_handle_aes_process_file",
                 handler_kwargs={"action": "decrypt"},
@@ -149,6 +156,7 @@ MAIN_CATEGORIES_CONFIG = {
             "3": SubMenuItem(
                 key="3",
                 label="ENCRYPT all files in folder with password",
+                description="",
                 handler_module="aes",
                 handler_method="_handle_aes_process_folder",
                 handler_kwargs={"action": "encrypt"},
@@ -156,6 +164,7 @@ MAIN_CATEGORIES_CONFIG = {
             "4": SubMenuItem(
                 key="4",
                 label="DECRYPT all files in folder with password",
+                description="",
                 handler_module="aes",
                 handler_method="_handle_aes_process_folder",
                 handler_kwargs={"action": "decrypt"},
@@ -171,18 +180,21 @@ MAIN_CATEGORIES_CONFIG = {
             "1": SubMenuItem(
                 key="1",
                 label="Create new PGP key pair",
+                description="",
                 handler_module="pgp",
                 handler_method="generate_pgp_key_pair",
             ),
             "2": SubMenuItem(
                 key="2",
                 label="Import a PGP key",
+                description="",
                 handler_module="pgp",
                 handler_method="import_key",
             ),
             "3": SubMenuItem(
                 key="3",
                 label="ENCRYPT a file using PGP",
+                description="",
                 handler_module="pgp",
                 handler_method="_handle_pgp_process_file",
                 handler_kwargs={"action": "encrypt"},
@@ -190,6 +202,7 @@ MAIN_CATEGORIES_CONFIG = {
             "4": SubMenuItem(
                 key="4",
                 label="DECRYPT a file using PGP",
+                description="",
                 handler_module="pgp",
                 handler_method="_handle_pgp_process_file",
                 handler_kwargs={"action": "decrypt"},
@@ -197,6 +210,7 @@ MAIN_CATEGORIES_CONFIG = {
             "5": SubMenuItem(
                 key="5",
                 label="ENCRYPT all files in folder using PGP",
+                description="",
                 handler_module="pgp",
                 handler_method="_handle_pgp_process_folder",
                 handler_kwargs={"action": "encrypt"},
@@ -204,6 +218,7 @@ MAIN_CATEGORIES_CONFIG = {
             "6": SubMenuItem(
                 key="6",
                 label="DECRYPT all files in folder using PGP",
+                description="",
                 handler_module="pgp",
                 handler_method="_handle_pgp_process_folder",
                 handler_kwargs={"action": "decrypt"},
@@ -211,12 +226,14 @@ MAIN_CATEGORIES_CONFIG = {
             "7": SubMenuItem(
                 key="7",
                 label="Sign a document with PGP",
+                description="",
                 handler_module="pgp",
                 handler_method="pgp_sign_file",
             ),
             "8": SubMenuItem(
                 key="8",
                 label="Verify a PGP signature",
+                description="",
                 handler_module="pgp",
                 handler_method="pgp_verify_signature",
             ),
@@ -231,6 +248,7 @@ MAIN_CATEGORIES_CONFIG = {
             "1": SubMenuItem(
                 key="1",
                 label="ENCRYPT message string with XOR",
+                description="",
                 handler_module="xor",
                 handler_method="_handle_xor_process_msg",
                 handler_kwargs={"action": "encrypt"},
@@ -238,6 +256,7 @@ MAIN_CATEGORIES_CONFIG = {
             "2": SubMenuItem(
                 key="2",
                 label="DECRYPT message string with XOR",
+                description="",
                 handler_module="xor",
                 handler_method="_handle_xor_process_msg",
                 handler_kwargs={"action": "decrypt"},
@@ -255,38 +274,10 @@ for key, category in MAIN_CATEGORIES_CONFIG.items():
 MAIN_MENU_CATEGORIES = GLOBAL_CONFIG.main_categories
 
 
-    # For convenience in importing
+# For convenience in importing
 __all__ = [
     "AppConfig",
     "MAIN_CATEGORIES_CONFIG",
     "GLOBAL_CONFIG",
     "MAIN_MENU_CATEGORIES"
 ]
-
-
-# def get_menu_lines_for_category(
-#         config: AppConfig,
-#         category: str,
-# ) -> List[str]:
-#     """Build menu lines for a specific category.
-
-#     Args:
-#         config: AppConfig instance
-#         category: MenuCategory enum value
-
-#     Returns:
-#         List of formatted menu line strings
-#     """
-#     lines = []
-
-#     # Get display label from config
-#     section_label = config.menu_categories.get(category, category)
-#     lines.append(f"[{config.warning_color}]{section_label}")
-
-#     # Filter items by category
-#     for key in sorted(config.main_menu_items.keys()):
-#         item = config.main_menu_items[key]
-#         if item.category == category:
-#             lines.append(f"[white][{key}] {item.label}")
-
-#     return lines
