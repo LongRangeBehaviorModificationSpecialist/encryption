@@ -50,9 +50,9 @@ def setup_logging(
     logger.addHandler(file_handler)
 
     # Log startup info
-    logger.info("=" * 60)
+    # logger.info("=" * 60)
     logger.info(f"Application started | Log file: {log_file}")
-    logger.info("=" * 60)
+    # logger.info("=" * 60)
 
     # Store log path for reference
     logger.log_file = str(log_file)
