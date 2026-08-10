@@ -13,6 +13,7 @@ import time
 # Import the console object from the main __init__.py file
 from . import c
 from resources.vars import ICONS
+from ui.config import GLOBAL_CONFIG
 
 
 class Utils:
