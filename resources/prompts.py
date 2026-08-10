@@ -5,6 +5,7 @@ from rich.prompt import Prompt
 # Import the console object from the main __init__.py file
 from . import c
 from resources.utils import Utils
+from ui.config import GLOBAL_CONFIG
 
 
 VERSION = "0.4.1785974400"
