@@ -2,7 +2,7 @@
 
 # Import the console object from the main __init__.py file
 from . import c
-from resources.vars import ENCRYPTED_EXT_LIST, ICONS
+from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
 
 HAS_CRYPTO = False
@@ -11,8 +11,8 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     c.print(
-        f"{ICONS['warning']}[yellow3] Missing dependency: "
-        "currently missing the 'cryptography' package.\n"
+        f"[cyan][{Utils.get_current_time()}][yellow3] Missing "
+        "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
 
@@ -22,9 +22,12 @@ from pathlib import Path
 from rich.prompt import Prompt
 from rich.traceback import install
 from typing import List
+from ui.log_config import get_logger
 
 
 install(show_locals=True, console=c)
+# Creates "encryption_app.aes" logger
+logger = get_logger("key")
 
 
 class KEY:
@@ -42,6 +45,7 @@ class KEY:
             FileNotFoundError: If the key file does not exist.
             ValueError: If the key is invalid or malformed.
         """
+        logger.debug("The _load_fernet() method was called")
         return Fernet(key_file_path.read_bytes())
 
 
@@ -52,31 +56,47 @@ class KEY:
         Returns:
             bytes: The generated key.
         """
+        logger.info("The generate_and_save_key() method was called")
         key_file_dir = Path(
             Prompt.ask(
-                f"{ICONS['question']}[white] Where do you want to "
-                "save the key file? "
+                f"[cyan][{Utils.get_current_time()}][white] Where "
+                "do you want to save the key file?"
             ).strip().strip('"\'')
         )
+        logger.info(f"The key file directory was input as -> {key_file_dir}")
 
         key_file_name = Prompt.ask(
-            f"{ICONS['key']}[white] Enter a name for the key "
-            "file (w/o file extension) "
+            f"[cyan][{Utils.get_current_time()}][white] Enter a name for "
+            f"the key file (w/o file extension)"
         ).strip()
+        logger.info(f"The name of the key file was entered as -> {key_file_name}")
 
         # Ensure target directory exists before writing
         key_file_dir.mkdir(parents=True, exist_ok=True)
 
         dt = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         full_key_path = key_file_dir / f"{dt}_{key_file_name}.key"
+        logger.info(f"Full key path set to -> {full_key_path}")
 
         key = Fernet.generate_key()
+        logger.info(
+            "The key was generated successfully using 'Fernet.generate_key()'"
+        )
 
         try:
             full_key_path.write_bytes(key)
+            logger.info("Key file was read into memory")
 
             key_file_hash_value = hashlib.sha256(key).hexdigest().upper()
+            logger.info(
+                f"Key file hash value was calculated to be: "
+                f"'{key_file_hash_value}'"
+            )
             key_file_hash_file = full_key_path.with_suffix(".key.sha256")
+            logger.info(
+                f"The key file hash file was saved as: "
+                f"{key_file_hash_file}"
+            )
 
             log_content = Utils.format_key_file_log(
                 timestamp= Utils.get_date_time(format="display"),
@@ -85,38 +105,49 @@ class KEY:
             )
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
+            logger.info("Data written to the key_file_hash_file successfully")
 
-            c.print(
-                Utils.format_key_file_verification(
-                    key_file_dir=key_file_dir,
-                    full_key_path=full_key_path,
-                    key_file_hash_file=key_file_hash_file,
-                    key_file_hash_value=key_file_hash_value,
-                )
+            key_file_verify = Utils.format_key_file_verification(
+                key_file_dir=key_file_dir,
+                full_key_path=full_key_path,
+                key_file_hash_file=key_file_hash_file,
+                key_file_hash_value=key_file_hash_value,
             )
+
+            c.print(f"{key_file_verify}")
+            logger.info(f"{key_file_verify}")
 
             return full_key_path
 
         except IOError as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to write key data "
-                f"to file : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed "
+                f"to write key data to file -> {e}"
             )
+            logger.error(f"IOError: Failed to write key data to file -> {e}")
             raise
 
 
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         return Prompt.ask(
-            f"{ICONS['key']}[white] Enter the path of the .key "
-            "file to use "
+            f"[cyan][{Utils.get_current_time()}][white] Enter the "
+            "path of the .key file to use"
         ).strip("\"'")
 
 
     def _handle_key_process_file(self, action: str) -> None:
         """Helper function to process encryption or decryption of a file."""
+        logger.info("The '_handle_key_process_file()' method was called")
+
         key_file_path = self.get_existing_key_file_path()
+        logger.info(f"The 'key_file_path' = {key_file_path}")
+
         target_file = Utils.get_file_path()
+        logger.info(f"The 'target_file' = {target_file}")
+
+        logger.info(f"The 'action' = {action}")
+
         self.key_process_file(
             key_file_path=key_file_path,
             target_file=target_file,
@@ -128,9 +159,19 @@ class KEY:
         """Helper function to process encryption or decryption of files
         in a folder.
         """
+        logger.info("The '_handle_key_process_folder()' method was called")
+
         key_file_path = self.get_existing_key_file_path()
+        logger.info(f"The 'key_file_path' was entered as: {key_file_path}")
+
         target_dir = Utils.get_directory_path()
+        logger.info(f"The 'target_dir' was entered as: {target_dir}")
+
         recursive = Utils.select_recursive_option()
+        logger.info(f"The 'recursive' variable was entered as: {recursive}")
+
+        logger.info(f"The 'action' was entered as: {action}")
+
         self.key_process_folder(
             target_dir=target_dir,
             key_file_path=key_file_path,
@@ -160,9 +201,14 @@ class KEY:
             FileNotFoundError: If target file or key file does not exist.
             ValueError: If action is invalid or key file matches target file.
         """
+        logger.info("The 'key_process_file()' method was called")
+
         action = action.lower().strip()
         target_file = Path(target_file).resolve()
+        logger.info("Path of the 'target_file' was resolved")
+
         key_file_path = Path(key_file_path).resolve()
+        logger.info("Path of the 'key_file_path' was resolved")
 
         if not target_file.is_file():
             Utils.print_not_file_error(target_file=target_file)
@@ -171,35 +217,36 @@ class KEY:
         if not Utils.verify_file_access(target_file=target_file):
             return
 
-        # Ensure key_file_path is resolved to prevent key self-encryption
-        # if key_file_path:
-        #     resolved_key_file_path = Path(key_file_path).resolve()
-        # else:
-        #     resolved_key_file_path = Path(
-        #         self.get_existing_key_file_path(self)
-        #     ).resolve()
-
         if not key_file_path.is_file():
             c.print(
-                f"{ICONS['failure']}[red] Key file not found : "
+                f"[cyan][{Utils.get_current_time()}][red1] Key "
+                f"file not found -> {key_file_path}"
+            )
+            logger.error(
+                f"FileNotFoundError - a key file was not found at "
                 f"{key_file_path}"
             )
             raise FileNotFoundError(
-                f"Invalid .key file : {key_file_path}"
+                f"Invalid .key file -> {key_file_path}"
             )
 
         # Prevent self-encryption guard
         if target_file == key_file_path:
             c.print(
-                f"{ICONS['warning']}[yellow3] Target file is the "
-                "active key file. Aborting."
+                f"[cyan][{Utils.get_current_time()}][yellow3] "
+                "Target file is the active key file. Aborting."
+            )
+            logger.error(
+                "ValueError - The same path was entered for the 'target_file' "
+                "and the 'key_file'. Cannot encrypt or decrypt the active key "
+                "file."
             )
             raise ValueError("Cannot encrypt or decrypt the active key file.")
 
         try:
             c.print(
-                f"{ICONS['file']}[white] Reading file : "
-                f"{target_file.name}..."
+                f"[cyan][{Utils.get_current_time()}][white] "
+                f"Reading file: {target_file.name}..."
             )
             original_file_data = target_file.read_bytes()
 
@@ -208,12 +255,12 @@ class KEY:
             )
 
             c.print(
-                f"{ICONS['success']}[white] File content read "
-                "successfully..."
+                f"[cyan][{Utils.get_current_time()}][white] File "
+                "content read successfully..."
             )
             c.print(
-                f"{ICONS['processing']}[white] {action.capitalize()}ing "
-                "file data..."
+                f"[cyan][{Utils.get_current_time()}][white] "
+                f"{action.capitalize()}ing file data..."
             )
 
             if action == "encrypt":
@@ -234,22 +281,24 @@ class KEY:
                 output_file.write_bytes(decrypted_data)
 
             c.print(
-                f"{ICONS['success']}[green3] {action.capitalize()}ed "
-                f"{target_file.name}  ->  {output_file.name}"
+                f"[cyan][{Utils.get_current_time()}][green3] "
+                f"{action.capitalize()}ed {target_file.name} ->  "
+                f"{output_file.name}"
             )
 
             return output_file
 
         except InvalidToken:
             c.print(
-                f"{ICONS['failure']}[red] Decryption failed! The key "
-                f"provided is invalid for {target_file.name}"
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"Decryption failed! The key provided is invalid for "
+                f"'{target_file.name}'"
             )
             raise
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to {action} "
-                f"{target_file.name} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"Failed to {action} {target_file.name} -> {e}"
             )
             raise
 
@@ -282,11 +331,12 @@ class KEY:
             return []
 
         c.print(
-            f"{ICONS['success']}[green3] {target_dir} validated."
+            f"[cyan][{Utils.get_current_time()}][green3] "
+            f"Target directory '{target_dir}' validated."
         )
         c.print(
-            f"{ICONS['processing']}[white] Fetching targets for "
-            f"{action}ion..."
+            f"[cyan][{Utils.get_current_time()}][white] Fetching "
+            f"targets for {action}ion..."
         )
 
         # Ensure key_file_path is resolved to prevent key self-encryption
@@ -319,15 +369,15 @@ class KEY:
                 ]
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to retrieve files "
-                f"from {target_dir} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed "
+                f"to retrieve files from {target_dir} -> {e}"
             )
             return []
 
         if not all_files:
             c.print(
-                f"{ICONS['warning']}[yellow3] No valid files to "
-                f"{action} in {target_dir}"
+                f"[cyan][{Utils.get_current_time()}][yellow3] No "
+                f"valid files to {action} in {target_dir}"
             )
             return []
 
@@ -344,15 +394,15 @@ class KEY:
                 successful_files.append(processed_path)
             except Exception as e:
                 c.print(
-                    f"{ICONS['failure']}[red] Error during "
-                    f"{action}ing {file_path.name} : {e}"
+                    f"[cyan][{Utils.get_current_time()}][red1] "
+                    f"Error during {action}ing {file_path.name} -> {e}"
                 )
                 failed_files.append(file_path)
 
         # Summary reporting
         if successful_files:
             c.print(
-                "\n" + "[green]-" * 45 + "\n",
+                "\n" + "[grey58]-" * 35 + "\n",
                 f"[green3]** Action Completed **\n"
                 f"    Successfully {action}ed {len(successful_files)} files "
                 f"in {target_dir}:"
@@ -362,11 +412,11 @@ class KEY:
 
         if failed_files:
             c.print(
-                "\n" + "-" * 45 + "\n",
-                f"[red]** Warning **\n"
+                "\n" + "[grey58]-" * 35 + "\n",
+                f"[red1]** Warning **\n"
                 f"    Failed to {action} {len(failed_files)} files:"
             )
             for failed_file in failed_files:
-                c.print(f"[red]        {failed_file.name}")
+                c.print(f"[red1]        {failed_file.name}")
 
         return successful_files

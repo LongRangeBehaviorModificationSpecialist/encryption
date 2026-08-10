@@ -7,25 +7,25 @@ SKIP_DIRS = {
 }
 
 ICONS = {
-    "arrow_right": "➡️",  # {ICONS['arrow_right']}
+    "arrow_right": "➡️",  # [{Utils.get_current_time()}]
     "checkmark": "✓",  # {ICONS['checkmark']}
     "confirm": "🔁",  # {ICONS['confirm']}
     "email": "📧",  # {ICONS['email']}
     "encrypted": "🔐",  # {ICONS['encrypted']}
     "decrypted": "🔓",  # {ICONS['decrypted']}
-    "failure": "❌",  # {ICONS['failure']}
-    "file": "📄",  # {ICONS['file']}
+    "failure": "❌",  # [{Utils.get_current_time()}]
+    "file": "📄",  # [{Utils.get_current_time()}]
     "folder": "📁",  # {ICONS['folder']}
-    "info": "ℹ️",  # {ICONS['info']}
-    "input": "📝",  # {ICONS['input']}
+    "info": "ℹ️",  # [{Utils.get_current_time()}]
+    "input": "📝",  # [{Utils.get_current_time()}]
     "key": "🗝️",  # {ICONS['key']}
-    "keyboard": "⌨️",  # {ICONS['keyboard']}
+    "keyboard": "⌨️",  # [{Utils.get_current_time()}]
     "label": "🏷️",  # {ICONS['label']}
-    "processing": "⏳",  # {ICONS['processing']}
-    "question": "❓",  # {ICONS['question']}
+    "processing": "⏳",  # [{Utils.get_current_time()}]
+    "question": "❓",  # [{Utils.get_current_time()}]
     "shield": "🛡️",  # {ICONS['shield']}
-    "success": "✅",  # {ICONS['success']}
-    "tray_in": "📥",  # {ICONS['tray_in']}
+    "success": "✅",  # [{Utils.get_current_time()}]
+    "tray_in": "📥",  # [{Utils.get_current_time()}]
     "tray_out": "📤",  # {ICONS['tray_out']}
-    "warning": "⚠️",  # {ICONS['warning']}
+    "warning": "⚠️",  # [{Utils.get_current_time()}]
 }

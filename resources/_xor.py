@@ -7,7 +7,7 @@ from rich.traceback import install
 from typing import List
 
 from . import c
-from resources.vars import ENCRYPTED_EXT_LIST, ICONS
+from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
 
 
@@ -35,8 +35,8 @@ class XOR:
     def get_xor_key(self) -> str:
         """Returns a UTF-8 encoded XOR key."""
         xor_key = Prompt.ask(
-            f"{ICONS['key']}[white] Enter the key you want to use for the "
-            "XOR operation",
+            f"[cyan][{Utils.get_current_time()}][white] Enter "
+            "the key you want to use for the XOR operation",
             password=True
         )
         return xor_key.encode("utf-8")
@@ -50,13 +50,14 @@ class XOR:
 
     def _handle_xor_process_msg(self, action: str) -> None:
         message = Prompt.ask(
-            f"\n{ICONS['keyboard']}[white] Enter the message you want to XOR"
+            f"\n[cyan][{Utils.get_current_time()}][white] Enter "
+            "the message you want to XOR"
         )
 
         if not message:
             c.print(
-                f"{ICONS['warning']}[yellow3] The message to process cannot "
-                "be empty"
+                f"[cyan][{Utils.get_current_time()}][yellow3] The "
+                "message to process cannot be empty"
             )
             raise ValueError("The message cannot be empty.")
 
@@ -64,7 +65,8 @@ class XOR:
 
         if not xor_key:
             c.print(
-                f"{ICONS['warning']}[yellow3] The XOR key cannot be empty"
+                f"[cyan][{Utils.get_current_time()}][yellow3] The "
+                "XOR key cannot be empty"
             )
             raise ValueError("The XOR key cannot be empty.")
 
@@ -160,43 +162,52 @@ class XOR:
             raise
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Error during {action}ion -> {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Error "
+                f"during {action}ion -> {e}"
             )
             raise
 
         save_output = Prompt.ask(
-            f"{ICONS['question']}[white] Do you want to save the {action}ed "
-            "message to a file?",
+            f"[cyan][{Utils.get_current_time()}][white] Do you "
+            f"want to save the {action}ed message to a file?",
             choices=["y", "n"],
             show_choices=True
         )
 
         if save_output == "y":
             output_file_input = Prompt.ask(
-                f"{ICONS['question']}[white] Enter the file path to save the "
-                "results"
+                f"[cyan][{Utils.get_current_time()}][white] Enter "
+                "the file path to save the results"
             )
             output_file = Path(output_file_input)
 
             try:
                 output_file.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_file, "w", encoding="utf-8", newline="\n") as f:
+                with open(
+                    output_file,
+                    "w",
+                    encoding="utf-8",
+                    newline="\n"
+                ) as f:
                     f.write(processed_data)
 
                 c.print(
-                    f"{ICONS['tray_in']}[green] {action.capitalize()}ed "
-                    f"message saved to -> {output_file.resolve()}"
+                    f"[cyan][{Utils.get_current_time()}][green3] "
+                    f"{action.capitalize()}ed message saved to -> "
+                    f"{output_file.resolve()}"
                 )
 
             except Exception as e:
                 c.print(
-                    f"{ICONS['failure']}[red] Could not write processed "
-                    f"message to {output_file} -> {e}"
+                    f"[cyan][{Utils.get_current_time()}][red1] "
+                    f"Could not write processed message to {output_file} "
+                    f"-> {e}"
                 )
 
         else:
             c.print(
-                f"\n{ICONS['success']}[green3] Action Successful\n"
+                f"\n[cyan][{Utils.get_current_time()}][green3] "
+                f"Action Successful\n"
                 f"\nThe {action}ed message is:\n"
                 f"\n    [white]{processed_data}\n"
             )
@@ -245,7 +256,7 @@ class XOR:
 
         if not xor_key:
             c.print(
-                f"{ICONS['warning']}[yellow3] The XOR key must not be empty"
+                f"[cyan][{Utils.get_current_time()}][yellow3] The XOR key must not be empty"
             )
             raise ValueError("XOR key must not be empty.")
 
@@ -267,8 +278,8 @@ class XOR:
         try:
             file_size = target_file.stat().st_size
             c.print(
-                f"{ICONS['processing']}[white] Processing file : {target_file.name} "
-                f"({file_size:,} bytes)..."
+                f"[cyan][{Utils.get_current_time()}][white] Processing file -> "
+                f"{target_file.name} ({file_size:,} bytes)..."
             )
 
             bytes_processed = 0
@@ -291,12 +302,12 @@ class XOR:
 
                     progress = (bytes_processed / file_size) * 100
                     c.print(
-                        f"{ICONS['info']}[white] Progress : "
+                        f"[cyan][{Utils.get_current_time()}][white] Progress : "
                         f"{progress:.1f}%",
                         end=""
                     )
             c.print(
-                f"\n{ICONS['success']}[green3] Processed "
+                f"\n[cyan][{Utils.get_current_time()}][green3] Processed "
                 f"{target_file.name}  ->'  {output_file.name}"
             )
 
@@ -307,7 +318,7 @@ class XOR:
             if output_file.exists():
                 output_file.unlink(missing_ok=True)
             c.print(
-                f"{ICONS['failure']}[red] Failed to process "
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to process "
                 f"{target_file.name} : {e}")
             raise
 
@@ -344,7 +355,7 @@ class XOR:
             return
 
         c.print(
-            f"{ICONS['success']}[green3] {target_dir} validated. "
+            f"[cyan][{Utils.get_current_time()}][green3] {target_dir} validated. "
             "Fetching files to process..."
         )
 
@@ -362,14 +373,14 @@ class XOR:
 
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to retrieve files "
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
             c.print(
-                f"{ICONS['warning']}[yellow3] No valid files to encrypt "
+                f"[cyan][{Utils.get_current_time()}][yellow3] No valid files to encrypt "
                 f"in {target_dir}"
             )
             return []
@@ -383,7 +394,8 @@ class XOR:
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
             c.print(
-                f"{ICONS['processing']}[cyan][{progress_bar}] "
+                f"[dim][cyan][{Utils.get_current_time()}][/di][white] "
+                f"[{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""
             )
@@ -398,7 +410,7 @@ class XOR:
 
             except Exception as e:
                 c.print(
-                    f"{ICONS['failure']}[red] Error during processing "
+                    f"[cyan][{Utils.get_current_time()}][red1] Error during processing "
                     f"{file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
@@ -408,7 +420,7 @@ class XOR:
 
         if successful_files:
             c.print(
-                f"{ICONS['success']}[green3] Action Completed\n"
+                f"[cyan][{Utils.get_current_time()}][green3] Action Completed\n"
                 f"Successfully processed {len(successful_files)} files in "
                 f"{target_dir}:"
             )
@@ -417,10 +429,10 @@ class XOR:
 
         if failed_files:
             c.print(
-                f"{ICONS['failure']}[red] Warning:\n"
+                f"[cyan][{Utils.get_current_time()}][red1] Warning:\n"
                 f"Failed to process {len(failed_files)} files :"
             )
             for file in failed_files:
-                c.print(f"[red]  {file.name}")
+                c.print(f"[red1]  {file.name}")
 
         return successful_files

@@ -2,17 +2,19 @@
 
 # Import the console object from the main __init__.py file
 from . import c
-from resources.vars import ENCRYPTED_EXT_LIST, ICONS
+from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
 
 import inspect
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 from typing import List
 from rich.prompt import Prompt
 from rich.traceback import install
+from ui.log_config import get_logger
 
 HAS_PGP = False
 try:
@@ -20,39 +22,56 @@ try:
     HAS_PGP = True
 except ImportError:
     c.print(
-        f"{ICONS['warning']}[yellow3] Missing dependency: "
-        "currently missing the 'python-gnupg' package.\n"
+        f"[cyan][{Utils.get_current_time()}][yellow3] Missing "
+        "dependency: currently missing the 'python-gnupg' package.\n"
         "It can be installed using the 'pip install python-gnupg' command"
     )
     sys.exit(1)
 
 
 install(show_locals=True, console=c)
+logger = get_logger("pgp")
 
 
 class PGP:
 
     def __init__(self, password: str | None = None):
         """Initialize with explicit homedir tracking."""
+        # self.gnupghome = os.path.expanduser("~/.gnupg")
+        # os.environ['GNUPGHOME'] = self.gnupghome
         # Get path of the gpg executable
+        try:
+            subprocess.run(["gpgconf", "--kill", "gpg-agent"], check=False)
+            logger.info("Killed existing GPG agent")
+        except Exception as e:
+            logger.warning(f"Could not kill GPG agent: {e}")
         self.resolved_gpg = (
             shutil.which("gpg")
             or r"C:\Program Files\GnuPG\bin\gpg.exe"
         )
         if not self.resolved_gpg and not Path(self.resolved_gpg).exists():
             c.print(
-                f"{ICONS['warning']}[yellow3] GnuPG binary not found "
-                f"at '{self.resolved_gpg}'. Please install GnuPG."
+                f"[cyan][{Utils.get_current_time()}][yellow3] GnuPG "
+                f"binary not found at '{self.resolved_gpg}'. Please "
+                f"install GnuPG."
             )
             raise FileNotFoundError
 
         # Calculate homedir independently of GPG instance
         self.gpg_homedir = self._get_gpg_homedir()
+        os.environ['GNUPGHOME'] = str(self.gpg_homedir)
 
         # Pass explicit homedir to GPG constructor
         self.gpg = GPG(
             gnupghome=str(self.gpg_homedir),
             gpgbinary=self.resolved_gpg,
+            options=[
+                "--batch",  # Non-interactive mode
+                "--yes",  # Auto-confirm prompts
+                "--trust-model", "always",  # Skip key verification
+                "--pinentry-mode", "loopback",
+                "--no-use-agent"  # Tells GPG to ignore the agent
+            ]
         )
 
         # Optional: ensure directory exists
@@ -60,8 +79,8 @@ class PGP:
 
         # You now have reliable access without querying gpg.gnupghome
         c.print(
-            f"{ICONS['success']}[green3] GPG initialized "
-            f"with: {self.gpg_homedir}"
+            f"[cyan][{Utils.get_current_time()}][green3] GPG "
+            f"initialized with: {self.gpg_homedir}"
         )
 
         # Public keyring
@@ -79,12 +98,19 @@ class PGP:
         # Check if files exist
         if self.pubring_path.exists():
             c.print(
-                f"[green]✓ Public keyring found: {self.pubring_path}"
+                f"[cyan][{Utils.get_current_time()}][green]✓ Public keyring "
+                f"found: {self.pubring_path}"
             )
         else:
             c.print(
-                f"{ICONS['warning']}[yellow] No public keyring at: "
-                f"{self.pubring_path}"
+                f"[cyan][{Utils.get_current_time()}][yellow3] "
+                f"No public keyring at: {self.pubring_path}"
+            )
+
+        if not self.verify_gpg_setup():
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][red1] GPG setup "
+                "verification failed. Some operations may fail"
             )
 
         self.script_path = Path(__file__).parents[1].resolve()
@@ -139,13 +165,13 @@ class PGP:
             del frame
 
 
-    def print_status(self, status: GPG, method: str) -> None:
+    def print_status(self, status: GPG, current_method: str) -> None:
         """Prints GPG action execution status to terminal."""
         # stderr should be empty/None on success
         if status.ok == True:
             c.print(
-                f"\n{ICONS['success']}[green3] {method}() was run "
-                f"successfully"
+                f"\n[cyan][{Utils.get_current_time()}][green3] "
+                f"{current_method}() was run successfully"
             )
         else:
             # Show the error message
@@ -155,105 +181,132 @@ class PGP:
                 getattr(status, "stderr", "Unknown Error")
             )
             c.print(
-                f"\n{ICONS['failure']}[red] {method}() WAS NOT executed "
-                f"successful -> {status_msg}. Please try again."
+                f"\n[cyan][{Utils.get_current_time()}][red1] "
+                f"{current_method}() WAS NOT executed successful -> "
+                f"{status_msg}. Please try again."
             )
 
 
-    def import_key(
-            self,
-            key_path: Path | str | None = None,
-            silent: bool = False
-    ) -> tuple[bool, str | None]:
+    def import_key(self) -> None:
         """Imports a PGP public or private key from an external file.
 
         Args:
-            key_path: Path to the key file. If None, prompts user interactively.
+            key_path: Path to the key file. If None, prompts user.
             silent: Suppress console output (useful for batch operations).
 
         Returns:
-            tuple[bool, str]: (success, fingerprint) where fingerprint is None
-                on failure
+            tuple[bool, str]: (success, fingerprint) where fingerprint is
+                None on failure
         """
-        if key_path is None:
-            key_path_input = Prompt.ask(
-                f"{ICONS['keyboard']}[white] Enter the path of the PGP key you "
-                f"would like to import"
-            ).strip()
-            key_path_input = key_path_input.strip("\"'")
-            key_path = Path(key_path_input)
-        else:
-            key_path = Path(key_path).resolve()
-
-        if not key_path.is_file():
-            message = f"Key file does not exist or is not a file: {key_path}"
-            if not silent:
-                c.print(
-                    f"{ICONS['failure']}[red] {message}"
-                )
-            return False, None
-
         try:
-            with open(key_path, "r", encoding="utf-8") as fh:
-                key_data = fh.read()
-        except UnicodeDecodeError:
-            if not silent:
-                c.print(
-                    f"{ICONS['info']}[cyan] Detected binary key format"
-                )
-            with open (key_path, "rb") as fh:
-                key_data = fh.read()
-        except OSError as e:
-            if not silent:
-                c.print(
-                    f"{ICONS['failure']}[red] Cannot read key file: "
-                    f"{key_path.name} -> {e}"
-                )
-                return False, None
+            key_file = Prompt.ask(
+                f"[cyan][{Utils.get_current_time()}][white] Enter key "
+                f"file path"
+            ).strip("\"'")
 
-        try:
+            if not key_file:
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow] No file path "
+                    "provided"
+                )
+                return
+
+            key_file = Path(key_file).resolve()
+
+            if not key_file.exists():
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][red] File not found: "
+                    f"{key_file}"
+                )
+                return
+
+            logger.info(f"Importing PGP key from: {key_file}")
+
+            # Read key content
+            with open(key_file, "r", encoding="utf-8") as f:
+                key_data =f.read()
+
+            # Import the key
             result = self.gpg.import_keys(key_data)
-        except Exception as e:
-            if not silent:
-                c.print(
-                    f"{ICONS['failure']}[red] Failed to import key: {e}"
-                )
-            return False, None
 
-        if result.count == 0:
-            raise ValueError("File does not contain a valid PGP key")
-
-        # Extract fingerprint safely (check fingerprints list length)
-        if not hasattr(result, 'fingerprints') or len(result.fingerprints) == 0:
-            if not silent:
-                c.print(
-                    f"{ICONS['failure']}[red] Key imported but no fingerprint "
-                    "available."
-                )
-            return False, None
-
-        # Get primary fingerprint (first one)
-        primary_fingerprint = (
-            result.fingerprints[0].get("fingerprint") or result.fingerprints[0]
-        )
-
-        # Update instance state (document it!)
-        self._recipient_fp = primary_fingerprint
-        self._key_imported = True
-
-        # Success output
-        if not silent:
-            c.print(
-                f"{ICONS['success']}[green3] Imported key fingerprint: "
-                f"{primary_fingerprint}"
+            logger.debug(f"Import result type: {type(result)}")
+            logger.debug(
+                f"Import result dir: {[attr for attr in dir(result) if not attr.startswith('_')]}"
             )
-            if hasattr(result, 'summary'):
-                summary = result.summary()
+
+            # FIXED: Safely access all optional attributes
+            imported = getattr(result, 'imported', 0)
+            considered = getattr(result, 'considered', None)
+            missing = getattr(result, 'missing', None)
+            failed = getattr(result, 'failed', None)
+            count = getattr(result, 'count', None)
+
+
+            if result.fingerprints:
+                # Get primary fingerprint (first one)
+                # Handles both string and dict formats
+                fp = result.fingerprints[0]
+                if isinstance(fp, dict):
+                    fingerprint = fp.get("fingerprint") or fp
+                else:
+                    fingerprint = fp # Already a string
+
                 c.print(
-                    f"{ICONS['file']}[cyan] Import summary: {summary}"
+                    f"[cyan][{Utils.get_current_time()}][green3] ✓ Key "
+                    "imported successfully!"
+                )
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][green3] Fingerprint: "
+                    f"{fingerprint}"
+                )
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][green3] Keys "
+                    f"imported: {imported}"
+                )
+                if considered:
+                    c.print(
+                        f"[cyan][{Utils.get_current_time()}][green3] Keys "
+                        f"considered: {considered}"
+                    )
+                if missing:
+                    c.print(
+                        f"[cyan][{Utils.get_current_time()}][green3] Keys "
+                        f"missing: {missing}"
+                    )
+                if failed:
+                    c.print(
+                        f"[cyan][{Utils.get_current_time()}][green3] Keys "
+                        f"failed: {failed}"
+                    )
+                if count:
+                    c.print(
+                        f"[cyan][{Utils.get_current_time()}][green3] Total "
+                        f"keys processed: {count}"
+                    )
+
+                    logger.info(
+                        f"Successfully imported PGP key: {fingerprint}"
+                    )
+            else:
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow3] Warning: "
+                    f"No fingerprints returned from import"
+                )
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow3] Imported "
+                    f"count: {imported}"
+                )
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow3] Failed "
+                    f"count: {failed or 0}"
                 )
 
-        return True, primary_fingerprint
+        except Exception as e:
+            logger.exception(f"Failed to import PGP key -> {e}")
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][red1] Error importing "
+                f"key -> {e}"
+            )
 
 
     def pgp_export_public_key(
@@ -282,25 +335,24 @@ class PGP:
 
         if not public_key_data:
             c.print(
-                f"{ICONS['failure']}[red] Failed to export public key "
-                f"for Key ID -> {keyid}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to export "
+                f"public key for Key ID -> {keyid}"
             )
             raise
-        # RuntimeError(f"{ICONS['failure']}[red] Failed to export public key ID: {keyid}")
 
         try:
             with open(output_file, "w", newline="\n", encoding="utf-8") as f:
                 f.write(public_key_data)
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to write key to "
-                f"{output_file} -> {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to write "
+                f"key to {output_file} -> {e}"
             )
             raise
 
         c.print(
-            f"\n{ICONS['success']}[white] [bold]Public[/bold] key "
-            f"exported to ->\n"
+            f"[cyan][{Utils.get_current_time()}][white] [bold]Public"
+            f"[/bold] key exported to ->\n"
             f"    {output_file}"
         )
 
@@ -340,8 +392,9 @@ class PGP:
 
         if not private_key_data:
             c.print(
-                f"{ICONS['failure']}[red] Failed to export private key "
-                f"for Key ID : {keyid}. Check the keyid/passphrase."
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to "
+                f"export private key for Key ID : {keyid}. Check the "
+                f"keyid/passphrase."
             )
             raise
         # RuntimeError(f"Failed to export private key ID {keyid}. ")
@@ -353,14 +406,14 @@ class PGP:
                 os.chmod(str(output_file), 0o600)  # Owner read/write only
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to write key to "
-                f"{output_file} -> {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to write "
+                f"key to {output_file} -> {e}"
             )
             raise
 
         c.print(
-            f"\n{ICONS['success']}[white] [bold]Private[/bold] key "
-            f"exported successfully to -> \n"
+            f"[cyan][{Utils.get_current_time()}][white] [bold]Private"
+            f"[/bold] key exported successfully to -> \n"
             f"    {output_file}"
         )
 
@@ -385,8 +438,8 @@ class PGP:
 
         # Optional: Add a comment field
         comment = Prompt.ask(
-            f"{ICONS['file']}[white] Enter a comment (optional, "
-            "e.g., 'Work Key')",
+            f"[cyan][{Utils.get_current_time()}][white] Enter a comment "
+            f"(optional, e.g., 'Work Key')",
             default=""
         ).strip()
 
@@ -413,13 +466,10 @@ class PGP:
                 if isinstance(expire_value, str):
                     try:
                         key_params["Expire-Date"] = expire_value
-                        # c.print(
-                        #     f"[cyan]Key expires: {expire_value}"
-                        # )
                     except ValueError:
                         c.print(
-                            f"{ICONS['warning']}[yellow] Invalid date "
-                            "format."
+                            f"[cyan][{Utils.get_current_time()}][yellow3] "
+                            f"Invalid date format."
                         )
                         del key_params["Expire-Date"]
 
@@ -431,8 +481,8 @@ class PGP:
 
         if not key.fingerprint:
             c.print(
-                f"{ICONS['failure']}[red] PGP key generation failed -> "
-                f"{key.stderr}"
+                f"[cyan][{Utils.get_current_time()}][red1] PGP key "
+                f"generation failed -> {key.stderr}"
             )
             raise RuntimeError("PGP key generation failed.")
 
@@ -440,8 +490,8 @@ class PGP:
 
         # Display key summary information
         c.print(
-            f"\n{ICONS['success']}[white] PGP key pair created "
-            "successfully!"
+            f"\n[cyan][{Utils.get_current_time()}][green3] PGP key pair "
+            "created successfully!"
         )
 
         if expire_value is None:
@@ -466,12 +516,12 @@ class PGP:
             f"[cyan]  Comment      :  {comment}\n"
             f"[cyan]  Email        :  {email_address}\n"
             f"[cyan]  Fingerprint  :  {keyid}\n"
-            f"[cyan]  Key Expires  :  {expire_dt_str}\n"
+            f"[cyan]  Key Expires  :  {expire_dt_str}"
         )
 
         export_pub_key = Prompt.ask(
-            f"{ICONS['question']}[white] Do you want to export the "
-            "newly created PGP PUBLIC key?",
+            f"\n[cyan][{Utils.get_current_time()}][white] Do you want to "
+            "export the newly created PGP PUBLIC key?",
             choices=["y","n"],
             show_choices=True
         )
@@ -480,8 +530,8 @@ class PGP:
             self.pgp_export_public_key(keyid=keyid)
 
         export_private_key = Prompt.ask(
-            f"{ICONS['question']}[white] Do you want to export the "
-            "newly created PGP PUBLIC key?",
+            f"\n[cyan][{Utils.get_current_time()}][white] Do you want to "
+            "export the newly created PGP PRIVATE key?",
             choices=["y","n"],
             show_choices=True
         )
@@ -497,11 +547,10 @@ class PGP:
     def _handle_pgp_process_file(self, action: str) -> None:
         """Collect user inputs and call pgp_process_file method."""
         ask_use_symmetric = Prompt.ask(
-            f"{ICONS['question']}[white] How do you want to {action.value} "
-            "the file (1=password, 2=pgp key)",
+            f"[cyan][{Utils.get_current_time()}][white] How do you want to "
+            f"{action} the file (1=password, 2=PGP key)",
             choices=["1", "2"],
             show_choices=True,
-            default="2"
         ).strip().lower()
         symmetric = (ask_use_symmetric == "1")
 
@@ -511,28 +560,28 @@ class PGP:
         if action == "encrypt":
             if symmetric:
                 password = Prompt.ask(
-                    f"{ICONS['keyboard']}[white] Enter a password to encrypt "
-                    f"the file(s)",
+                    f"[cyan][{Utils.get_current_time()}][white] Enter a "
+                    f"password to encrypt the file(s)",
                     password=True
                 )
                 if not password:
                     c.print(
-                        f"{ICONS['warning']}[yellow3] A password is required "
-                        "for symmetric encryption."
+                        f"[cyan][{Utils.get_current_time()}][yellow3] "
+                        f"A password is required for symmetric encryption"
                     )
                     return
             else:
                 # Asymmetric encryption - recipients required
                 email_input = Prompt.ask(
-                    f"{ICONS['keyboard']}[white] Enter the email address of "
-                    f"the owner of the public key that will be used to "
-                    f"{action} the file"
+                    f"[cyan][{Utils.get_current_time()}][white] Enter the "
+                    f"email address of the owner of the public key that will "
+                    f"be used to {action} the file"
                 ).strip()
 
                 if not email_input:
                     c.print(
-                        f"{ICONS['warning']}[yellow3] No email address "
-                        "provided."
+                        f"[cyan][{Utils.get_current_time()}][yellow3] No "
+                        f"email address provided."
                     )
                     return
 
@@ -541,8 +590,8 @@ class PGP:
         else:
             # DECRYPTION - password only needed for symmetric-encrypted files
             confirm = Prompt.ask(
-                f"{ICONS['question']}[white] Enter decryption password now? "
-                "(leave blank for GPG prompt)",
+                f"[cyan][{Utils.get_current_time()}][white] Enter "
+                f"decryption password now? (leave blank for GPG prompt)",
                 choices=["y", "n"],
                 show_choices=True,
                 default="y"
@@ -550,8 +599,8 @@ class PGP:
 
             if confirm == "y":
                 password = Prompt.ask(
-                    f"{ICONS['keyboard']}[white] Enter the password to decrypt "
-                    "the file(s)",
+                    f"[cyan][{Utils.get_current_time()}][white] Enter the "
+                    f"password to decrypt the file(s)",
                     password=True
                 )
 
@@ -563,7 +612,10 @@ class PGP:
                 recipients=recipients,
             )
         except Exception as e:
-            c.print(f"{ICONS['warning']}[red1][!] Operation failed -> {e}")
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][red1] Operational "
+                f"failed -> {e}"
+            )
 
 
     def _handle_pgp_process_folder(self, action: str) -> None:
@@ -578,17 +630,18 @@ class PGP:
 
         # Email address (required for public-key encryption)
         email_input = Prompt.ask(
-            f"{ICONS['keyboard']}[white] Enter recipient email "
-            "address(es) (comma-separated)"
+            f"[cyan][{Utils.get_current_time()}][white] Enter recipient "
+            "email address(es) (comma-separated)"
         ).strip()
 
         if not email_input and action == "encrypt":
             c.print(
-                f"{ICONS['warning']}[yellow3] No email provided."
+                f"[cyan][{Utils.get_current_time()}][yellow3] No email "
+                "provided."
             )
             confirm = Prompt.ask(
-                f"{ICONS['question']}[white] Proceed with symmetric "
-                "encryption instead?",
+                f"[cyan][{Utils.get_current_time()}][white] Proceed with "
+                "symmetric encryption instead?",
                 choices=["y", "n"],
                 show_choices=True
             )
@@ -607,27 +660,27 @@ class PGP:
         # Password (required for symmetric encryption)
         if symmetric:
             password =Prompt.ask(
-                f"{ICONS['keyboard']}[white] Enter passphrase for "
-                "encryption"
+                f"[cyan][{Utils.get_current_time()}][white] Enter "
+                f"passphrase for encryption"
             )
             if not password:
                 c.print(
-                    f"{ICONS['warning']}[yellow3] Passphrase required "
-                    "for symmetric encryption."
+                    f"[cyan][{Utils.get_current_time()}][yellow3] Passphrase "
+                    "required for symmetric encryption."
                 )
                 return
 
         elif action == "decrypt":
             confirm = Prompt.ask(
-                f"{ICONS['question']}[white] Do you want to provide a "
-                "passphrase now? (leave blank for GPG prompt)",
+                f"[cyan][{Utils.get_current_time()}][white] Do you want to "
+                "provide a passphrase now? (leave blank for GPG prompt)",
                 choices=["y", "n"],
                 show_choices=True
             )
             if confirm:
                 password = Prompt.ask(
-                    f"{ICONS['keyboard']}[white] Enter passphrase for "
-                    "processing",
+                    f"[cyan][{Utils.get_current_time()}][white] Enter "
+                    f"passphrase for processing",
                     password=True
                 )
             else:
@@ -637,8 +690,8 @@ class PGP:
 
         # Armored option
         armored = Prompt.ask(
-            f"{ICONS['question']}[white] Use ASCII-armored output"
-            "(.asc)? ",
+            f"[cyan][{Utils.get_current_time()}][white] Use ASCII-armored "
+            "output (.asc)?",
             choices=["y", "n"],
             show_choices=True
         )
@@ -657,12 +710,13 @@ class PGP:
             )
 
             c.print(
-                f"{ICONS['success']}[green3] Completed processing "
-                f"{len(results)} files."
+                f"[cyan][{Utils.get_current_time()}][green3] Completed "
+                f"processing {len(results)} files."
             )
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Operation failed -> {e}")
+                f"[cyan][{Utils.get_current_time()}][red1] Operation "
+                f"failed -> {e}")
             return None
 
 
@@ -712,15 +766,15 @@ class PGP:
 
         if not target_file.is_file():
             c.print(
-                f"{ICONS['failure']}[red] {target_file.name} does not "
-                "exist or is a directory."
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"{target_file.name} does not exist or is a directory."
             )
             raise FileNotFoundError(f"Invalid target file -> {target_file}")
 
         # Output path (optional)
         output_path_input = Prompt.ask(
-            f"{ICONS['keyboard']}[white] Enter output path (leave "
-            "blank for default)",
+            f"[cyan][{Utils.get_current_time()}][white] Enter output path "
+            "(leave blank for default)",
         ).strip("\"'")
         output_path = (
             Path(output_path_input).resolve()
@@ -733,8 +787,8 @@ class PGP:
             if use_symmetric:
             # Password -> required for symmetric encryption or decryption
                 armored_response = Prompt.ask(
-                    f"{ICONS['question']}[white] Use ASCII-armored output "
-                    "(.asc)?",
+                    f"[cyan][{Utils.get_current_time()}][white] "
+                    f"Use ASCII-armored output (.asc)?",
                     choices=["y", "n"],
                     show_choices=True
                 )
@@ -744,8 +798,8 @@ class PGP:
                 # Validate: symmetric encryption requires a password
                 if not password:
                     c.print(
-                        f"{ICONS['warning']}[yellow3]A password is required for "
-                        "symmetric encryption."
+                        f"[cyan][{Utils.get_current_time()}][yellow3] "
+                        f"A password is required for symmetric encryption."
                     )
                     raise ValueError(
                         "Password required for symmetric encryption."
@@ -771,33 +825,63 @@ class PGP:
                         f"{target_file.name}.decrypted")
                 )
 
+        # DEBUG: Log password status BEFORE encryption
+        logger.debug(
+            f"PASSED PASSWORD: {'***HIDDEN***' if password else 'NONE'}"
+        )
+        logger.debug(f"SYM MODE: {use_symmetric}")
+        logger.debug(f"TARGET FILE: {target_file}")
+        logger.debug(f"OUTPUT FILE: {output_file}")
+
         try:
             c.print(
-                f"{ICONS['file']}[white] Reading file -> "
-                f"{target_file.name}..."
+                f"[cyan][{Utils.get_current_time()}][white] "
+                f"Reading file -> {target_file.name}..."
             )
 
-            if action == "encrypt":
-                c.print(
-                    f"{ICONS['info']}[white] "
-                    f"{action.capitalize()}ing file data..."
-                )
-                c.print(
-                    f"{ICONS['file']}[white] Reading file -> "
-                    f"{target_file.name}..."
-                )
-
-                with open(target_file, "rb") as f:
+            with open(target_file, "rb") as f:
+                if action == "encrypt":
+                    c.print(
+                        f"[cyan][{Utils.get_current_time()}][white] "
+                        f"{action.capitalize()}ing file data..."
+                    )
                     if use_symmetric:
+                        logger.info(
+                            f"Starting SYMMETRIC encrypt for: "
+                            f"{target_file.name}"
+                        )
+
+                        # VERIFY PASSWORD EXISTS
+                        if not password:
+                            logger.error(
+                                "PASSWORD IS NONE FOR SYMMETRIC ENCRYPTION!"
+                            )
+                            raise ValueError(
+                                "Password required for symmetric encryption"
+                            )
+
                         # Symmetric encryption - NO recipients
                         status = self.gpg.encrypt_file(
                             f,
                             recipients=[],
                             symmetric=True,
+                            # python-gnupg will send this via stdin
                             passphrase=password,
                             armor=use_armored,
                             output=str(output_file),
                         )
+
+                        logger.debug(
+                            f"Encryption status.ok: {status.ok}"
+                        )
+                        logger.debug(
+                            f"Encryption status.status: "
+                            f"{getattr(status, 'status', 'NO STATUS ATTR')}"
+                        )
+
+                        if status.stderr:
+                            logger.error(f"GPG STDERR: {status.stderr}")
+
                     else:
                         # Asymmetric encryption - REQUIRES recipients
                         if not recipients:
@@ -812,18 +896,34 @@ class PGP:
                             armor=use_armored,
                             output=str(output_file),
                         )
-            else:
-                # Decryption
-                with open(target_file, "rb") as f:
+                else:
+                    # Decryption
                     status = self.gpg.decrypt_file(
                         f,
+                        # Pass for private key decryption
                         passphrase=password,
                         output=str(output_file),
                     )
         except Exception as e:
+            # Try to extract GPG-specific error message
+            if hasattr(e, 'stderr'):
+                logger.error(f"GPG stderr: {e.stderr}")
+            elif hasattr(e, 'status'):
+                logger.error(f"GPG status: {e.status}")
             c.print(
-                f"{ICONS['failure']}[red] Failed to execute GPG "
-                f"{action}ion -> {e}")
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to "
+                f"execute GPG {action}ion -> {e}"
+            )
+            # Try to show helpful troubleshooting info
+            if "broken pipe" in str(e).lower():
+                c.print(
+                    f"[yellow]Troubleshooting: Check if pinentry is "
+                    f"installed. On Linux: sudo apt install pinentry-gnome3"
+                )
+                c.print(
+                    f"[yellow]Also verify GPG agent is running: "
+                    "gpg-connect-agent reloadagent /bye"
+                )
             raise RuntimeError(f"GPG operation failed: {e}") from e
 
         # Validate GPG status
@@ -833,21 +933,28 @@ class PGP:
                 output_file.unlink(missing_ok=True)
 
             error_msg = getattr(
-                status, "status", getattr(status, "status", "Unknown GPG error")
+                status, "status", getattr(
+                    status, "status", "Unknown GPG error"
+                )
             )
             c.print(
-                f"{ICONS['failure']}[red] PGP {action.title()}ion failed for "
-                f"{target_file.name}. GPG status -> {error_msg}"
+                f"[cyan][{Utils.get_current_time()}][red1] PGP "
+                f"{action.title()}ion failed for {target_file.name}. GPG "
+                f"status -> {error_msg}"
             )
             raise RuntimeError(f"PGP {action.title()}ion failed: {error_msg}")
 
         # Log status
         if hasattr(self, "print_status"):
-            self.print_status(status=status, method=self.current_method)
+            self.print_status(
+                status=status,
+                current_method=self.current_method
+            )
 
         c.print(
-            f"{ICONS['success']}[green3] File {action}ed successfully. "
-            f"{target_file.name}  ->  {output_file.name}"
+            f"[cyan][{Utils.get_current_time()}][green3] File "
+            f"{action}ed successfully. {target_file.name}  ->  "
+            f"{output_file.name}"
         )
 
         return output_file
@@ -870,11 +977,12 @@ class PGP:
         Args:
             target_dir: Path to the directory containing files.
             action: Either 'encrypt' or 'decrypt'.
-            email_address: Recipient email or key ID(s). Required for public-key
-                encryption. Ignored for symmetric encryption.
+            email_address: Recipient email or key ID(s). Required for
+                public-key encryption. Ignored for symmetric encryption.
             password: Passphrase for symmetric encryption or private key
                 decryption. If None, will be prompted interactively.
-            recursive: Traverse the target_dir and process files in sub-folders.
+            recursive: Traverse the target_dir and process files in
+                sub-folders.
             armored: True → ASCII-armored (.asc); False → binary (.pgp/.gpg).
                 If None, uses the instance default.
             symmetric: True → password-only encryption; False → public-key
@@ -903,9 +1011,10 @@ class PGP:
         # Validate: public-key encryption requires recipients
         if action == "encrypt" and not use_symmetric and not email_address:
             c.print(
-                f"{ICONS['failure']}[red] At least one recipient email "
-                "or key ID must be provided for public-key encryption. Use "
-                "symmetric=True for password-only encryption."
+                f"[cyan][{Utils.get_current_time()}][red1] At least "
+                "one recipient email or key ID must be provided for "
+                "public-key encryption. Use symmetric=True for password-only "
+                "encryption."
             )
             raise ValueError
 
@@ -937,15 +1046,15 @@ class PGP:
 
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to retrieve files "
-                f"from {target_dir} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed to "
+                f"retrieve files from {target_dir} -> {e}"
             )
             return []
 
         if not all_files:
             c.print(
-                f"{ICONS['warning']}[yellow3] No valid files to "
-                f"{action} in {target_dir}"
+                f"[cyan][{Utils.get_current_time()}][yellow3] No valid files "
+                f"to {action} in {target_dir}"
             )
             return []
 
@@ -966,15 +1075,16 @@ class PGP:
                 successful_files.append(processed_path)
             except Exception as e:
                 c.print(
-                    f"{ICONS['failure']}[red] Error during {action}ing "
-                    f"{file_path.name} : {e}"
+                    f"[cyan][{Utils.get_current_time()}][red1] Error during "
+                    f"{action}ing {file_path.name} -> {e}"
                 )
                 failed_files.append(file_path)
 
         # Summary reporting
         if successful_files:
             c.print(
-                f"{ICONS['success']}[green3] Action Completed\n"
+                f"[cyan][{Utils.get_current_time()}][green3] "
+                f"Action Completed\n"
                 f"Successfully {action}ed {len(successful_files)} files in "
                 f"{target_dir} :"
             )
@@ -983,11 +1093,12 @@ class PGP:
 
         if failed_files:
             c.print(
-                f"{ICONS['failure']}[red] Warning\n"
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                "Warning\n"
                 f"Failed to {action} {len(failed_files)} files :"
             )
             for failed_file in failed_files:
-                c.print(f"[red]  {failed_file.name}")
+                c.print(f"[red1]  {failed_file.name}")
 
         return successful_files
 
@@ -1004,11 +1115,11 @@ class PGP:
         Args:
             detached: If True, produce a detached signature (.sig). If False,
                 produce an inline/compressed signed file.
-            clearsign: If True, produce a cleartext-signed document (.asc) that
-                remains readable while carrying an embedded signature. Overrides
-                `detached` when True.
-            armored: True → ASCII-armored output; False → binary. If None, uses
-                the instance default.
+            clearsign: If True, produce a cleartext-signed document (.asc)
+                that remains readable while carrying an embedded signature.
+                Overrides `detached` when True.
+            armored: True → ASCII-armored output; False → binary. If None,
+                uses the instance default.
         Returns:
             Path: Path to the resulting signature or signed file.
 
@@ -1018,8 +1129,8 @@ class PGP:
             RuntimeError: If the GPG signing operation fails.
         """
         target_file = Prompt.ask(
-            f"{ICONS['keyboard']}[white] Enter the path of the file to "
-            "be signed"
+            f"[cyan][{Utils.get_current_time()}][white] Enter the path of "
+            "the file to be signed"
         )
         target_file = Path(target_file).resolve()
 
@@ -1028,19 +1139,19 @@ class PGP:
             raise FileNotFoundError(f"Invalid target file -> {target_file}")
 
         signer_email = Prompt.ask(
-            f"{ICONS['keyboard']}[white] Enter the email address or "
-            "key ID of the signer's private key"
+            f"[cyan][{Utils.get_current_time()}][white] Enter the email "
+            "address or key ID of the signer's private key"
         )
         if not signer_email:
             c.print(
-                f"{ICONS['warning']}[yellow3] The signer's email or "
-                "key ID must be provided"
+                f"[cyan][{Utils.get_current_time()}][yellow3] The signer's "
+                "email or key ID must be provided"
             )
             raise ValueError
 
         password = Prompt.ask(
-            f"{ICONS['key']}[white] Enter the passphrase for the "
-            "signer's private key",
+            f"[cyan][{Utils.get_current_time()}][white] Enter the passphrase "
+            "for the signer's private key",
             password=True
         )
 
@@ -1048,9 +1159,9 @@ class PGP:
             self, "_armored", False)
 
         sig_type = Prompt.ask(
-            f"{ICONS['question']}[white] What type of signature do "
-            "you want to use to sign this file? (1 = clearsign, 2 = detached, "
-            "3 = other) ",
+            f"[cyan][{Utils.get_current_time()}][white] What type of "
+            "signature do you want to use to sign this file? "
+            "(1=clearsign, 2=detached, 3=other)",
             choices=["1", "2", "3"],
             show_choices=True
         )
@@ -1064,8 +1175,8 @@ class PGP:
                 clearsign, detached = False, False
             case _:
                 c.print(
-                    f"{ICONS['warning']}[yellow3] Invalid choice, "
-                    "defaulting to inline signature"
+                    f"[cyan][{Utils.get_current_time()}][yellow3] "
+                    "Invalid choice, defaulting to inline signature"
                 )
                 clearsign, detached = False, False
         # Determine output path and extension
@@ -1080,12 +1191,12 @@ class PGP:
         # Calling the signing method
         try:
             c.print(
-                f"{ICONS['info']}[white] Signing file -> "
-                f"{target_file.name}..."
+                f"[cyan][{Utils.get_current_time()}][white] Signing "
+                f"file -> {target_file.name}..."
             )
             c.print(
-                f"{ICONS['info']}[cyan] Signature will be written "
-                f"to -> {output_file.name}"
+                f"[cyan][{Utils.get_current_time()}][white] Signature "
+                f"will be written to -> {output_file.name}"
             )
 
             with open(target_file, "rb") as f:
@@ -1099,12 +1210,13 @@ class PGP:
                     output=str(output_file),
             )
             c.print(
-                f"{ICONS['success']}[green3] Signature created -> "
-                f"{output_file.name}"
+                f"[cyan][{Utils.get_current_time()}][green3] Signature "
+                f"created -> {output_file.name}"
             )
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] File signing failed -> {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] File signing "
+                f"failed -> {e}"
             )
             raise RuntimeError(f"Failed to execute GPG signing -> {e}") from e
 
@@ -1114,8 +1226,9 @@ class PGP:
 
             error_msg = getattr(status, "stderr", "Unknown GPG error")
             raise RuntimeError(
-                f"{ICONS['failure']}[red] PGP signing failed for -> "
-                f"{target_file.name}. GPG status -> {error_msg}"
+                f"[cyan][{Utils.get_current_time()}][red1] PGP signing "
+                f"failed for -> {target_file.name}. GPG status -> "
+                f"{error_msg}"
             )
 
         if hasattr(self, "print_status"):
@@ -1156,11 +1269,11 @@ class PGP:
 
         if not signature_file.is_file():
             c.print(
-                f"{ICONS['failure']}[red] Signature file not found : "
-                f"{signature_file}"
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"Signature file not found -> {signature_file}"
             )
             raise FileNotFoundError(
-                f"Invalid signature file : {signature_file}"
+                f"Invalid signature file -> {signature_file}"
             )
 
         # Determine if this is a detached or inline/cleartext signature
@@ -1171,17 +1284,17 @@ class PGP:
 
             if not original_file.is_file():
                 c.print(
-                    f"{ICONS['failure']}[red] Original file not "
-                    f"found : {original_file}"
+                    f"[cyan][{Utils.get_current_time()}][red1] "
+                    f"The original file not found -> {original_file}"
                 )
                 raise FileNotFoundError(
-                    f"Invalid original file : {original_file}"
+                    f"Invalid original file -> {original_file}"
                 )
 
         try:
             c.print(
-                f"{ICONS['info']}white] Verifying signature : "
-                f"{signature_file.name}..."
+                f"[cyan][{Utils.get_current_time()}][white] "
+                f"Verifying signature ->{signature_file.name}..."
             )
 
             if is_detached:
@@ -1196,19 +1309,19 @@ class PGP:
 
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Verification error for "
-                f"{signature_file.name} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"Verification error for {signature_file.name} -> {e}"
             )
             return False
 
         # Check basic validity
         if not verified:
             c.print(
-                f"{ICONS['failure']}[red] Signature verification "
-                f"FAILED for {signature_file.name}."
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"Signature verification FAILED for {signature_file.name}."
             )
             if hasattr(verified, "stderr") and verified.stderr:
-                c.print(f"[red]  {verified.stderr.strip()}")
+                c.print(f"[red1]  {verified.stderr.strip()}")
             return False
 
         # If a specific signer was expected, verify the key matches
@@ -1230,9 +1343,9 @@ class PGP:
 
             if not key_matches:
                 c.print(
-                    f"{ICONS['failure']}[red] Signature is valid "
-                    f"but was NOT produced by expected signer : "
-                    f"{signer_email}.\n"
+                    f"[cyan][{Utils.get_current_time()}][red1] "
+                    f"Signature is valid but was NOT produced by expected "
+                    f"signer : {signer_email}.\n"
                     f"  -> Actual signer key_id      : {actual_key_id}\n"
                     f"  -> Actual signer fingerprint : {actual_fingerprint}"
                 )
@@ -1244,8 +1357,8 @@ class PGP:
         sign_date = getattr(verified, "timestamp", "Unknown")
 
         c.print(
-            f"{ICONS['success']}[green3] Signature verification "
-            f"PASSED with {signature_file.name}"
+            f"[cyan][{Utils.get_current_time()}][green3] "
+            f"Signature verification PASSED with {signature_file.name}"
         )
         c.print(
             f"[green3]  Signer  : {signer_name}\n"
@@ -1269,9 +1382,56 @@ class PGP:
 
         # List available keys
         keys = self.gpg.list_keys()
-        c.print(f"[cyan]Keys found:[/] {len(keys)}")
+        c.print(
+            f"[cyan][{Utils.get_current_time()}][white] Keys found: "
+            f"{len(keys)}"
+        )
         for key in keys[:5]:  # Show first 5
-            c.print(f"  - {key['uids'][0]} ({key['fingerprint'][:16]}...)")
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][white]  - "
+                f"{key['uids'][0]} ({key['fingerprint'][:16]}...)"
+            )
+
+
+    def verify_gpg_setup(self) -> bool:
+        """Verify GPG installation and configuration."""
+        logger = get_logger("pgp")
+
+        # ✅ Use standard library to check for gpg binary
+        gpg_path = shutil.which("gpg")
+
+        if not gpg_path:
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][red] GPG binary not "
+                "found in PATH. Install Gpg4win (Windows) or gpg (Linux/Mac)"
+            )
+            return False
+
+        logger.debug(f"GPG binary found at: {gpg_path}")
+
+        # Test keyring access
+        try:
+            keys = self.gpg.list_keys()
+            logger.debug(f"Found {len(keys)} public keys")
+
+            secret_keys = self.gpg.list_keys(secret=True)
+            logger.debug(f"Found {len(secret_keys)} secret keys")
+
+            if not secret_keys and not getattr(self, "default_symmetric", False):
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow] Warning: No "
+                    "secret keys found. Symmetric encryption recommended."
+                )
+        except Exception as e:
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][red] Error accessing "
+                f"GPG keyring -> {e}"
+            )
+            return False
+
+        return True
+
+
 
 
 

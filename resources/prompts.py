@@ -5,7 +5,6 @@ from rich.prompt import Prompt
 # Import the console object from the main __init__.py file
 from . import c
 from resources.utils import Utils
-from resources.vars import ICONS
 
 
 VERSION = "0.4.1785974400"
@@ -26,7 +25,7 @@ def display_menu(
         if clear_on_invalid:
             Utils.clear_screen()
         c.print(
-            f"\n\n{ICONS['warning']}[yellow3] \"{user_input}\" is not "
+            f"\n\n[cyan][{Utils.get_current_time()}][yellow3] \"{user_input}\" is not "
             "a valid option. [/]"
             f"""[white]Valid options for this menu are: {', '.join(
                 f"'{c}'" for c in sorted(choices))}.\n\n"""

@@ -3,9 +3,11 @@
 
 # Import the console object from the main __init__.py file
 from . import c
+from ui.log_config import get_logger
 from rich.traceback import install
-from resources.vars import ENCRYPTED_EXT_LIST, ICONS
+from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
+from typing import List
 
 HAS_CRYPTO = False
 try:
@@ -15,8 +17,8 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     c.print(
-        f"{ICONS['warning']}[yellow3] Missing dependency: "
-        "currently missing the 'cryptography' package.\n"
+        f"[cyan][{Utils.get_current_time()}][yellow3] Missing "
+        "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
 
@@ -25,7 +27,7 @@ from pathlib import Path
 
 
 install(show_locals=True, console=c)
-
+logger = get_logger("aes")  # Creates "encryption_app.aes" logger
 
 class AES:
 
@@ -44,18 +46,31 @@ class AES:
         """Derives a 256-bit key from a password buffer using Scrypt (N=2^17
         for improved GPU attack resistance).
         """
+        # Log at START of important operations
+        logger.debug(
+            f"Deriving key from password (length: "
+            f"{len(password) if isinstance(password, str) else len(bytes(password))})"
+        )
         # If a string gets passed, encode it; otherwise use raw buffer
-        pwd_buffer = (
-            password.encode("utf-8")
-            if isinstance(password, str) else password)
+        # Convert string to bytes
+        if isinstance(password, str):
+            pwd_buffer = password.encode("utf-8")
+        elif isinstance(password, bytearray):
+            # Convert bytearray to immutable bytes
+            pwd_buffer = bytes(password)
+        else:
+            pwd_buffer = password
+
         kdf = Scrypt(salt=salt, length=32, n=2**17, r=8, p=1)
+
+        logger.debug("Key derived successfully")
         return kdf.derive(pwd_buffer)
 
 
     def _handle_aes_process_file(self, action: str) -> None:
         """Collect user inputs and call aes_process_file."""
         target_file = Utils.get_file_path()
-        password = Utils.get_password()
+        password = Utils.get_confirmed_password()
         self.aes_process_file(
             target_file=target_file,
             password=password,
@@ -65,7 +80,7 @@ class AES:
 
     def _handle_aes_process_folder(self, action: str) -> None:
         target_dir = Utils.get_directory_path()
-        password = Utils.get_password()
+        password = Utils.get_confirmed_password()
         recursive = Utils.select_recursive_option()
         self.aes_process_folder(
             target_dir=target_dir,
@@ -97,6 +112,7 @@ class AES:
         """
         action = action.lower().strip()
         target_file = Path(target_file).resolve()
+        logger.info(f"Starting {action} for file: {target_file}")
 
         if not target_file.is_file():
             Utils.print_not_file_error(target_file=target_file)
@@ -107,19 +123,19 @@ class AES:
 
         try:
             c.print(
-                f"{ICONS['file']}[white] Reading file : "
-                f"{target_file.name}..."
+                f"[cyan][{Utils.get_current_time()}][white]"
+                f"Reading file : {target_file.name}..."
             )
 
             original_file_data = target_file.read_bytes()
             c.print(
-                f"{ICONS['success']}[white] File content read "
-                "successfully..."
+                f"[cyan][{Utils.get_current_time()}][white] File "
+                "content read successfully..."
             )
 
             c.print(
-                f"{ICONS['processing']}[white] {action.capitalize()}ing "
-                "file data..."
+                f"[cyan][{Utils.get_current_time()}][white] "
+                f"{action.capitalize()}ing file data..."
             )
 
             if action == "encrypt":
@@ -129,8 +145,9 @@ class AES:
                 )
                 # Generate fresh, random cryptographic parameters
                 salt = os.urandom(self.SALT_LENGTH)
-                iv = os.urandom(self.IV_LENGTH)  # 96-bit IV is standard for GCM
-                key = self._derive_key(self, password, salt)
+                # 96-bit IV is standard for GCM
+                iv = os.urandom(self.IV_LENGTH)
+                key = self._derive_key(password, salt)
 
                 aesgcm = AESGCM(key)
 
@@ -153,14 +170,13 @@ class AES:
                     output_file = target_file.with_name(
                         f"{target_file.name}.{FILE_EXT}"
                     )
-                # Convert string to mutable bytearray
-                password_bytes = bytearray(password.encode("utf-8"))
 
                 min_length = self.SALT_LENGTH + self.IV_LENGTH + 16
                 if len(original_file_data) < min_length:
                     c.print(
-                        f"{ICONS['failure']}[red]File is corrupted or "
-                        "too short to be a valid AES-GCM payload."
+                        f"[cyan][{Utils.get_current_time()}][red1] "
+                        f"File is corrupted or too short to be a valid "
+                        "AES-GCM payload."
                     )
                     raise ValueError("File corrupted or too short")
 
@@ -175,12 +191,11 @@ class AES:
                         self.SALT_LENGTH + self.IV_LENGTH :
                     ]
 
-                    # Derive key and decrypt/verify
-                    key = self._derive_key(password_bytes, salt)
+                    key = self._derive_key(password, salt)
 
                     aesgcm = AESGCM(key)
 
-                    # Decrypts ciphertext and verifies authentication tag
+                    # Decrypt and verify authentication tag
                     decrypted_data = aesgcm.decrypt(
                         iv,
                         ciphertext_with_tag,
@@ -191,30 +206,28 @@ class AES:
 
                 except InvalidTag:
                     c.print(
-                        f"{ICONS['failure']}[red] Decryption failed : "
-                        "Invalid password or corrupted payload (authentication "
-                        "tag check failed) (Invalid tag)."
+                        f"[cyan][{Utils.get_current_time()}][red1] "
+                        "Decryption failed: Invalid password or corrupted "
+                        "payload (authentication tag check failed) "
+                        "(Invalid tag)."
                     )
                     raise ValueError(
                         "Authentication failed : Wrong password or file has "
                         "been altered."
                     )
-                finally:
-                    # Zero out the password memory immediately after derivation
-                    for i in range(len(password_bytes)):
-                        password_bytes[i] = 0
 
             c.print(
-                f"{ICONS['success']}[green3] {action.capitalize()}ed "
-                f"{target_file.name}  ->  {output_file.name}"
+                f"[cyan][{Utils.get_current_time()}][green3] "
+                f"{action.capitalize()}ed {target_file.name}  ->  "
+                f"{output_file.name}"
             )
 
             return output_file
 
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to {action} "
-                f"{target_file.name} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] "
+                f"Failed to {action} {target_file.name} -> {e}"
             )
             return None
 
@@ -225,7 +238,7 @@ class AES:
             password: str,
             action: str,
             recursive: bool = True
-    ) -> Path:
+    ) -> List[Path]:
         """Recursively encrypt or decrypt all valid  files within a directory
         using safely using AES.GCM and independent salt derivation.
 
@@ -245,16 +258,20 @@ class AES:
             ValueError: If action is invalid or key file matches target file.
 
         """
-        results = {"success": [], "failed": [], "skipped": []}
         action = action.lower().strip()
         target_dir = Path(target_dir).resolve()
 
         if not Utils.verify_is_directory(target_dir=target_dir):
-            return
+            return []
 
         c.print(
-            f"{ICONS['success']}[green3] {target_dir} validated. "
-            f"Fetching targets for {action}ion...")
+            f"[cyan][{Utils.get_current_time()}][green3] "
+            f"Target directory '{target_dir}' validated."
+        )
+        c.print(
+            f"[cyan][{Utils.get_current_time()}][white] Fetching "
+            f"targets for {action}ion..."
+        )
 
         try:
             # Dynamically filter files based on the requested action
@@ -278,16 +295,19 @@ class AES:
                 ]
         except Exception as e:
             c.print(
-                f"{ICONS['failure']}[red] Failed to retrieve files "
-                f"from {target_dir} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red1] Failed "
+                f"to retrieve files from {target_dir} -> {e}"
             )
 
         if not all_files:
             c.print(
-                f"{ICONS['warning']}[yellow3] No valid files to "
-                f"{action} in {target_dir}"
+                f"[cyan][{Utils.get_current_time()}][yellow3] No "
+                f"valid files to {action} in {target_dir}"
             )
-            return
+            return []
+
+        successful_files: List[Path] = []
+        failed_files: List[Path] = []
 
         for file_path in all_files:
             try:
@@ -296,43 +316,31 @@ class AES:
                     password=password,
                     action=action,
                 )
-                results['success'].append({
-                    "original": str(file_path),
-                    f"processed": str(processed_path)}
-                )
+                successful_files.append(processed_path)
             except Exception as e:
                 c.print(
-                    f"{ICONS['failure']}[red] Error {action}ing "
-                    f"{file_path.name}  ->  {e}"
+                    f"[cyan][{Utils.get_current_time()}][red1] "
+                    f"Error during {action}ing {file_path.name}  ->  {e}"
                 )
-                results['failed'].append({
-                    "path": str(file_path),
-                    "error": str(e)}
-                )
+                failed_files.append(file_path)
 
-        if results['success']:
+        if successful_files:
             c.print(
-                f"{ICONS['success']}[green3] Action Completed\n"
-                f"Successfully {action}ed {len(results['success'])} files in "
-                f"{target_dir} :"
+                "\n" + "[green]-" * 45 + "\n",
+                f"[green3]** Action Completed **\n"
+                f"    Successfully {action}ed {len(successful_files)} files "
+                f"in {target_dir}:"
             )
-            processed_paths = [
-                item['processed'] for item in results['success']
-            ]
-            for path in processed_paths:
-                c.print(f"[green3]    {str(path)}")
+            for processed_file in successful_files:
+                c.print(f"[green3]        {processed_file.name}")
 
-        if results['failed']:
+        if failed_files:
             c.print(
-                f"{ICONS['failure']}[red] Warning:\n"
-                f"Failed to {action} {len(results['failed'])} files :"
+                "\n" + "-" * 45 + "\n",
+                f"[red1]** Warning **\n"
+                f"    Failed to {action} {len(failed_files)} files:"
             )
-            failed_paths = [
-                item["path"] for item in results["failed"]
-            ]
-            for path in failed_paths:
-                c.print(f"[red]    {str(path)}")
+            for failed_file in failed_files:
+                c.print(f"[red1]        {failed_file.name}")
 
-        # c.print(results)
-
-        return results
+        return successful_files
