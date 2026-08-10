@@ -39,6 +39,14 @@ class XOR:
             "the key you want to use for the XOR operation",
             password=True
         )
+        
+        if not xor_key:
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][yellow3] The "
+                "XOR key cannot be empty"
+            )
+            raise ValueError("The XOR key cannot be empty.")
+        
         return xor_key.encode("utf-8")
 
 
@@ -63,16 +71,10 @@ class XOR:
 
         xor_key = self.get_xor_key()
 
-        if not xor_key:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] The "
-                "XOR key cannot be empty"
-            )
-            raise ValueError("The XOR key cannot be empty.")
-
-        self.xor_process_msg(xor_key=xor_key,
-                             message=message,
-                             action=action,
+        self.xor_process_msg(
+            xor_key=xor_key,
+            message=message,
+            action=action,
         )
 
 
