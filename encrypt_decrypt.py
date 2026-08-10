@@ -438,7 +438,7 @@ class Main:
                 normalized = selection.lower()
 
                 # Check for quit
-                if normalized in ["q", "quit", "exit"]:
+                if normalized in ["q"]:
                     c.print(get_exit_message(self.config))
                     exit_program = True
                     break
@@ -472,6 +472,7 @@ class Main:
                     f"\n[cyan][{Utils.get_current_time()}][red1] EOF "
                     f"received. Exiting..."
                 )
+                logger.error("EOF received. Program exited.")
                 exit_program = True
                 sys.exit(0)
 
@@ -481,7 +482,7 @@ if __name__ != "__main__":
 
 
 if __name__ == "__main__":
-    logger.info("Application launch initiated")
+    logger.info("Application launched")
     app = Main()
     try:
         app.main()
@@ -491,15 +492,23 @@ if __name__ == "__main__":
             f"\n[cyan][{Utils.get_current_time()}][yellow3] Program "
             f"interrupted by user. Exiting..."
         )
+        logger.info(
+            "KeyboardInterrupt -- The program was interrupted by the user."
+        )
         sys.exit(0)
     except Exception as e:
-        logger.exception(f"FATAL ERROR: {e}")  # Includes traceback
         c.print(
             f"[cyan][{Utils.get_current_time()}][red1] Unexpected "
             f"error -> {e}"
         )
+        logger.error(f"An unexpected error occured -> {e}")
+
         c.print(
-            f"[cyan][{Utils.get_current_time()}][yellow] Full traceback:"
+            f"[cyan][{current_time()}][yellow] Full traceback:"
         )
         c.print(traceback.format_exc())  # Shows exact line causing error
+        
+        logger.error("Full traceback below:")
+        logger.error(f"{traceback.format_exc}") # Include traceback
+
         sys.exit(1)
