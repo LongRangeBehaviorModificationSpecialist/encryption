@@ -24,8 +24,6 @@ def setup_logging(
     log_path.mkdir(exist_ok=True)
 
     # Generate timestamped log filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # log_file = log_path / f"app_{timestamp}.log"
     log_file = log_path / "app.log"
 
     # Configure root logger
@@ -37,10 +35,6 @@ def setup_logging(
 
     # File formatter with full details
     file_formatter = logging.Formatter(
-        # fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        # fmt="%(asctime)s | %(levelname)-8s | %(message)s",
-        # datefmt="%Y-%m-%d %H:%M:%S"
-        
         fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
@@ -53,17 +47,12 @@ def setup_logging(
         backupCount=5,        # Keep 5 old files (app.log.1, app.log.2, etc.)
         encoding="utf-8"
     )
-    
-    
-    # file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(log_level)
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
     # Log startup info
-    # logger.info("=" * 60)
     logger.info(f"Application started | Log file: {log_file}")
-    # logger.info("=" * 60)
 
     # Store log path for reference
     logger.log_file = str(log_file)
