@@ -89,9 +89,12 @@ class Main:
     def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         c.print(
-            f"\n\n\n[cyan][{Utils.get_current_time()}][red1] Operation "
+            f"\n\n\n{GLOBAL_CONFIG.red_line} Operation "
             f"cancelled by user. Exiting...\n"
         )
+        
+        # [cyan][{Utils.get_current_time()}][red1]
+        
         sys.exit(0)
 
 
