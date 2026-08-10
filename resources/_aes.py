@@ -4,6 +4,7 @@
 # Import the console object from the main __init__.py file
 from . import c
 from ui.log_config import get_logger
+from ui.config import GLOBAL_CONFIG
 from rich.traceback import install
 from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
@@ -17,7 +18,7 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     c.print(
-        f"[cyan][{Utils.get_current_time()}][yellow3] Missing "
+        f"{GLOBAL_CONFIG.yellow_line} Missing "
         "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
