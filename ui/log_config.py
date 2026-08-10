@@ -40,7 +40,7 @@ def setup_logging(
         # datefmt="%Y-%m-%d %H:%M:%S"
         
         fmt="%(asctime)s | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s",
-        datefmt="%H:%M:%S"
+        datefmt="%H:%M:%S.%f"
     )
 
     # File handler (ALL logs go here)
