@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 
 import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from pathlib import Path
 
@@ -45,7 +46,16 @@ def setup_logging(
     )
 
     # File handler (ALL logs go here)
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    # Replace FileHandler with RotatingFileHandler
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=25_000_000,  # 25 MB per file
+        backupCount=5,        # Keep 5 old files (app.log.1, app.log.2, etc.)
+        encoding="utf-8"
+    )
+    
+    
+    # file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(log_level)
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
