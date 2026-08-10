@@ -24,7 +24,8 @@ def setup_logging(
 
     # Generate timestamped log filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = log_path / f"app_{timestamp}.log"
+    # log_file = log_path / f"app_{timestamp}.log"
+    log_file = log_path / "app.log"
 
     # Configure root logger
     logger = logging.getLogger("encryption_app")
@@ -39,8 +40,8 @@ def setup_logging(
         # fmt="%(asctime)s | %(levelname)-8s | %(message)s",
         # datefmt="%Y-%m-%d %H:%M:%S"
         
-        fmt="%(asctime)s | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s",
-        datefmt="%H:%M:%S.%f"
+        fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # File handler (ALL logs go here)
