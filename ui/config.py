@@ -65,8 +65,12 @@ class AppConfig:
     header_style: str = "#2070b2"
     warning_color: str = "yellow3"
     success_color: str = "green3"
-    
-    red_line: str = f"[cyan][{Utils.get_current_time()}][red1]"
+
+    begin_line: str = f"[cyan][{Utils.get_current_time()}]"
+    green_line: str = f"{begin_line}[green3]"
+    red_line: str = f"{begin_line}[red1]"
+    white_line: str = f"{begin_line}[white]"
+    yellow_line: str = f"{begin_line}[yellow3]"
 
     show_separator_line: bool = False
 
