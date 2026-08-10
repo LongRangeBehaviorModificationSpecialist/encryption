@@ -350,7 +350,9 @@ class Main:
         # Display main categories (1-4)
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
-            menu_table.add_row(f"[white][{key}] {category.label}")
+            menu_table.add_row(
+                f"[white][{key}] {category.label} [grey58][{categoty.description}]"
+            )
 
         # Add quit option
         menu_table.add_row()  # Blank row
@@ -397,7 +399,9 @@ class Main:
         # Display submenu items
         for sub_key in sorted(category.submenu_items.keys()):
             item = category.submenu_items[sub_key]
-            menu_table.add_row(f"[white][{sub_key}] {item.label}")
+            menu_table.add_row(
+                f"[white][{sub_key}] {item.label} [grey58][{item.description}]"
+            )
 
         menu_table.add_row()
 
