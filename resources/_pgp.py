@@ -4,6 +4,7 @@
 from . import c
 from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
+from ui.config import GLOBAL_CONFIG
 
 import inspect
 import os
