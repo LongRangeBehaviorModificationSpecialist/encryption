@@ -4,6 +4,7 @@
 from . import c
 from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
+from ui.config import GLOBAL_CONFIG
 
 HAS_CRYPTO = False
 try:
@@ -26,7 +27,7 @@ from ui.log_config import get_logger
 
 
 install(show_locals=True, console=c)
-# Creates "encryption_app.aes" logger
+# Creates "key" logger
 logger = get_logger("key")
 
 
