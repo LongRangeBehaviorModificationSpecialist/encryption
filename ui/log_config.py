@@ -36,8 +36,11 @@ def setup_logging(
     # File formatter with full details
     file_formatter = logging.Formatter(
         # fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        fmt="%(asctime)s | %(levelname)-8s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        # fmt="%(asctime)s | %(levelname)-8s | %(message)s",
+        # datefmt="%Y-%m-%d %H:%M:%S"
+        
+        fmt="%(asctime)s | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s",
+        datefmt="%H:%M:%S"
     )
 
     # File handler (ALL logs go here)
