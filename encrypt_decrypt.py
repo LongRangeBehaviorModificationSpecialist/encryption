@@ -89,12 +89,12 @@ class Main:
     def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         c.print(
-            f"\n\n\n{GLOBAL_CONFIG.red_line} Operation "
+            f"\n\n\n[cyan][{Utils.get_current_time()}][red1] Operation "
             f"cancelled by user. Exiting...\n"
         )
-        
-        # [cyan][{Utils.get_current_time()}][red1]
-        
+
+        # {GLOBAL_CONFIG.red_line}
+
         sys.exit(0)
 
 
@@ -117,13 +117,13 @@ class Main:
                                 )
                             except Exception as e:
                                 c.print(
-                                    f"[cyan][{Utils.get_current_time()}]"
-                                    f"[yellow]⚠ Failed to bind "
+                                    f"{GLOBAL_CONFIG.yellow_line}"
+                                    f"⚠ Failed to bind "
                                     f"[{category_key}][{sub_key}] -> {e}"
                                 )
                         else:
                             c.print(
-                                f"[cyan][{Utils.get_current_time()}][yellow]"
+                                f"{GLOBAL_CONFIG.yellow_line}"
                                 f"⚠ Warning: Method '{item.handler_method}' "
                                 f"not found in {item.handler_module} for "
                                 f"submenu [{category_key}][{sub_key}]"
@@ -149,7 +149,7 @@ class Main:
                     # Verify it's actually callable
                     if not callable(handler):
                         c.print(
-                            f"[cyan][{Utils.get_current_time()}][red1]"
+                            f"{GLOBAL_CONFIG.red_line}"
                             f"✗ Error: '{item.handler_method}' is not "
                             f"callable (it's a {type(handler).__name__}) "
                             f"for submenu {category_key}][{sub_key}]"
@@ -216,7 +216,7 @@ class Main:
 
         # No handler configured
         c.print(
-            f"[cyan][{Utils.get_current_time()}][yellow] No handler "
+            f"[cyan][{Utils.get_current_time()}][yellow3] No handler "
             f"configured for this item"
         )
         return False
@@ -249,7 +249,7 @@ class Main:
             self.display_sub_menu(category_key)
 
             try:
-                selection = Prompt.ask(f"\n[bold yellow3]ENTER CHOICE").strip()
+                selection = Prompt.ask(f"\n[yellow3]ENTER CHOICE").strip()
                 normalized = selection.lower()
 
                 logger.debug(f"User selected: {normalized}")
@@ -277,7 +277,7 @@ class Main:
                 # Execute the selected operation
                 item = category.submenu_items[normalized]
                 logger.info(
-                    f"Executing operation: [{category_key}][{normalized}] "
+                    f"Executing operation: [{category_key}][{normalized}] -> "
                     f"{item.label}"
                 )
 
@@ -307,9 +307,10 @@ class Main:
         try:
 
             response = Prompt.ask(
-                f"\n[cyan][{Utils.get_current_time()}][white] Task "
-                "complete! Return to previous menu?",
+                f"\n[cyan][{Utils.get_current_time()}][white] Task complete! Return to "
+                "previous menu?",
                 choices=["y", "n"],
+                default="y",
                 show_choices=True
             ).lower().strip()
 
@@ -348,13 +349,13 @@ class Main:
             safe_box=True,
         )
 
-        menu_table.add_row(f"[bold yellow3]What method do you want to use?\n")
+        menu_table.add_row(f"[yellow3]What method do you want to use?\n")
 
         # Display main categories (1-4)
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
             menu_table.add_row(
-                f"[white][{key}] {category.label} [grey58][{categoty.description}]"
+                f"[white][{key}] {category.label} [grey58][{category.description}]"
             )
 
         # Add quit option
@@ -397,7 +398,7 @@ class Main:
             safe_box=True,
         )
 
-        menu_table.add_row(f"[bold yellow3]Options:\n")
+        menu_table.add_row(f"[yellow3]Options:\n")
 
         # Display submenu items
         for sub_key in sorted(category.submenu_items.keys()):
@@ -436,7 +437,7 @@ class Main:
             self.display_main_menu()
 
             try:
-                selection = Prompt.ask(f"\n[bold yellow3]ENTER CHOICE").strip()
+                selection = Prompt.ask(f"\n[yellow3]ENTER CHOICE").strip()
 
                 normalized = selection.lower()
 
@@ -507,10 +508,10 @@ if __name__ == "__main__":
         logger.error(f"An unexpected error occured -> {e}")
 
         c.print(
-            f"[cyan][{current_time()}][yellow] Full traceback:"
+            f"[cyan][{Utils.get_current_time()}][yellow3] Full traceback:"
         )
         c.print(traceback.format_exc())  # Shows exact line causing error
-        
+
         logger.error("Full traceback below:")
         logger.error(f"{traceback.format_exc}") # Include traceback
 

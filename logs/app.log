@@ -1,0 +1,43 @@
+2026-08-11 10:13:47.757 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-11 10:13:47.757 | INFO     | encrypt_decrypt.py:489 | <module> | Application launched
+2026-08-11 10:13:47.757 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-11 10:13:47.901 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-11 10:13:48.143 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-11 10:13:52.630 | INFO     | encrypt_decrypt.py:243 | run_submenu_loop | Entered submenu loop for category: 2
+2026-08-11 10:13:52.694 | INFO     | encrypt_decrypt.py:377 | display_sub_menu | User viewing submenu for category: 2
+2026-08-11 10:13:54.844 | INFO     | encrypt_decrypt.py:279 | run_submenu_loop | Executing operation: [2][1] ENCRYPT a single file with password
+2026-08-11 10:13:59.430 | INFO     | _aes.py:74 | _handle_aes_process_file | The target_file was entered as 'C:\Users\mikes\Desktop\test\OSHA.docx'
+2026-08-11 10:14:04.076 | INFO     | _aes.py:76 | _handle_aes_process_file | User entered password 'mikes'
+2026-08-11 10:14:04.077 | INFO     | _aes.py:77 | _handle_aes_process_file | Action was input as 'encrypt'
+2026-08-11 10:14:04.077 | INFO     | _aes.py:123 | aes_process_file | Starting encryption for file 'C:\Users\mikes\Desktop\test\OSHA.docx'
+2026-08-11 10:14:04.077 | INFO     | _aes.py:140 | aes_process_file | Reading file 'OSHA.docx'
+2026-08-11 10:14:04.078 | INFO     | _aes.py:147 | aes_process_file | Content of 'OSHA.docx' read successfully
+2026-08-11 10:14:04.078 | INFO     | _aes.py:155 | aes_process_file | Encrypting file data of 'OSHA.docx'
+2026-08-11 10:14:04.078 | INFO     | _aes.py:164 | aes_process_file | Encrypted file name will be: OSHA.docx.encrypted
+2026-08-11 10:14:04.078 | INFO     | _aes.py:169 | aes_process_file | Encryption salt is 'b'Tk\xb4q[\x16\xe0=\x95\xc5\x91\\d\xda\xb4~''
+2026-08-11 10:14:04.078 | INFO     | _aes.py:172 | aes_process_file | Encryption IV value is 'b'\xba\xb8k\xb0&\x9dd\x9bN\x0e\xb1w''
+2026-08-11 10:14:04.351 | INFO     | _aes.py:174 | aes_process_file | Encryption key value is 'b'\x8e6\xe8e\x87\x16JO\xbf\x0b?\xb4\xd7\xa4\xa9\xa9\x84\x86rS\x8b\xe4\x99Fw\xceQ\x8dP\xe8\x7f\xb5''
+2026-08-11 10:14:04.351 | INFO     | _aes.py:175 | aes_process_file | File encryption began
+2026-08-11 10:14:04.352 | INFO     | _aes.py:189 | aes_process_file | Encrypted data written successfully for OSHA.docx
+2026-08-11 10:14:04.353 | INFO     | _aes.py:270 | aes_process_file | Encrypted OSHA.docx  ->  OSHA.docx.encrypted
+2026-08-11 10:14:06.934 | INFO     | encrypt_decrypt.py:243 | run_submenu_loop | Entered submenu loop for category: 2
+2026-08-11 10:14:07.018 | INFO     | encrypt_decrypt.py:377 | display_sub_menu | User viewing submenu for category: 2
+2026-08-11 10:15:26.641 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-11 10:15:26.641 | INFO     | encrypt_decrypt.py:489 | <module> | Application launched
+2026-08-11 10:15:26.642 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-11 10:15:26.790 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-11 10:15:27.043 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-11 10:15:28.987 | INFO     | encrypt_decrypt.py:243 | run_submenu_loop | Entered submenu loop for category: 2
+2026-08-11 10:15:29.052 | INFO     | encrypt_decrypt.py:377 | display_sub_menu | User viewing submenu for category: 2
+2026-08-11 10:15:31.426 | INFO     | encrypt_decrypt.py:279 | run_submenu_loop | Executing operation: [2][2] DECRYPT a single file with password
+2026-08-11 10:15:52.261 | INFO     | _aes.py:74 | _handle_aes_process_file | The target_file was entered as 'C:\Users\mikes\Desktop\test\OSHA.docx.encrypted'
+2026-08-11 10:15:56.888 | INFO     | _aes.py:76 | _handle_aes_process_file | User entered password 'mikes'
+2026-08-11 10:15:56.888 | INFO     | _aes.py:77 | _handle_aes_process_file | Action was input as 'decrypt'
+2026-08-11 10:15:56.888 | INFO     | _aes.py:123 | aes_process_file | Starting decryption for file 'C:\Users\mikes\Desktop\test\OSHA.docx.encrypted'
+2026-08-11 10:15:56.889 | INFO     | _aes.py:140 | aes_process_file | Reading file 'OSHA.docx.encrypted'
+2026-08-11 10:15:56.895 | INFO     | _aes.py:147 | aes_process_file | Content of 'OSHA.docx.encrypted' read successfully
+2026-08-11 10:15:56.895 | INFO     | _aes.py:155 | aes_process_file | Decrypting file data of 'OSHA.docx.encrypted'
+2026-08-11 10:15:56.896 | INFO     | _aes.py:201 | aes_process_file | Decrypted file name will be 'OSHA.docx'
+2026-08-11 10:15:57.157 | INFO     | _aes.py:233 | aes_process_file | File decryption started
+2026-08-11 10:15:57.158 | INFO     | _aes.py:245 | aes_process_file | Decrypted data written to OSHA.docx successfully
+2026-08-11 10:15:57.159 | INFO     | _aes.py:270 | aes_process_file | Decrypted OSHA.docx.encrypted  ->  OSHA.docx

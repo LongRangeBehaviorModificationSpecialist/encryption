@@ -2,20 +2,15 @@
 """External configuration for menu items and application settings."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from rich.console import Console
-import sys
-from typing import Dict, List, Any, Optional
-from resources.utils import Utils
+from typing import Dict, Any, Optional
+# from resources.utils import Utils
 
 
 c = Console()
 
-
-class FileAction(Enum):
-    """Enum for encryption/decryption actions."""
-    ENCRYPT = "encrypt"
-    DECRYPT = "decrypt"
 
 
 class EncryptionMethod(Enum):
@@ -66,11 +61,12 @@ class AppConfig:
     warning_color: str = "yellow3"
     success_color: str = "green3"
 
-    begin_line: str = f"[cyan][{Utils.get_current_time()}]"
-    green_line: str = f"{begin_line}[green3]"
-    red_line: str = f"{begin_line}[red1]"
-    white_line: str = f"{begin_line}[white]"
-    yellow_line: str = f"{begin_line}[yellow3]"
+    # begin_line: str = f"[cyan][{get_current_time()}]"
+    # grey_line: str = f"{begin_line}[grey58]"
+    # green_line: str = f"{begin_line}[green3]"
+    # red_line: str = f"{begin_line}[red1]"
+    # white_line: str = f"{begin_line}[white]"
+    # yellow_line: str = f"{begin_line}[yellow3]"
 
     show_separator_line: bool = False
 
@@ -182,7 +178,7 @@ MAIN_CATEGORIES_CONFIG = {
     EncryptionMethod.PGP.value: MainMenuCategory(
         key="3",
         label="Use a PGP (password or PGP key)",
-        description="Asymmetric encryption using PGP/GPG",
+        description="Symmetric/Asymmetric encryption using PGP/GPG",
         method_enum=EncryptionMethod.PGP,
         submenu_items={
             "1": SubMenuItem(

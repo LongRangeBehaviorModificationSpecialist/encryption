@@ -99,7 +99,7 @@ class PGP:
         # Check if files exist
         if self.pubring_path.exists():
             c.print(
-                f"[cyan][{Utils.get_current_time()}][green]✓ Public keyring "
+                f"{GLOBAL_CONFIG.green_line}✓ Public keyring "
                 f"found: {self.pubring_path}"
             )
         else:
@@ -207,7 +207,7 @@ class PGP:
 
             if not key_file:
                 c.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow] No file path "
+                    f"[cyan][{Utils.get_current_time()}][yellow3] No file path "
                     "provided"
                 )
                 return
@@ -216,7 +216,7 @@ class PGP:
 
             if not key_file.exists():
                 c.print(
-                    f"[cyan][{Utils.get_current_time()}][red] File not found: "
+                    f"[cyan][{Utils.get_current_time()}][red1] File not found: "
                     f"{key_file}"
                 )
                 return
@@ -1403,7 +1403,7 @@ class PGP:
 
         if not gpg_path:
             c.print(
-                f"[cyan][{Utils.get_current_time()}][red] GPG binary not "
+                f"[cyan][{Utils.get_current_time()}][red1] GPG binary not "
                 "found in PATH. Install Gpg4win (Windows) or gpg (Linux/Mac)"
             )
             return False
@@ -1420,12 +1420,12 @@ class PGP:
 
             if not secret_keys and not getattr(self, "default_symmetric", False):
                 c.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow] Warning: No "
+                    f"[cyan][{Utils.get_current_time()}][yellow3] Warning: No "
                     "secret keys found. Symmetric encryption recommended."
                 )
         except Exception as e:
             c.print(
-                f"[cyan][{Utils.get_current_time()}][red] Error accessing "
+                f"[cyan][{Utils.get_current_time()}][red1] Error accessing "
                 f"GPG keyring -> {e}"
             )
             return False

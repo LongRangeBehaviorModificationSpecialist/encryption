@@ -14,6 +14,10 @@ import time
 from . import c
 from resources.vars import ICONS
 from ui.config import GLOBAL_CONFIG
+from ui.log_config import get_logger
+
+
+logger = get_logger("utils")
 
 
 class Utils:
@@ -45,7 +49,7 @@ class Utils:
     def exit_application() -> None:
         """Print message to screen then exit the application."""
         c.print(
-            f"\n\n[cyan][{Utils.get_current_time()}][green3] "
+            f"\n\n[cyan][{Utils.get_current_time()}][yellow3] "
             "Exiting the application...\n"
         )
         sys.exit(0)
@@ -91,6 +95,98 @@ class Utils:
             f"[cyan][{Utils.get_current_time()}][white] Enter the "
             f"full path of the directory containing the files to be processed"
         ).strip("\"'")
+
+
+    @staticmethod
+    def get_output_path(
+            target_path: Path | str,
+            prompt_text: str = None,
+            force_same_directory: bool = True
+    ) -> Path:
+        """Ask user for output path, defaulting to target file's directory
+        if left blank.
+
+        Args:
+            target_file: Source/target file whose directory will be used as
+                default
+            prompt_text: Custom prompt message (optional)
+            force_same_directory: If True, always use target's parent
+                as default
+
+        Returns:
+            Path object for the output destination
+        """
+        # Resolve to absolute path
+        resolved_target = Path(target_path).resolve()
+
+        # Determine default directory (SAME folder as target)
+        if resolved_target.is_file():
+            default_dir = str(resolved_target.parent)
+        elif resolved_target.is_dir():
+            default_dir = str(resolved_target)
+        else:
+            # Doesn't exist yet, use parent of whatever path was given
+            default_dir = (
+                str(resolved_target.parent)
+                if resolved_target.parent != resolved_target
+                else str(Path.cwd())
+            )
+
+        # Build helpful prompt text
+        if prompt_text:
+            base_prompt = prompt_text
+        else:
+            base_prompt = (
+                f"[cyan][{Utils.get_current_time()}][white][-] Enter the "
+                "directory where you want to save the processed files "
+                "(press [Enter] to use the same folder)"
+            )
+
+        # Show default location clearly in the prompt
+        prompt_display = f"{base_prompt} [dim](default: {default_dir})[/dim]"
+
+        # Ask user for input
+        output_input = Prompt.ask(
+            prompt_display,
+            default=default_dir,  # ← This makes Enter use the same directory!
+            show_default=True
+        ).strip("\"'")
+
+        # Handle empty/whitespace input
+        if not output_input or output_input.strip() == "":
+            output_path = Path(default_dir)
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][green] ✓ Using same "
+                f"directory: {output_path}"
+            )
+        else:
+            output_path = Path(output_input).resolve()
+            c.print(
+                f"[cyan][{Utils.get_current_time()}] Output directory: "
+                f"{output_path}"
+            )
+
+        # Ensure output directory exists
+        if not output_path.exists():
+            c.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] Creating output "
+                f"directory: {output_path}"
+            )
+            try:
+                output_path.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Output directory '{output_path}' was created")
+            except Exception as e:
+                failed_make_dir_msg = f"Failed to create {output_path} -> {e}"
+                c.print(
+                    f"[cyan][{Utils.get_current_time()}][red] "
+                    f"{failed_make_dir_msg}"
+                )
+                logger.error(f"{failed_make_dir_msg}")
+                raise RuntimeError(
+                    f"{failed_make_dir_msg}"
+                )
+
+        return output_path
 
 
     @staticmethod
@@ -182,7 +278,7 @@ class Utils:
                 and has_lower
                 and has_symbol):
             c.print(
-                f"[cyan][{Utils.get_current_time()}][red1]\n"
+                f"{GLOBAL_CONFIG.red_line}\n"
                 "Your password did not meet the minimun requirements. Please "
                 "try again.\n"
                 "Your password must meet the following criteria:\n\n"
@@ -336,8 +432,7 @@ class Utils:
                         return f"{num_days}d"
                 else:
                     c.print(
-                        f"[cyan][{Utils.get_current_time()}]"
-                        "[yellow3] Invalid number."
+                        f"[cyan][{Utils.get_current_time()}][yellow3] Invalid number."
                     )
                     return None
             else:
@@ -350,16 +445,14 @@ class Utils:
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()
                     if parsed <= datetime.now().date():
                         c.print(
-                            f"[cyan][{Utils.get_current_time()}]"
-                            "[yellow3] The date must be in future"
+                            f"[cyan][{Utils.get_current_time()}][yellow3] The date must be in future"
                         )
                         return None
                     # Add time with "T" separator
                     return f"{date_str}T000000"
                 except ValueError:
                     c.print(
-                        f"[cyan][{Utils.get_current_time()}]"
-                        "[yellow3] An invalid date format was entered"
+                        f"[cyan][{Utils.get_current_time()}][yellow3] An invalid date format was entered"
                     )
                     return None
         return None

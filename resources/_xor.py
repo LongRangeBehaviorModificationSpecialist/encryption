@@ -40,14 +40,14 @@ class XOR:
             "the key you want to use for the XOR operation",
             password=True
         )
-        
+
         if not xor_key:
             c.print(
                 f"[cyan][{Utils.get_current_time()}][yellow3] The "
                 "XOR key cannot be empty"
             )
             raise ValueError("The XOR key cannot be empty.")
-        
+
         return xor_key.encode("utf-8")
 
 
@@ -397,7 +397,7 @@ class XOR:
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
             c.print(
-                f"[dim][cyan][{Utils.get_current_time()}][/di][white] "
+                f"[cyan][{Utils.get_current_time()}][white] "
                 f"[{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""

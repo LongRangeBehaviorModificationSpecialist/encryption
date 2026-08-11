@@ -4,7 +4,6 @@
 from . import c
 from resources.vars import ENCRYPTED_EXT_LIST
 from resources.utils import Utils
-from ui.config import GLOBAL_CONFIG
 
 HAS_CRYPTO = False
 try:
@@ -64,39 +63,42 @@ class KEY:
                 "do you want to save the key file?"
             ).strip().strip('"\'')
         )
-        logger.info(f"The key file directory was input as -> {key_file_dir}")
+        logger.info(f"The key file directory was input as '{key_file_dir}'")
 
         key_file_name = Prompt.ask(
             f"[cyan][{Utils.get_current_time()}][white] Enter a name for "
             f"the key file (w/o file extension)"
         ).strip()
-        logger.info(f"The name of the key file was entered as -> {key_file_name}")
+        logger.info(
+            f"The name of the key file was entered as '{key_file_name}'"
+        )
 
         # Ensure target directory exists before writing
         key_file_dir.mkdir(parents=True, exist_ok=True)
 
         dt = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         full_key_path = key_file_dir / f"{dt}_{key_file_name}.key"
-        logger.info(f"Full key path set to -> {full_key_path}")
+        logger.info(f"Full key path set to '{full_key_path}'")
 
         key = Fernet.generate_key()
         logger.info(
             "The key was generated successfully using 'Fernet.generate_key()'"
         )
+        logger.info(f"Key value is '{key}'")
 
         try:
             full_key_path.write_bytes(key)
-            logger.info("Key file was read into memory")
+            logger.info("Key file created")
 
             key_file_hash_value = hashlib.sha256(key).hexdigest().upper()
             logger.info(
-                f"Key file hash value was calculated to be: "
+                f"Key file hash value was calculated to be "
                 f"'{key_file_hash_value}'"
             )
             key_file_hash_file = full_key_path.with_suffix(".key.sha256")
             logger.info(
-                f"The key file hash file was saved as: "
-                f"{key_file_hash_file}"
+                f"The key file hash file was saved as "
+                f"'{key_file_hash_file}'"
             )
 
             log_content = Utils.format_key_file_log(
@@ -106,7 +108,7 @@ class KEY:
             )
 
             key_file_hash_file.write_text(log_content, encoding="utf-8")
-            logger.info("Data written to the key_file_hash_file successfully")
+            logger.info(f"Key file hash data: {log_content}")
 
             key_file_verify = Utils.format_key_file_verification(
                 key_file_dir=key_file_dir,
@@ -132,8 +134,8 @@ class KEY:
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter the "
-            "path of the .key file to use"
+            f"[cyan][{Utils.get_current_time()}][white] Enter the path of "
+            "the .key file to use"
         ).strip("\"'")
 
 
@@ -142,12 +144,12 @@ class KEY:
         logger.info("The '_handle_key_process_file()' method was called")
 
         key_file_path = self.get_existing_key_file_path()
-        logger.info(f"The 'key_file_path' = {key_file_path}")
+        logger.info(f"The key file path was entered as '{key_file_path}'")
 
         target_file = Utils.get_file_path()
-        logger.info(f"The 'target_file' = {target_file}")
+        logger.info(f"The target file was entered as '{target_file}'")
 
-        logger.info(f"The 'action' = {action}")
+        logger.info(f"The action was entered as '{action}'")
 
         self.key_process_file(
             key_file_path=key_file_path,
@@ -163,15 +165,15 @@ class KEY:
         logger.info("The '_handle_key_process_folder()' method was called")
 
         key_file_path = self.get_existing_key_file_path()
-        logger.info(f"The 'key_file_path' was entered as: {key_file_path}")
+        logger.info(f"The key_file_path was entered as '{key_file_path}'")
 
         target_dir = Utils.get_directory_path()
-        logger.info(f"The 'target_dir' was entered as: {target_dir}")
+        logger.info(f"The target_dir was entered as '{target_dir}'")
 
         recursive = Utils.select_recursive_option()
-        logger.info(f"The 'recursive' variable was entered as: {recursive}")
+        logger.info(f"The recursive variable was entered as '{recursive}'")
 
-        logger.info(f"The 'action' was entered as: {action}")
+        logger.info(f"The action was entered as '{action}'")
 
         self.key_process_folder(
             target_dir=target_dir,
