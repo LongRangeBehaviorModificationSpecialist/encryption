@@ -72,9 +72,7 @@ class AES:
         """Collect user inputs and call aes_process_file."""
         target_file = Utils.get_file_path()
         logger.info(f"The target_file was entered as '{target_file}'")
-        output_dir = Utils.get_output_path(
-            target_path=target_file
-        )
+        output_dir = Utils.get_output_path(target_path=target_file)
         password = Utils.get_confirmed_password()
         logger.info(f"User entered password '{password}'")
         logger.info(f"Action was input as '{action}'")
@@ -89,9 +87,7 @@ class AES:
     def _handle_aes_process_folder(self, action: str) -> None:
         target_dir = Utils.get_directory_path()
         logger.info(f"The target_dir was entered as '{target_dir}'")
-        output_dir = Utils.get_output_path(
-            target_path=target_dir
-        )
+        output_dir = Utils.get_output_path(target_path=target_dir)
         logger.info(f"The output_dir was entered as '{output_dir}'")
         password = Utils.get_confirmed_password()
         logger.info(f"User entered password '{password}'")
