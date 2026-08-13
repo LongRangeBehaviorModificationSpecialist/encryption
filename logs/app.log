@@ -41,3 +41,118 @@
 2026-08-11 10:15:57.157 | INFO     | _aes.py:233 | aes_process_file | File decryption started
 2026-08-11 10:15:57.158 | INFO     | _aes.py:245 | aes_process_file | Decrypted data written to OSHA.docx successfully
 2026-08-11 10:15:57.159 | INFO     | _aes.py:270 | aes_process_file | Decrypted OSHA.docx.encrypted  ->  OSHA.docx
+2026-08-13 12:53:53.249 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 12:53:53.257 | INFO     | encrypt_decrypt.py:488 | <module> | Application launched
+2026-08-13 12:53:53.257 | INFO     | encrypt_decrypt.py:66 | __init__ | Initializing application modules...
+2026-08-13 12:53:53.375 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 12:53:53.590 | INFO     | encrypt_decrypt.py:85 | __init__ | All modules initialized successfully
+2026-08-13 13:02:45.080 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:02:45.081 | INFO     | encrypt_decrypt.py:489 | <module> | Application launched
+2026-08-13 13:02:45.081 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:02:45.251 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:02:45.445 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:02:45.534 | ERROR    | encrypt_decrypt.py:508 | <module> | An unexpected error occured -> Panel.__init__() got an unexpected keyword argument 'show_header'
+2026-08-13 13:02:45.536 | ERROR    | encrypt_decrypt.py:515 | <module> | Full traceback below:
+2026-08-13 13:02:45.537 | ERROR    | encrypt_decrypt.py:516 | <module> | <function format_exc at 0x000001AE847BCC20>
+2026-08-13 13:02:55.628 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:02:55.628 | INFO     | encrypt_decrypt.py:489 | <module> | Application launched
+2026-08-13 13:02:55.628 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:02:55.667 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:02:55.763 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:02:55.782 | ERROR    | encrypt_decrypt.py:508 | <module> | An unexpected error occured -> Panel.__init__() got an unexpected keyword argument 'header_style'
+2026-08-13 13:02:55.784 | ERROR    | encrypt_decrypt.py:515 | <module> | Full traceback below:
+2026-08-13 13:02:55.784 | ERROR    | encrypt_decrypt.py:516 | <module> | <function format_exc at 0x0000023F19BECC20>
+2026-08-13 13:04:23.097 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:04:23.098 | INFO     | encrypt_decrypt.py:490 | <module> | Application launched
+2026-08-13 13:04:23.098 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:04:23.154 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:04:23.246 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:04:23.267 | ERROR    | encrypt_decrypt.py:509 | <module> | An unexpected error occured -> Panel.__init__() got an unexpected keyword argument 'caption'
+2026-08-13 13:04:23.269 | ERROR    | encrypt_decrypt.py:516 | <module> | Full traceback below:
+2026-08-13 13:04:23.269 | ERROR    | encrypt_decrypt.py:517 | <module> | <function format_exc at 0x0000011835AB0C20>
+2026-08-13 13:04:36.189 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:04:36.189 | INFO     | encrypt_decrypt.py:490 | <module> | Application launched
+2026-08-13 13:04:36.189 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:04:36.229 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:04:36.330 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:04:36.358 | ERROR    | encrypt_decrypt.py:509 | <module> | An unexpected error occured -> Panel.__init__() missing 1 required positional argument: 'renderable'
+2026-08-13 13:04:36.360 | ERROR    | encrypt_decrypt.py:516 | <module> | Full traceback below:
+2026-08-13 13:04:36.360 | ERROR    | encrypt_decrypt.py:517 | <module> | <function format_exc at 0x000002043E6DCC20>
+2026-08-13 13:05:20.364 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:05:20.364 | INFO     | encrypt_decrypt.py:491 | <module> | Application launched
+2026-08-13 13:05:20.364 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:05:20.410 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:05:20.489 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:05:20.509 | ERROR    | encrypt_decrypt.py:510 | <module> | An unexpected error occured -> Panel.__init__() got an unexpected keyword argument 'RenderableType'
+2026-08-13 13:05:20.511 | ERROR    | encrypt_decrypt.py:517 | <module> | Full traceback below:
+2026-08-13 13:05:20.511 | ERROR    | encrypt_decrypt.py:518 | <module> | <function format_exc at 0x000001D42E6ACC20>
+2026-08-13 13:05:31.901 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:05:31.901 | INFO     | encrypt_decrypt.py:490 | <module> | Application launched
+2026-08-13 13:05:31.901 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:05:31.944 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:05:32.047 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:05:32.068 | ERROR    | encrypt_decrypt.py:509 | <module> | An unexpected error occured -> Panel.__init__() missing 1 required positional argument: 'renderable'
+2026-08-13 13:05:32.070 | ERROR    | encrypt_decrypt.py:516 | <module> | Full traceback below:
+2026-08-13 13:05:32.070 | ERROR    | encrypt_decrypt.py:517 | <module> | <function format_exc at 0x000002CCE330CC20>
+2026-08-13 13:05:47.731 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:05:47.732 | INFO     | encrypt_decrypt.py:491 | <module> | Application launched
+2026-08-13 13:05:47.732 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:05:47.772 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:05:47.869 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:05:47.891 | ERROR    | encrypt_decrypt.py:510 | <module> | An unexpected error occured -> 'Panel' object has no attribute 'add_row'
+2026-08-13 13:05:47.893 | ERROR    | encrypt_decrypt.py:517 | <module> | Full traceback below:
+2026-08-13 13:05:47.893 | ERROR    | encrypt_decrypt.py:518 | <module> | <function format_exc at 0x000001807135CC20>
+2026-08-13 13:07:15.940 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:07:15.940 | INFO     | encrypt_decrypt.py:490 | <module> | Application launched
+2026-08-13 13:07:15.940 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:07:15.990 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:07:16.098 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:07:16.121 | ERROR    | encrypt_decrypt.py:509 | <module> | An unexpected error occured -> Table.__init__() got an unexpected keyword argument 'title_align'
+2026-08-13 13:07:16.123 | ERROR    | encrypt_decrypt.py:516 | <module> | Full traceback below:
+2026-08-13 13:07:16.123 | ERROR    | encrypt_decrypt.py:517 | <module> | <function format_exc at 0x000002265EECCC20>
+2026-08-13 13:07:23.939 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:07:23.939 | INFO     | encrypt_decrypt.py:490 | <module> | Application launched
+2026-08-13 13:07:23.940 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:07:23.995 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:07:24.084 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:13:36.288 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:13:36.289 | INFO     | encrypt_decrypt.py:496 | <module> | Application launched
+2026-08-13 13:13:36.289 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:13:36.333 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:13:36.423 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:15:06.451 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:15:06.451 | INFO     | encrypt_decrypt.py:502 | <module> | Application launched
+2026-08-13 13:15:06.452 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:15:06.493 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:15:06.580 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:15:20.967 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:15:20.967 | INFO     | encrypt_decrypt.py:502 | <module> | Application launched
+2026-08-13 13:15:20.968 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:15:21.001 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:15:21.087 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:17:10.738 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:17:10.738 | INFO     | encrypt_decrypt.py:510 | <module> | Application launched
+2026-08-13 13:17:10.738 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:17:10.792 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:17:10.878 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:17:10.900 | ERROR    | encrypt_decrypt.py:529 | <module> | An unexpected error occured -> 'str' object has no attribute 'substitute'
+2026-08-13 13:17:10.902 | ERROR    | encrypt_decrypt.py:536 | <module> | Full traceback below:
+2026-08-13 13:17:10.903 | ERROR    | encrypt_decrypt.py:537 | <module> | <function format_exc at 0x0000021E764D8CC0>
+2026-08-13 13:17:42.464 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:17:42.464 | INFO     | encrypt_decrypt.py:510 | <module> | Application launched
+2026-08-13 13:17:42.464 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:17:42.506 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:17:42.590 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:17:42.613 | ERROR    | encrypt_decrypt.py:529 | <module> | An unexpected error occured -> 'str' object has no attribute 'substitute'
+2026-08-13 13:17:42.616 | ERROR    | encrypt_decrypt.py:536 | <module> | Full traceback below:
+2026-08-13 13:17:42.616 | ERROR    | encrypt_decrypt.py:537 | <module> | <function format_exc at 0x0000021FDB938CC0>
+2026-08-13 13:18:41.769 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:18:41.769 | INFO     | encrypt_decrypt.py:491 | <module> | Application launched
+2026-08-13 13:18:41.769 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:18:41.814 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:18:41.916 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully
+2026-08-13 13:19:36.701 | INFO     | log_config.py:55 | setup_logging | Application started | Log file: logs\app.log
+2026-08-13 13:19:36.701 | INFO     | encrypt_decrypt.py:491 | <module> | Application launched
+2026-08-13 13:19:36.701 | INFO     | encrypt_decrypt.py:67 | __init__ | Initializing application modules...
+2026-08-13 13:19:36.750 | INFO     | _pgp.py:46 | __init__ | Killed existing GPG agent
+2026-08-13 13:19:36.839 | INFO     | encrypt_decrypt.py:86 | __init__ | All modules initialized successfully

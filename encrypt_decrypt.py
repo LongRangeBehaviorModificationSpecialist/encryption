@@ -9,6 +9,7 @@ from resources._xor import XOR
 from resources.utils import Utils
 from rich import box
 from rich.console import Console
+from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.traceback import install
@@ -19,7 +20,6 @@ import traceback
 from ui.config import (
     GLOBAL_CONFIG,
     SubMenuItem,
-    MAIN_MENU_CATEGORIES,
 )
 
 from ui.log_config import setup_logging, get_logger
@@ -43,7 +43,7 @@ def get_exit_message(config) -> str:
     """Print exit confirmation message then exit app."""
     c.print(
         f"\n[green3]Exiting the application...\n"
-        f"[grey58]" + "Done"
+        f"[grey58]Done"
     )
     sys.exit(0)
 
@@ -329,11 +329,13 @@ class Main:
         """Render the main menu using configuration."""
         logger.debug("Displaying main menu")
         menu_table = Table(
+        # menu_table = Panel.fit(
             title=(
                 f"[{self.config.title_color}]\n{self.config.app_name}, "
                 f"v.{self._version}"
             ),
-            box=box.HEAVY,
+            # title_align="center",
+            box=box.ROUNDED,
             show_header=False,
             header_style=self.config.header_style,
             show_lines=False,
