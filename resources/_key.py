@@ -109,11 +109,7 @@ class KEY:
             make_key_verify_file = Confirm.ask(
                 f"[cyan][{Utils.get_current_time()}][grey66] Save a "
                 f"verification file in the same folder as the .key file?"
-                # choices=["y", "n"],
-                # show_choices=True,
-                # default="y"
             )
-            # .strip().lower()
 
             if make_key_verify_file:
                 key_file_hash_file = full_key_path.with_suffix(".key.sha256")
