@@ -3,8 +3,8 @@
 from rich.prompt import Prompt
 
 # Import the console object from the main __init__.py file
-from . import c
-from resources.utils import Utils
+from . import console
+from utils import Utils
 from ui.config import GLOBAL_CONFIG
 
 
@@ -25,8 +25,8 @@ def display_menu(
 
         if clear_on_invalid:
             Utils.clear_screen()
-        c.print(
-            f"\n\n[cyan][{Utils.get_current_time()}][yellow3] \"{user_input}\" is not "
+        console.print(
+            f"\n\n[cyan][{Utils.get_current_time()}][yellow] \"{user_input}\" is not "
             "a valid option. [/]"
             f"""[white]Valid options for this menu are: {', '.join(
                 f"'{c}'" for c in sorted(choices))}.\n\n"""
@@ -41,13 +41,13 @@ def show_main_menu() -> str:
 ENCRYPT/DECRYPT APP MENU
 v.{VERSION}
 ----------------------------\n
-[yellow3]What method do you want to use? (select one):[white]\n
+[yellow]What method do you want to use? (select one):[white]\n
 [1] Use a .key file
 [2] Use a password (AES.GCM)
 [3] Use PGP
 [4] Use XOR\n
 [Q] Quit the Application\n
-[yellow3]ENTER CHOICE""")
+[yellow]ENTER CHOICE""")
 
     return display_menu(choices=MAIN_MENU_CHOICES, menu_text=MAIN_MENU)
 
@@ -60,7 +60,7 @@ def show_key_menu() -> str:
 ENCRYPT/DECRYPT FILE(S)
 WITH A .KEY FILE
 ----------------------------\n
-[yellow3]Options:[white]\n
+[yellow]Options:[white]\n
 [1] Create a [bold]new[/bold] .key file\n
 [2] ENCRYPT a single file using a .key
 [3] DECRYPT a single file using a .key\n
@@ -68,7 +68,7 @@ WITH A .KEY FILE
 [5] DECRYPT all files in a folder using a .key\n
 [R] Return to the main menu
 [Q] Quit the application\n
-[yellow3]ENTER CHOICE"""
+[yellow]ENTER CHOICE"""
 
     return display_menu(choices=KEY_MENU_CHOICES, menu_text=KEY_MENU)
 
@@ -81,14 +81,14 @@ def show_aes_menu() -> str:
 ENCRYPT/DECRYPT FILE(S)
 WITH A PASSWORD [AES-GCM]
 ----------------------------\n
-[yellow3]Options:[white]\n
+[yellow]Options:[white]\n
 [1] ENCRYPT a single file
 [2] DECRYPT a single file\n
 [3] ENCRYPT all files in a folder
 [4] DECRYPT all files in a folder\n
 [R] Return to the main menu
 [Q] Quit the application\n
-[yellow3]ENTER CHOICE"""
+[yellow]ENTER CHOICE"""
 
     return display_menu(choices=AES_MENU_CHOICES, menu_text=AES_MENU)
 
@@ -101,7 +101,7 @@ def show_pgp_menu() -> str:
 ENCRYPT/DECRYPT FILE(S)
 WITH PGP KEY
 ----------------------------\n
-[yellow3]Options:[white]\n
+[yellow]Options:[white]\n
 [A] Debug PGP setup\n
 [1] Create new PGP key pair
 [2] Import a PGP key\n
@@ -113,7 +113,7 @@ WITH PGP KEY
 [8] Verify a PGP signature\n
 [R] Return to the main menu
 [Q] Quit the application\n
-[yellow3]ENTER CHOICE"""
+[yellow]ENTER CHOICE"""
 
     return display_menu(choices=PGP_MENU_CHOICES, menu_text=PGP_MENU)
 
@@ -126,11 +126,11 @@ def show_xor_menu() -> str:
 ENCRYPT/DECRYPT A MESSAGE OR
 FILE(S) USING AN XOR KEY
 ----------------------------\n
-[yellow3]Options:[white]\n
+[yellow]Options:[white]\n
 [1] ENCRYPT a single message string
 [2] DECRYPT a single message string\n
 [R] Return to the main menu
 [Q] Quit the application\n
-[yellow3]ENTER CHOICE"""
+[yellow]ENTER CHOICE"""
 
     return display_menu(choices=XOR_MENU_CHOICES, menu_text=XOR_MENU)

@@ -11,7 +11,7 @@ import sys
 import time
 
 # Import the console object from the main __init__.py file
-from . import c
+from resources import console
 from resources.vars import ICONS
 from ui.config import GLOBAL_CONFIG
 from ui.log_config import get_logger
@@ -30,8 +30,8 @@ class Utils:
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][green3] "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][green] "
                 f"Operation [{func.__name__}() ] was completed in "
                 f"{total_time:.4f} seconds"
             )
@@ -48,8 +48,8 @@ class Utils:
     @staticmethod
     def exit_application() -> None:
         """Print message to screen then exit the application."""
-        c.print(
-            f"\n\n[cyan][{Utils.get_current_time()}][yellow3] "
+        console.print(
+            f"\n\n[cyan][{Utils.get_current_time()}][yellow] "
             "Exiting the application...\n"
         )
         sys.exit(0)
@@ -155,20 +155,20 @@ class Utils:
         # Handle empty/whitespace input
         if not output_input or output_input.strip() == "":
             output_path = Path(default_dir)
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][green] ✓ Using same "
                 f"directory: {output_path}"
             )
         else:
             output_path = Path(output_input).resolve()
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}] Output directory: "
                 f"{output_path}"
             )
 
         # Ensure output directory exists
         if not output_path.exists():
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][yellow] Creating output "
                 f"directory: {output_path}"
             )
@@ -177,7 +177,7 @@ class Utils:
                 logger.info(f"Output directory '{output_path}' was created")
             except Exception as e:
                 failed_make_dir_msg = f"Failed to create {output_path} -> {e}"
-                c.print(
+                console.print(
                     f"[cyan][{Utils.get_current_time()}][red] "
                     f"{failed_make_dir_msg}"
                 )
@@ -204,8 +204,8 @@ class Utils:
                     return True
                 case "n":
                     return False
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] "
                 "Invalid input. Enter either 'y' or 'n'."
             )
 
@@ -232,8 +232,8 @@ class Utils:
             for i in range(len(password_bytes)):
                 password_bytes[i] = 0
 
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] Not a "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] Not a "
                 "valid password. Please try again."
             )
 
@@ -277,7 +277,7 @@ class Utils:
                 and has_upper
                 and has_lower
                 and has_symbol):
-            c.print(
+            console.print(
                 f"{GLOBAL_CONFIG.red_line}\n"
                 "Your password did not meet the minimun requirements. Please "
                 "try again.\n"
@@ -291,7 +291,7 @@ class Utils:
                 )
             return False
         else:
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][white] Your "
                 "password meets the minimum requirements. Continuing..."
             )
@@ -308,8 +308,8 @@ class Utils:
 
     @staticmethod
     def print_confirm_file_action(file_name: Path | str, text: str) -> str:
-        return c.print(
-            f"[cyan][{Utils.get_current_time()}][green3] Action "
+        return console.print(
+            f"[cyan][{Utils.get_current_time()}][green] Action "
             "Successful\n"
             f"[white]The {text} file was saved as : {file_name}"
             )
@@ -331,29 +331,31 @@ class Utils:
 
 
     @staticmethod
-    def format_key_file_verification(
+    def show_key_file_verification(
             key_file_dir: Path | str,
             full_key_path: Path | str,
-            key_file_hash_file: Path | str,
             key_file_hash_value: str
     ) -> str:
         return (
-            "\n[grey58]" + "-" * 45 +"[/grey58]\n"
-            f"[green3][-] ** Key file created **\n\n"
-            f"[white][-] Key file saved as:\n"
-            f"    [yellow3]{key_file_dir}\{full_key_path.name}\n"
-            f"[white][-] Key file hash verification saved as:\n"
-            f"    [yellow3]{key_file_hash_file}\n"
-            f"[white][-] Key file hash value (SHA256):\n"
-            f"    [yellow3]{key_file_hash_value}\n"
-            "[grey58]" + "-" * 45 +"[/grey58]"
-    )
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][green] ** Key file "
+                f"created successfully\n"
+                f"[cyan][{Utils.get_current_time()}][grey66] Key file saved "
+                f"as: [blue][i]{key_file_dir}\{full_key_path.name}[/i]\n"
+                f"[cyan][{Utils.get_current_time()}][grey66] Key file hash "
+                f"value (SHA256): [blue][i]{key_file_hash_value}\n"
+            )
+        )
+
+
+        # f"[white][-] Key file hash verification saved as:\n"
+        # f"[yellow]{key_file_hash_file}\n"
 
 
     @staticmethod
     def print_not_file_error(target_file: Path) -> str:
-        return ( c.print(
-            f"[cyan][{Utils.get_current_time()}][red1] File "
+        return ( console.print(
+            f"[cyan][{Utils.get_current_time()}][red] File "
             f"validation for {target_file.name} failed -> the file does not "
             "exist or is not a file."
             )
@@ -364,8 +366,8 @@ class Utils:
     def verify_file_access(target_file: Path | str) -> bool:
         """Returns True if the user has permission to read the file."""
         if not os.access(target_file, os.R_OK):
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] The "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] The "
                 "current user does not have the correct permissions to process "
                 f"{target_file.name}"
             )
@@ -378,8 +380,8 @@ class Utils:
     def verify_is_directory(target_dir: Path | str) -> bool:
         """Returns true if target_dir points to a directory."""
         if not target_dir.is_dir():
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] "
                 f"{target_dir} does not exist or is not a valid directory"
             )
             return False
@@ -431,8 +433,8 @@ class Utils:
                     else:
                         return f"{num_days}d"
                 else:
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow3] Invalid number."
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][yellow] Invalid number."
                     )
                     return None
             else:
@@ -444,15 +446,15 @@ class Utils:
                     from datetime import datetime
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()
                     if parsed <= datetime.now().date():
-                        c.print(
-                            f"[cyan][{Utils.get_current_time()}][yellow3] The date must be in future"
+                        console.print(
+                            f"[cyan][{Utils.get_current_time()}][yellow] The date must be in future"
                         )
                         return None
                     # Add time with "T" separator
                     return f"{date_str}T000000"
                 except ValueError:
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow3] An invalid date format was entered"
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][yellow] An invalid date format was entered"
                     )
                     return None
         return None
@@ -468,8 +470,8 @@ class Utils:
             attempts += 1
 
             if attempts > max_attempts:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] Too many failed "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] Too many failed "
                     "attempts. Exiting..."
                 )
                 raise ValueError("Max passphrase attempts exceeded.")
@@ -480,8 +482,8 @@ class Utils:
             )
 
             if not password:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow3] Passphrase cannot "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow] Passphrase cannot "
                     "be empty."
                 )
                 continue
@@ -494,22 +496,22 @@ class Utils:
             )
 
             if not confirm_password:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow3] Passphrase cannot "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][yellow] Passphrase cannot "
                     "be empty."
                 )
                 continue
 
             # Check if they match
             if password == confirm_password:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][green3] Passphrases "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][green] Passphrases "
                     "confirmed!"
                 )
                 return password
             else:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] Passphrases do not "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] Passphrases do not "
                     f"match! Try again (attempt {attempts}/{max_attempts})"
                 )
 
@@ -523,8 +525,8 @@ class Utils:
         ).strip()
 
         if not full_name:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] A valid name is "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] A valid name is "
                 "required."
             )
             raise ValueError("Full name must be provided.")
@@ -540,8 +542,8 @@ class Utils:
         ).strip().lower()
 
         if not email_address or "@" not in email_address:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] Invalid or missing "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] Invalid or missing "
                 f"email address provided -> {email_address}"
             )
             raise ValueError(

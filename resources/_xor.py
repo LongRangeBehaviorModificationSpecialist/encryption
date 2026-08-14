@@ -6,13 +6,13 @@ from rich.prompt import Prompt
 from rich.traceback import install
 from typing import List
 
-from . import c
+from . import console
 from resources.vars import ENCRYPTED_EXT_LIST
-from resources.utils import Utils
+from utils import Utils
 from ui.config import GLOBAL_CONFIG
 
 
-install(show_locals=True, console=c)
+install(show_locals=True, console=console)
 
 
 class XOR:
@@ -42,8 +42,8 @@ class XOR:
         )
 
         if not xor_key:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] The "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] The "
                 "XOR key cannot be empty"
             )
             raise ValueError("The XOR key cannot be empty.")
@@ -64,8 +64,8 @@ class XOR:
         )
 
         if not message:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] The "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] The "
                 "message to process cannot be empty"
             )
             raise ValueError("The message cannot be empty.")
@@ -164,8 +164,8 @@ class XOR:
         except ValueError:
             raise
         except Exception as e:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] Error "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] Error "
                 f"during {action}ion -> {e}"
             )
             raise
@@ -194,22 +194,22 @@ class XOR:
                 ) as f:
                     f.write(processed_data)
 
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][green3] "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][green] "
                     f"{action.capitalize()}ed message saved to -> "
                     f"{output_file.resolve()}"
                 )
 
             except Exception as e:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] "
                     f"Could not write processed message to {output_file} "
                     f"-> {e}"
                 )
 
         else:
-            c.print(
-                f"\n[cyan][{Utils.get_current_time()}][green3] "
+            console.print(
+                f"\n[cyan][{Utils.get_current_time()}][green] "
                 f"Action Successful\n"
                 f"\nThe {action}ed message is:\n"
                 f"\n    [white]{processed_data}\n"
@@ -246,7 +246,7 @@ class XOR:
             ValueError: If the key is empty.
         """
 
-        c.print(f"\n\nThe random XOR key is -> {xor_key}\n\n")
+        console.print(f"\n\nThe random XOR key is -> {xor_key}\n\n")
 
         target_file = Path(target_file).resolve()
 
@@ -258,8 +258,8 @@ class XOR:
             return
 
         if not xor_key:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] The XOR key must not be empty"
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] The XOR key must not be empty"
             )
             raise ValueError("XOR key must not be empty.")
 
@@ -280,7 +280,7 @@ class XOR:
 
         try:
             file_size = target_file.stat().st_size
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][white] Processing file -> "
                 f"{target_file.name} ({file_size:,} bytes)..."
             )
@@ -304,13 +304,13 @@ class XOR:
                     bytes_processed += len(chunk)
 
                     progress = (bytes_processed / file_size) * 100
-                    c.print(
+                    console.print(
                         f"[cyan][{Utils.get_current_time()}][white] Progress : "
                         f"{progress:.1f}%",
                         end=""
                     )
-            c.print(
-                f"\n[cyan][{Utils.get_current_time()}][green3] Processed "
+            console.print(
+                f"\n[cyan][{Utils.get_current_time()}][green] Processed "
                 f"{target_file.name}  ->'  {output_file.name}"
             )
 
@@ -320,8 +320,8 @@ class XOR:
             # Clean up partial output on failure
             if output_file.exists():
                 output_file.unlink(missing_ok=True)
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] Failed to process "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] Failed to process "
                 f"{target_file.name} : {e}")
             raise
 
@@ -357,8 +357,8 @@ class XOR:
         if not Utils.verify_is_directory(target_dir=target_dir):
             return
 
-        c.print(
-            f"[cyan][{Utils.get_current_time()}][green3] {target_dir} validated. "
+        console.print(
+            f"[cyan][{Utils.get_current_time()}][green] {target_dir} validated. "
             "Fetching files to process..."
         )
 
@@ -375,15 +375,15 @@ class XOR:
             ]
 
         except Exception as e:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] Failed to retrieve files "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] Failed to retrieve files "
                 f"from {target_dir} : {e}"
             )
             return []
 
         if not all_files:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] No valid files to encrypt "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] No valid files to encrypt "
                 f"in {target_dir}"
             )
             return []
@@ -396,7 +396,7 @@ class XOR:
         for idx, file_path in enumerate(all_files, start=1):
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][white] "
                 f"[{progress_bar}] "
                 f"Processing: {file_path.name}...",
@@ -412,30 +412,30 @@ class XOR:
                 successful_files.append(result_path)
 
             except Exception as e:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] Error during processing "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] Error during processing "
                     f"{file_path.name} : {e}"
                 )
                 failed_files.append(file_path)
 
         # Summary reporting
-        c.print("\n" + "-" * 35)
+        console.print("\n" + "-" * 35)
 
         if successful_files:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][green3] Action Completed\n"
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][green] Action Completed\n"
                 f"Successfully processed {len(successful_files)} files in "
                 f"{target_dir}:"
             )
             for file in successful_files:
-                c.print(f"[green]  {file.name}")
+                console.print(f"[green]  {file.name}")
 
         if failed_files:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] Warning:\n"
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] Warning:\n"
                 f"Failed to process {len(failed_files)} files :"
             )
             for file in failed_files:
-                c.print(f"[red1]  {file.name}")
+                console.print(f"[red]  {file.name}")
 
         return successful_files

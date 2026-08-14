@@ -2,12 +2,12 @@
 """AES encryption/decryption module."""
 
 # Import the console object from the main __init__.py file
-from . import c
+from . import console
 from ui.log_config import get_logger
 from ui.config import GLOBAL_CONFIG
 from rich.traceback import install
 from resources.vars import ENCRYPTED_EXT_LIST
-from resources.utils import Utils
+from utils import Utils
 from typing import List
 
 HAS_CRYPTO = False
@@ -17,8 +17,8 @@ try:
     from cryptography.exceptions import InvalidTag
     HAS_CRYPTO = True
 except ImportError:
-    c.print(
-        f"[cyan][{Utils.get_current_time()}][yellow3] Missing "
+    console.print(
+        f"[cyan][{Utils.get_current_time()}][yellow] Missing "
         "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
@@ -27,7 +27,7 @@ import os
 from pathlib import Path
 
 
-install(show_locals=True, console=c)
+install(show_locals=True, console=console)
 logger = get_logger("aes")  # Creates "encryption_app.aes" logger
 
 class AES:
@@ -141,8 +141,8 @@ class AES:
                 f"File validation for '{target_file.name}' failed -> the file "
                 "does not exist or is not a file."
             )
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] "
                 f"{invalid_target_file_msg}"
             )
             logger.error(f"{invalid_target_file_msg}")
@@ -152,14 +152,14 @@ class AES:
             return
 
         try:
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][white] "
                 f"Reading file : {target_file.name}..."
             )
             logger.info(f"Reading file '{target_file.name}'")
 
             original_file_data = target_file.read_bytes()
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][white] File "
                 "content read successfully..."
             )
@@ -167,7 +167,7 @@ class AES:
                 f"Content of '{target_file.name}' read successfully"
             )
 
-            c.print(
+            console.print(
                 f"[cyan][{Utils.get_current_time()}][white] "
                 f"{action.capitalize()}ing file data..."
             )
@@ -227,8 +227,8 @@ class AES:
                         f"'{target_file.name}' is corrupted or too short to "
                         "be a valid AES-GCM payload."
                     )
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][red1] "
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][red] "
                         f"{min_length_msg}"
                     )
                     logger.error(f"{min_length_msg}")
@@ -272,8 +272,8 @@ class AES:
                         "invalid password or corrupted payload (authentication "
                         "tag check failed) (Invalid tag)"
                     )
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][red1] "
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][red] "
                         f"{invalid_tag_msg}"
                     )
                     logger.error(f"{invalid_tag_msg}")
@@ -283,8 +283,8 @@ class AES:
                 f"{action.capitalize()}ed {target_file.name}  ->  "
                 f"{output_file.name}"
             )
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][green3] {success_msg}"
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][green] {success_msg}"
             )
             logger.info(f"{success_msg}")
 
@@ -292,8 +292,8 @@ class AES:
 
         except Exception as e:
             other_error_msg = f"Failed to {action} {target_file.name} -> {e}"
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] {other_error_msg}"
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] {other_error_msg}"
             )
             logger.error(f"{other_error_msg}")
             return None
@@ -336,14 +336,14 @@ class AES:
             return []
 
         dir_validated_msg = f"Target directory '{target_dir}' validated."
-        c.print(
-            f"[cyan][{Utils.get_current_time()}][green3] "
+        console.print(
+            f"[cyan][{Utils.get_current_time()}][green] "
             f"{dir_validated_msg}"
         )
         logger.info(f"{dir_validated_msg}")
 
         fetch_targets_msg = f"Fetching targets for {action}ion..."
-        c.print(
+        console.print(
             f"[cyan][{Utils.get_current_time()}][white] {fetch_targets_msg}"
         )
         logger.info(f"{fetch_targets_msg}")
@@ -372,16 +372,16 @@ class AES:
             failed_retrieve_files_msg = (
                 f"Failed to retrieve files from {target_dir} -> {e}"
             )
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] "
                 f"{failed_retrieve_files_msg}"
             )
             logger.error(f"{failed_retrieve_files_msg}")
 
         if not all_files:
             no_files_msg = f"No valid files to {action} in {target_dir}"
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][yellow3] {no_files_msg}"
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][yellow] {no_files_msg}"
             )
             logger.error(f"{no_files_msg}")
             return []
@@ -399,29 +399,29 @@ class AES:
                 )
                 successful_files.append(processed_path)
             except Exception as e:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] "
                     f"Error during {action}ing {file_path.name}  ->  {e}"
                 )
                 failed_files.append(file_path)
 
         if successful_files:
-            c.print(
+            console.print(
                 "\n" + "[green]-" * 45 + "\n",
-                f"[green3]** Action Completed **\n"
+                f"[green]** Action Completed **\n"
                 f"    Successfully {action}ed {len(successful_files)} files "
                 f"in {target_dir}:"
             )
             for processed_file in successful_files:
-                c.print(f"[green3]        {processed_file.name}")
+                console.print(f"[green]        {processed_file.name}")
 
         if failed_files:
-            c.print(
+            console.print(
                 "\n" + "-" * 45 + "\n",
-                f"[red1]** Warning **\n"
+                f"[red]** Warning **\n"
                 f"    Failed to {action} {len(failed_files)} files:"
             )
             for failed_file in failed_files:
-                c.print(f"[red1]        {failed_file.name}")
+                console.print(f"[red]        {failed_file.name}")
 
         return successful_files

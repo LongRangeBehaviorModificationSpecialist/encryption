@@ -35,7 +35,8 @@ def setup_logging(
 
     # File formatter with full details
     file_formatter = logging.Formatter(
-        fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s",
+        fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | "
+        "%(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
 
@@ -52,7 +53,8 @@ def setup_logging(
     logger.addHandler(file_handler)
 
     # Log startup info
-    logger.info(f"Application started | Log file: {log_file}")
+    logger.info(f"=== Application started ===")
+    logger.info(f"Log file: [ '{log_file}' ]")
 
     # Store log path for reference
     logger.log_file = str(log_file)

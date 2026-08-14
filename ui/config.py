@@ -2,15 +2,12 @@
 """External configuration for menu items and application settings."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from rich.console import Console
 from typing import Dict, Any, Optional
-# from resources.utils import Utils
 
 
-c = Console()
-
+console = Console()
 
 
 class EncryptionMethod(Enum):
@@ -47,7 +44,7 @@ class AppConfig:
     """Central application configuration."""
 
     # Application metadata
-    app_name: str = "ENCRYPTION/DECRYPTION APPLICATION"
+    app_name: str = "ENCRYPTION|DECRYPTION APPLICATION"
     version_source: str = "versions"  # Module to load version from
 
     # Display settings
@@ -56,17 +53,10 @@ class AppConfig:
     credits_justify: str = "left"
 
     # Colors (Rich color codes)
-    title_color: str = "dodger_blue1"
+    title_color: str = "blue"
     header_style: str = "#2070b2"
     warning_color: str = "yellow3"
     success_color: str = "green3"
-
-    # begin_line: str = f"[cyan][{get_current_time()}]"
-    # grey_line: str = f"{begin_line}[grey58]"
-    # green_line: str = f"{begin_line}[green3]"
-    # red_line: str = f"{begin_line}[red1]"
-    # white_line: str = f"{begin_line}[white]"
-    # yellow_line: str = f"{begin_line}[yellow3]"
 
     show_separator_line: bool = False
 
@@ -97,7 +87,7 @@ MAIN_CATEGORIES_CONFIG = {
             "1": SubMenuItem(
                 key="1",
                 label="Create a new .key file",
-                description="",
+                description="Create and save a new .key file",
                 handler_module="key",
                 handler_method="generate_and_save_key",
             ),

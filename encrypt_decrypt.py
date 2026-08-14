@@ -6,11 +6,11 @@ from resources._key import KEY
 from resources._aes import AES
 from resources._pgp import PGP
 from resources._xor import XOR
-from resources.utils import Utils
+from utils import Utils
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt
+from rich.prompt import Prompt, Confirm
 from rich.table import Table
 from rich.traceback import install
 import signal
@@ -32,17 +32,18 @@ from versions import (
 )
 
 
-c = Console()
-install(show_locals=True, console=c)
+console = Console()
+install(show_locals=True, console=console)
 
 # Set up logging FIRST (before anything else)
 logger = setup_logging(log_dir="logs", log_level=logging.INFO)
+logger = get_logger("main")
 
 
 def get_exit_message(config) -> str:
     """Print exit confirmation message then exit app."""
-    c.print(
-        f"\n[green3]Exiting the application...\n"
+    console.print(
+        f"\n[green]Exiting the application...\n"
         f"[grey58]Done"
     )
     sys.exit(0)
@@ -65,8 +66,8 @@ class Main:
 
         # Log initialization
         logger.info("Initializing application modules...")
-        logger.debug(f"Version: {self._version}")
-        logger.debug(f"Author: {self._author}")
+        logger.info(f"Version: {self._version}")
+        logger.info(f"Author: {self._author}")
 
         # Initialize subsystems
         self.key = KEY()
@@ -88,8 +89,8 @@ class Main:
 
     def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
-        c.print(
-            f"\n\n\n[cyan][{Utils.get_current_time()}][red1] Operation "
+        console.print(
+            f"\n[cyan][{Utils.get_current_time()}][red] Operation "
             f"cancelled by user. Exiting...\n"
         )
 
@@ -116,19 +117,19 @@ class Main:
                                     **item.handler_kwargs
                                 )
                             except Exception as e:
-                                c.print(
+                                console.print(
                                     f"{GLOBAL_CONFIG.yellow_line}"
                                     f"⚠ Failed to bind "
                                     f"[{category_key}][{sub_key}] -> {e}"
                                 )
                         else:
-                            c.print(
+                            console.print(
                                 f"{GLOBAL_CONFIG.yellow_line}"
                                 f"⚠ Warning: Method '{item.handler_method}' "
                                 f"not found in {item.handler_module} for "
                                 f"submenu [{category_key}][{sub_key}]"
                             )
-                            c.print(
+                            console.print(
                                 f"[cyan][{Utils.get_current_time()}][grey58] "
                                 f"Available methods in {item.handler_module}: "
                                 f"{[m for m in dir(module) if not m.startswith('_')]}"
@@ -139,7 +140,7 @@ class Main:
                             if callable(getattr(module, m))
                             and not m.startswith("_")
                         ]
-                        c.print(
+                        console.print(
                             f"[cyan][{Utils.get_current_time()}][grey58] "
                             f"Available methods in {item.handler_module} -> "
                             f"{', '.join(available)}"
@@ -148,7 +149,7 @@ class Main:
 
                     # Verify it's actually callable
                     if not callable(handler):
-                        c.print(
+                        console.print(
                             f"{GLOBAL_CONFIG.red_line}"
                             f"✗ Error: '{item.handler_method}' is not "
                             f"callable (it's a {type(handler).__name__}) "
@@ -157,14 +158,14 @@ class Main:
                         continue
 
                     try:
-                        # Create the partial function with handler_kwargs bound
+                        # Create the partial function with handler_kwargs
                         item.handler_callable = partial(
                             handler,
                             **item.handler_kwargs
                         )
                     except Exception as e:
-                        c.print(
-                            f"[cyan][{Utils.get_current_time()}][red1] "
+                        console.print(
+                            f"[cyan][{Utils.get_current_time()}][red] "
                             f"✗ Error binding handler for [{category_key}]"
                             f"[{sub_key}] -> {e}"
                         )
@@ -189,34 +190,34 @@ class Main:
                         handler(**menu_item.handler_kwargs)
                         return True
                     except Exception as e:
-                        c.print(
-                            f"[cyan][{Utils.get_current_time()}][red1] Error "
+                        console.print(
+                            f"[cyan][{Utils.get_current_time()}][red] Error "
                             f"executing handler: {type(e).__name__} -> {e}"
                         )
                         import traceback
-                        c.print(
+                        console.print(
                             f"[cyan][{Utils.get_current_time()}][grey58] "
                             "Traceback:"
                         )
-                        c.print(traceback.format_exc())
+                        console.print(traceback.format_exc())
                         return False
                 else:
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][red1] Method "
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][red] Method "
                         f"'{menu_item.handler_method}' not found or not "
                         f"callable in {menu_item.handler_module}"
                     )
                     return False
             else:
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] Module "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] Module "
                     f"'{menu_item.handler_module}' not found"
                 )
                 return False
 
         # No handler configured
-        c.print(
-            f"[cyan][{Utils.get_current_time()}][yellow3] No handler "
+        console.print(
+            f"[cyan][{Utils.get_current_time()}][yellow] No handler "
             f"configured for this item"
         )
         return False
@@ -234,8 +235,8 @@ class Main:
             category = self.config.main_categories.get(category_key)
             if not category:
                 logger.error(f"Invalid category requested: {category_key}")
-                c.print(
-                    f"[cyan][{Utils.get_current_time()}][red1] Invalid "
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] Invalid "
                     "category"
                 )
                 return
@@ -249,7 +250,7 @@ class Main:
             self.display_sub_menu(category_key)
 
             try:
-                selection = Prompt.ask(f"\n[yellow3]ENTER CHOICE").strip()
+                selection = Prompt.ask(f"\n[yellow]ENTER CHOICE").strip()
                 normalized = selection.lower()
 
                 logger.debug(f"User selected: {normalized}")
@@ -261,15 +262,15 @@ class Main:
 
                 # Check for quit
                 if normalized in ["q"]:
-                    c.print(get_exit_message(self.config))
+                    console.print(get_exit_message(self.config))
                     logger.info("User chose to exit from submenu")
                     exit_program = True
                     return
 
                 # Validate submenu item exists
                 if normalized not in category.submenu_items.keys():
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][red1] Invalid "
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][red] Invalid "
                         "choice. Try again or press \"R\" to go back."
                     )
                     continue
@@ -289,8 +290,8 @@ class Main:
                     return
 
             except KeyboardInterrupt:
-                c.print(
-                    f"\n[cyan][{Utils.get_current_time()}][yellow3] "
+                console.print(
+                    f"\n[cyan][{Utils.get_current_time()}][yellow] "
                     "Interrupted by user."
                 )
                 return
@@ -306,128 +307,141 @@ class Main:
         """
         try:
 
-            response = Prompt.ask(
-                f"\n[cyan][{Utils.get_current_time()}][white] Task complete! Return to "
-                "previous menu?",
-                choices=["y", "n"],
-                default="y",
-                show_choices=True
-            ).lower().strip()
+            response = Confirm.ask(
+                f"\n[cyan][{Utils.get_current_time()}][grey66] Task complete! "
+                "Return to previous menu?"
+            )
 
-            if response == "n":
-                c.print(get_exit_message(self.config))
+            if not response:
+                logger.info("The application was closed by the user")
+                console.print(get_exit_message(self.config))
                 return False
 
+            logger.info("User returned to the previous menu")
             return True
 
-        except (KeyboardInterrupt, EOFError):
+        except (KeyboardInterrupt, EOFError) as e:
+            logger.error(f"An error occured during this operation -> {e}")
             # Exit on interrupt during prompt
             return False
 
 
     def display_main_menu(self) -> None:
         """Render the main menu using configuration."""
-        logger.debug("Displaying main menu")
+        logger.info("Displaying main menu")
+
         menu_table = Table(
-        # menu_table = Panel.fit(
-            title=(
-                f"[{self.config.title_color}]\n{self.config.app_name}, "
-                f"v.{self._version}"
-            ),
-            # title_align="center",
-            box=box.ROUNDED,
+            box=None,
             show_header=False,
             header_style=self.config.header_style,
             show_lines=False,
             pad_edge=True,
             padding=(0, 5, 0, 1),
-            caption=(
-                f"Written by   : {self._author}\n"
-                f"Last Updated : {self._last_updated}"
-            ),
             caption_justify=self.config.credits_justify,
             caption_style="grey58",
             expand=False,
             safe_box=True,
         )
 
-        menu_table.add_row(f"[yellow3]What method do you want to use?\n")
+        menu_table.add_row(f"\n[yellow]What method do you want to use?\n")
 
         # Display main categories (1-4)
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
             menu_table.add_row(
-                f"[white][{key}] {category.label} [grey58][{category.description}]"
+                f"[white][{key}] {category.label} [grey58]"
+                f"[{category.description}]"
             )
 
         # Add quit option
         menu_table.add_row()  # Blank row
-        menu_table.add_row(f"[yellow3][Q] Quit Program")
+        menu_table.add_row(f"[yellow][Q] Quit Program")
 
         # Blank line at end
         menu_table.add_row()
 
-        c.print(menu_table)
+        # To put the main menu table inside a Panel for better formatting
+        menu_panel = Panel.fit(
+            renderable=menu_table,
+            title=(
+                f"[blue][i]\n{self.config.app_name} (v.{self._version})"
+            ),
+            title_align="center",
+            subtitle=(
+                f"[grey66][dim][i]Written by: {self._author} | Last Updated: "
+                f"{self._last_updated}"
+            ),
+            subtitle_align="center",
+        )
+
+        console.print(menu_panel)
 
 
     def display_sub_menu(self, category_key: str) -> None:
         """Render submenu for a specific encryption category.
 
         Args:
-            category_key: Key from main_categories (e.g., "1", "2", "3", "4")
+            category_key: Keys from main_categories
         """
         logger.info(f"User viewing submenu for category: {category_key}")
         category = self.config.main_categories.get(category_key)
         if not category:
-            c.print(
-                f"[cyan][{Utils.get_current_time()}][red1] Invalid category "
+            console.print(
+                f"[cyan][{Utils.get_current_time()}][red] Invalid category "
                 "selected"
             )
             return
 
-        menu_table = Table(
-            title=(
-                f"[{self.config.title_color}]\n{category.label}"
-                # f"[dim]Press '0' or 'B' to go back[/]"
-            ),
-            box=box.ROUNDED,
+        sub_menu_table = Table(
+            box=None,
             show_header=False,
             header_style=self.config.header_style,
             show_lines=False,
+            show_edge=False,
             pad_edge=True,
             padding=(0, 5, 0, 1),
             expand=False,
             safe_box=True,
         )
 
-        menu_table.add_row(f"[yellow3]Options:\n")
+        sub_menu_table.add_row(f"\n[yellow]Options:\n")
 
-        # Display submenu items
+        # Display sub-menu items
         for sub_key in sorted(category.submenu_items.keys()):
             item = category.submenu_items[sub_key]
-            menu_table.add_row(
+            sub_menu_table.add_row(
                 f"[white][{sub_key}] {item.label} [grey58][{item.description}]"
             )
 
-        menu_table.add_row()
+        sub_menu_table.add_row()
 
         # Add back option
-        menu_table.add_row(f"[white][R] Return to the main menu")
+        sub_menu_table.add_row(f"[white][R] Return to the main menu")
 
         # Add exit option
-        menu_table.add_row(f"[white][Q] Quit the application")
+        sub_menu_table.add_row(f"[white][Q] Quit the application")
 
         # Blank line at end
-        menu_table.add_row()
+        sub_menu_table.add_row()
 
-        c.print(menu_table)
+        # To put the main menu table inside a Panel for better formatting
+        sub_menu_panel = Panel.fit(
+            renderable=sub_menu_table,
+            title=(
+                f"[blue][i][{self.config.title_color}]\n{category.label}"
+            ),
+            title_align="center",
+        )
+
+        console.print(sub_menu_panel)
 
 
     def main(self) -> None:
         """Main application controller for the ENCRYPT/DECRYPT utility.
 
-        Orchestrates input/output operations and manages converter subsystems.
-        Provides menu-driven interface for various encoding/decoding operations.
+        Orchestrates input/output operations and manages converter
+        subsystems. Provides menu-driven interface for various
+        encoding/decoding operations.
         """
         exit_program = False
 
@@ -439,21 +453,21 @@ class Main:
             self.display_main_menu()
 
             try:
-                selection = Prompt.ask(f"\n[yellow3]ENTER CHOICE").strip()
+                selection = Prompt.ask(f"\n[yellow]ENTER CHOICE").strip()
 
                 normalized = selection.lower()
 
                 # Check for quit
                 if normalized in ["q"]:
-                    c.print(get_exit_message(self.config))
+                    console.print(get_exit_message(self.config))
                     exit_program = True
                     break
 
                 # Validate main category
                 if normalized not in self.config.main_categories.keys():
-                    c.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow3] Invalid "
-                        f"choice. Please enter 1-4 or Q to quit."
+                    console.print(
+                        f"[cyan][{Utils.get_current_time()}][yellow] Invalid "
+                        f"choice. Please enter 1-4 or 'Q' to quit."
                     )
                     continue
 
@@ -466,21 +480,22 @@ class Main:
                     break
 
             except KeyboardInterrupt:
-                c.print(
-                    f"\n\n[cyan][{Utils.get_current_time()}][yellow3] Program "
+                console.print(
+                    f"\n\n[cyan][{Utils.get_current_time()}][yellow] Program "
                     "interrupted by user..."
                 )
-                c.print(get_exit_message(self.config))
+                logger.info("Program interrupted by user (KeyboardInterrupt)")
+                console.print(get_exit_message(self.config))
                 exit_program = True
-                sys.exit(0)
+                sys.exit(1)
             except EOFError:
-                c.print(
-                    f"\n[cyan][{Utils.get_current_time()}][red1] EOF "
+                console.print(
+                    f"\n[cyan][{Utils.get_current_time()}][red] EOF "
                     f"received. Exiting..."
                 )
-                logger.error("EOF received. Program exited.")
+                logger.error("EOFError received. Program exited.")
                 exit_program = True
-                sys.exit(0)
+                sys.exit(1)
 
 
 if __name__ != "__main__":
@@ -488,14 +503,12 @@ if __name__ != "__main__":
 
 
 if __name__ == "__main__":
-    logger.info("Application launched")
     app = Main()
     try:
         app.main()
-        logger.info("Application exited normally")
     except KeyboardInterrupt:
-        c.print(
-            f"\n[cyan][{Utils.get_current_time()}][yellow3] Program "
+        console.print(
+            f"\n[cyan][{Utils.get_current_time()}][yellow] Program "
             f"interrupted by user. Exiting..."
         )
         logger.info(
@@ -503,18 +516,20 @@ if __name__ == "__main__":
         )
         sys.exit(0)
     except Exception as e:
-        c.print(
-            f"[cyan][{Utils.get_current_time()}][red1] Unexpected "
+        console.print(
+            f"[cyan][{Utils.get_current_time()}][red] Unexpected "
             f"error -> {e}"
         )
         logger.error(f"An unexpected error occured -> {e}")
 
-        c.print(
-            f"[cyan][{Utils.get_current_time()}][yellow3] Full traceback:"
+        console.print(
+            f"[cyan][{Utils.get_current_time()}][yellow] Full traceback:"
         )
-        c.print(traceback.format_exc())  # Shows exact line causing error
+        # Shows exact line causing error
+        console.print(traceback.format_exc())
 
         logger.error("Full traceback below:")
-        logger.error(f"{traceback.format_exc}") # Include traceback
+        # Include traceback
+        logger.error(f"{traceback.format_exc}")
 
         sys.exit(1)
