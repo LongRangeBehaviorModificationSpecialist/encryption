@@ -21,9 +21,7 @@ from ui.config import (
     GLOBAL_CONFIG,
     SubMenuItem,
 )
-
 from ui.log_config import setup_logging, get_logger
-
 from versions import (
     __version__,
     __author__,
@@ -93,9 +91,6 @@ class Main:
             f"\n[cyan][{Utils.get_current_time()}][red] Operation "
             f"cancelled by user. Exiting...\n"
         )
-
-        # {GLOBAL_CONFIG.red_line}
-
         sys.exit(0)
 
 
@@ -258,7 +253,8 @@ class Main:
                 # Check for back command
                 if normalized in ["r"]:
                     logger.debug("User returned to main menu")
-                    return  # Return to main menu
+                    # Return to main menu
+                    return
 
                 # Check for quit
                 if normalized in ["q"]:
@@ -284,7 +280,7 @@ class Main:
 
                 self._call_handler(item)
 
-                # Ask if they want to continue
+                # Ask if user wants to continue
                 if not self._ask_continue():
                     exit_program = True
                     return
@@ -446,7 +442,7 @@ class Main:
         exit_program = False
 
         while not exit_program:
-            # Clear the screen before showing the MAIN MENU
+            # Clear the screen before showing MAIN MENU
             Utils.clear_screen()
 
             # Show the main app menu
@@ -516,20 +512,19 @@ if __name__ == "__main__":
         )
         sys.exit(0)
     except Exception as e:
+        logger.error(f"An unexpected error occured -> {e}")
+        logger.error("Full traceback below:")
+        # Include traceback
+        logger.error(f"{traceback.format_exc}")
+
         console.print(
             f"[cyan][{Utils.get_current_time()}][red] Unexpected "
             f"error -> {e}"
         )
-        logger.error(f"An unexpected error occured -> {e}")
-
         console.print(
             f"[cyan][{Utils.get_current_time()}][yellow] Full traceback:"
         )
         # Shows exact line causing error
         console.print(traceback.format_exc())
-
-        logger.error("Full traceback below:")
-        # Include traceback
-        logger.error(f"{traceback.format_exc}")
 
         sys.exit(1)
