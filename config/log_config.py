@@ -2,7 +2,6 @@
 
 import logging
 from logging.handlers import RotatingFileHandler
-from datetime import datetime
 from pathlib import Path
 
 
@@ -27,18 +26,10 @@ def setup_logging(
     log_file = log_path / "app.log"
 
     # Configure root logger
-    logger = logging.getLogger("encryption_app")
-    logger.setLevel(log_level)
+    logger = logging.getLogger(__name__)
 
     # Clear any existing handlers
     logger.handlers.clear()
-
-    # File formatter with full details
-    file_formatter = logging.Formatter(
-        fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | "
-        "%(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
 
     # File handler (ALL logs go here)
     # Replace FileHandler with RotatingFileHandler
@@ -46,10 +37,18 @@ def setup_logging(
         log_file,
         maxBytes=25_000_000,  # 25 MB per file
         backupCount=5,        # Keep 5 old files (app.log.1, app.log.2, etc.)
+        encoding="utf-8",
+    )
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        filename=log_file,
+        filemode="w",
         encoding="utf-8"
     )
-    file_handler.setLevel(log_level)
-    file_handler.setFormatter(file_formatter)
+
     logger.addHandler(file_handler)
 
     # Log startup info
@@ -60,6 +59,7 @@ def setup_logging(
     logger.log_file = str(log_file)
 
     return logger
+
 
 # Convenience function to get the configured logger
 def get_logger(name: str = None) -> logging.Logger:

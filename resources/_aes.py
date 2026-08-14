@@ -3,8 +3,8 @@
 
 # Import the console object from the main __init__.py file
 from . import console
-from ui.log_config import get_logger
-from ui.config import GLOBAL_CONFIG
+from config.log_config import get_logger
+from config.config import GLOBAL_CONFIG
 from rich.traceback import install
 from resources.vars import ENCRYPTED_EXT_LIST
 from utils import Utils
@@ -149,14 +149,14 @@ class AES:
 
         try:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"Reading file : {target_file.name}..."
             )
             logger.info(f"Reading file '{target_file.name}'")
 
             original_file_data = target_file.read_bytes()
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] File "
+                f"[cyan][{Utils.get_current_time()}][grey66] File "
                 "content read successfully..."
             )
             logger.info(
@@ -164,7 +164,7 @@ class AES:
             )
 
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"{action.capitalize()}ing file data..."
             )
             logger.info(
@@ -340,7 +340,7 @@ class AES:
 
         fetch_targets_msg = f"Fetching targets for {action}ion..."
         console.print(
-            f"[cyan][{Utils.get_current_time()}][white] {fetch_targets_msg}"
+            f"[cyan][{Utils.get_current_time()}][grey66] {fetch_targets_msg}"
         )
         logger.info(f"{fetch_targets_msg}")
 

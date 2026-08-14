@@ -2,14 +2,14 @@
 
 import base64
 from pathlib import Path
-from rich.prompt import Prompt
+from rich.prompt import Prompt, Confirm
 from rich.traceback import install
 from typing import List
 
 from . import console
+from config.config import GLOBAL_CONFIG
 from resources.vars import ENCRYPTED_EXT_LIST
 from utils import Utils
-from ui.config import GLOBAL_CONFIG
 
 
 install(show_locals=True, console=console)
@@ -36,7 +36,7 @@ class XOR:
     def get_xor_key(self) -> str:
         """Returns a UTF-8 encoded XOR key."""
         xor_key = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter "
             "the key you want to use for the XOR operation",
             password=True
         )
@@ -59,7 +59,7 @@ class XOR:
 
     def _handle_xor_process_msg(self, action: str) -> None:
         message = Prompt.ask(
-            f"\n[cyan][{Utils.get_current_time()}][white] Enter "
+            f"\n[cyan][{Utils.get_current_time()}][grey66] Enter "
             "the message you want to XOR"
         )
 
@@ -170,16 +170,14 @@ class XOR:
             )
             raise
 
-        save_output = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Do you "
+        save_output = Confirm.ask(
+            f"[cyan][{Utils.get_current_time()}][grey66] Do you "
             f"want to save the {action}ed message to a file?",
-            choices=["y", "n"],
-            show_choices=True
         )
 
-        if save_output == "y":
+        if save_output:
             output_file_input = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Enter "
+                f"[cyan][{Utils.get_current_time()}][grey66] Enter "
                 "the file path to save the results"
             )
             output_file = Path(output_file_input)
@@ -212,7 +210,7 @@ class XOR:
                 f"\n[cyan][{Utils.get_current_time()}][green] "
                 f"Action Successful\n"
                 f"\nThe {action}ed message is:\n"
-                f"\n    [white]{processed_data}\n"
+                f"\n    [grey66]{processed_data}\n"
             )
 
         return processed_data
@@ -281,7 +279,7 @@ class XOR:
         try:
             file_size = target_file.stat().st_size
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] Processing file -> "
+                f"[cyan][{Utils.get_current_time()}][grey66] Processing file -> "
                 f"{target_file.name} ({file_size:,} bytes)..."
             )
 
@@ -305,7 +303,7 @@ class XOR:
 
                     progress = (bytes_processed / file_size) * 100
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][white] Progress : "
+                        f"[cyan][{Utils.get_current_time()}][grey66] Progress : "
                         f"{progress:.1f}%",
                         end=""
                     )
@@ -397,7 +395,7 @@ class XOR:
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"[{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""

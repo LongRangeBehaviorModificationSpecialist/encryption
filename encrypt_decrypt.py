@@ -7,7 +7,6 @@ from resources._aes import AES
 from resources._pgp import PGP
 from resources._xor import XOR
 from utils import Utils
-from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
@@ -17,11 +16,11 @@ import signal
 import sys
 import traceback
 
-from ui.config import (
+from config.config import (
     GLOBAL_CONFIG,
     SubMenuItem,
 )
-from ui.log_config import setup_logging, get_logger
+from config.log_config import setup_logging, get_logger
 from versions import (
     __version__,
     __author__,
@@ -34,7 +33,7 @@ console = Console()
 install(show_locals=True, console=console)
 
 # Set up logging FIRST (before anything else)
-logger = setup_logging(log_dir="logs", log_level=logging.INFO)
+logger = setup_logging(log_dir="logs", log_level=logging.DEBUG)
 logger = get_logger("main")
 
 
@@ -48,7 +47,6 @@ def get_exit_message(config) -> str:
 
 
 class Main:
-
     """Main application class."""
 
     def __init__(self):
@@ -229,7 +227,9 @@ class Main:
         while not exit_program:
             category = self.config.main_categories.get(category_key)
             if not category:
-                logger.error(f"Invalid category requested: {category_key}")
+                logger.error(
+                    f"Invalid category requested: [ '{category_key}' ]"
+                )
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][red] Invalid "
                     "category"
@@ -345,7 +345,7 @@ class Main:
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
             menu_table.add_row(
-                f"[white][{key}] {category.label} [grey58]"
+                f"[grey66][{key}] {category.label} [grey58]"
                 f"[{category.description}]"
             )
 
@@ -406,16 +406,16 @@ class Main:
         for sub_key in sorted(category.submenu_items.keys()):
             item = category.submenu_items[sub_key]
             sub_menu_table.add_row(
-                f"[white][{sub_key}] {item.label} [grey58][{item.description}]"
+                f"[grey66][{sub_key}] {item.label} [grey58][{item.description}]"
             )
 
         sub_menu_table.add_row()
 
         # Add back option
-        sub_menu_table.add_row(f"[white][R] Return to the main menu")
+        sub_menu_table.add_row(f"[grey66][R] Return to the main menu")
 
         # Add exit option
-        sub_menu_table.add_row(f"[white][Q] Quit the application")
+        sub_menu_table.add_row(f"[grey66][Q] Quit the application")
 
         # Blank line at end
         sub_menu_table.add_row()

@@ -5,7 +5,7 @@ from functools import wraps
 import os
 from pathlib import Path
 import re
-from rich.prompt import Prompt
+from rich.prompt import Prompt, Confirm
 import subprocess
 import sys
 import time
@@ -13,8 +13,8 @@ import time
 # Import the console object from the main __init__.py file
 from resources import console
 from resources.vars import ICONS
-from ui.config import GLOBAL_CONFIG
-from ui.log_config import get_logger
+from config.config import GLOBAL_CONFIG
+from config.log_config import get_logger
 
 
 logger = get_logger("utils")
@@ -84,7 +84,7 @@ class Utils:
     @staticmethod
     def get_file_path() -> str:
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter the "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
             "path of the file to be processed"
         ).strip("\"'")
 
@@ -92,7 +92,7 @@ class Utils:
     @staticmethod
     def get_directory_path() -> str:
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter the "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
             f"full path of the directory containing the files to be processed"
         ).strip("\"'")
 
@@ -137,7 +137,7 @@ class Utils:
             base_prompt = prompt_text
         else:
             base_prompt = (
-                f"[cyan][{Utils.get_current_time()}][white][-] Enter the "
+                f"[cyan][{Utils.get_current_time()}][grey66][-] Enter the "
                 "directory where you want to save the processed files "
                 "(press [Enter] to use the same folder)"
             )
@@ -193,21 +193,14 @@ class Utils:
     def select_recursive_option() -> bool:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
-            recursive_input =Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] "
-                "Process subdirectories recursively?",
-                choices=["y", "n"],
-                show_choices=True
-            ).strip().lower()
-            match recursive_input:
-                case "y":
-                    return True
-                case "n":
-                    return False
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] "
-                "Invalid input. Enter either 'y' or 'n'."
+            recursive_input = Confirm.ask(
+                f"[cyan][{Utils.get_current_time()}][grey66] "
+                "Process subdirectories recursively?"
             )
+            if not recursive_input:
+                return False
+            else:
+                return True
 
 
     @staticmethod
@@ -218,7 +211,7 @@ class Utils:
         while True:
             # Prompt user and convert directly to a mutable bytearray
             raw_password = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Enter "
+                f"[cyan][{Utils.get_current_time()}][grey66] Enter "
                 "the PASSWORD you want to use",
                 password=True
             ).encode("utf-8")
@@ -292,7 +285,7 @@ class Utils:
             return False
         else:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] Your "
+                f"[cyan][{Utils.get_current_time()}][grey66] Your "
                 "password meets the minimum requirements. Continuing..."
             )
             return True
@@ -301,7 +294,7 @@ class Utils:
     @staticmethod
     def get_email_address() -> str:
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter "
             "the email address of the PGP key owner"
         ).strip().lower()
 
@@ -311,7 +304,7 @@ class Utils:
         return console.print(
             f"[cyan][{Utils.get_current_time()}][green] Action "
             "Successful\n"
-            f"[white]The {text} file was saved as : {file_name}"
+            f"[grey66]The {text} file was saved as : {file_name}"
             )
 
 
@@ -348,7 +341,7 @@ class Utils:
         )
 
 
-        # f"[white][-] Key file hash verification saved as:\n"
+        # f"[grey66][-] Key file hash verification saved as:\n"
         # f"[yellow]{key_file_hash_file}\n"
 
 
@@ -392,16 +385,14 @@ class Utils:
     @staticmethod
     def get_pgp_key_expire_date() -> str | None:
         """Get expiration from user, return as GNU format string."""
-        expire_option = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Do you "
+        expire_option = Confirm.ask(
+            f"[cyan][{Utils.get_current_time()}][grey66] Do you "
             "want to set an expiration date for the new key?",
-            choices=["y", "n"],
-            show_choices=True
         )
 
-        if expire_option == "y":
+        if expire_option:
             expire_type = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 "Enter the expiration type (1=Days, 2=Date)",
                 choices=["1", "2"],
                 show_choices=True
@@ -410,7 +401,7 @@ class Utils:
             if expire_type == "1":
                 # GNU format: "365d", "1y", "6m" - most compatible!
                 days = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] "
+                    f"[cyan][{Utils.get_current_time()}][grey66] "
                     "Enter number of days (e.g., '365d', '1y', '6m')"
                 ).strip()
                 if days.isdigit() and int(days) > 0:
@@ -434,12 +425,13 @@ class Utils:
                         return f"{num_days}d"
                 else:
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow] Invalid number."
+                        f"[cyan][{Utils.get_current_time()}][yellow] "
+                        "Invalid number."
                     )
                     return None
             else:
                 date_str = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] "
+                    f"[cyan][{Utils.get_current_time()}][grey66] "
                     "Enter date (in 'YYYYMMDD' format)"
                 ).strip()
                 try:
@@ -447,14 +439,16 @@ class Utils:
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()
                     if parsed <= datetime.now().date():
                         console.print(
-                            f"[cyan][{Utils.get_current_time()}][yellow] The date must be in future"
+                            f"[cyan][{Utils.get_current_time()}][yellow] The "
+                            "date must be in future"
                         )
                         return None
                     # Add time with "T" separator
                     return f"{date_str}T000000"
                 except ValueError:
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow] An invalid date format was entered"
+                        f"[cyan][{Utils.get_current_time()}][yellow] An "
+                        "invalid date format was entered"
                     )
                     return None
         return None
@@ -477,7 +471,7 @@ class Utils:
                 raise ValueError("Max passphrase attempts exceeded.")
 
             password = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Enter passphrase",
+                f"[cyan][{Utils.get_current_time()}][grey66] Enter passphrase",
                 password=True
             )
 
@@ -490,7 +484,7 @@ class Utils:
 
             # Confirmation entry
             confirm_password = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Re-enter passphrase to "
+                f"[cyan][{Utils.get_current_time()}][grey66] Re-enter passphrase to "
                 "confirm",
                 password=True
             )
@@ -520,7 +514,7 @@ class Utils:
     def get_pgp_full_name() -> str:
         """Get full name of the PGP key owner."""
         full_name = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter full name of the PGP "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter full name of the PGP "
             "key owner"
         ).strip()
 
@@ -537,7 +531,7 @@ class Utils:
     def get_pgp_email_address() -> str:
         """Get email address of the PGP key owner."""
         email_address = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter email address of the "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter email address of the "
             "PGP key owner"
         ).strip().lower()
 

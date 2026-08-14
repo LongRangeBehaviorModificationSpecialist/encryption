@@ -1,11 +1,5 @@
 # !/usr/bin/env python3
 
-# Import the console object from the main __init__.py file
-from . import console
-from resources.vars import ENCRYPTED_EXT_LIST
-from utils import Utils
-from ui.config import GLOBAL_CONFIG
-
 import inspect
 import os
 from pathlib import Path
@@ -13,9 +7,15 @@ import shutil
 import subprocess
 import sys
 from typing import List
-from rich.prompt import Prompt
+from rich.prompt import Prompt, Confirm
 from rich.traceback import install
-from ui.log_config import get_logger
+
+# Import the console object from the main __init__.py file
+from . import console
+from config.config import GLOBAL_CONFIG
+from config.log_config import get_logger
+from resources.vars import ENCRYPTED_EXT_LIST
+from utils import Utils
 
 HAS_PGP = False
 try:
@@ -201,7 +201,7 @@ class PGP:
         """
         try:
             key_file = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Enter key "
+                f"[cyan][{Utils.get_current_time()}][grey66] Enter key "
                 f"file path"
             ).strip("\"'")
 
@@ -352,7 +352,7 @@ class PGP:
             raise
 
         console.print(
-            f"[cyan][{Utils.get_current_time()}][white] [bold]Public"
+            f"[cyan][{Utils.get_current_time()}][grey66] [bold]Public"
             f"[/bold] key exported to ->\n"
             f"    {output_file}"
         )
@@ -413,7 +413,7 @@ class PGP:
             raise
 
         console.print(
-            f"[cyan][{Utils.get_current_time()}][white] [bold]Private"
+            f"[cyan][{Utils.get_current_time()}][grey66] [bold]Private"
             f"[/bold] key exported successfully to -> \n"
             f"    {output_file}"
         )
@@ -439,7 +439,7 @@ class PGP:
 
         # Optional: Add a comment field
         comment = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter a comment "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter a comment "
             f"(optional, e.g., 'Work Key')",
             default=""
         ).strip()
@@ -520,21 +520,17 @@ class PGP:
             f"[cyan]  Key Expires  :  {expire_dt_str}"
         )
 
-        export_pub_key = Prompt.ask(
-            f"\n[cyan][{Utils.get_current_time()}][white] Do you want to "
+        export_pub_key = Confirm.ask(
+            f"\n[cyan][{Utils.get_current_time()}][grey66] Do you want to "
             "export the newly created PGP PUBLIC key?",
-            choices=["y","n"],
-            show_choices=True
         )
         if export_pub_key:
             # Export keys upon successful generation
             self.pgp_export_public_key(keyid=keyid)
 
-        export_private_key = Prompt.ask(
-            f"\n[cyan][{Utils.get_current_time()}][white] Do you want to "
+        export_private_key = Confirm.ask(
+            f"\n[cyan][{Utils.get_current_time()}][grey66] Do you want to "
             "export the newly created PGP PRIVATE key?",
-            choices=["y","n"],
-            show_choices=True
         )
         if export_private_key:
             self.pgp_export_private_key(
@@ -548,7 +544,7 @@ class PGP:
     def _handle_pgp_process_file(self, action: str) -> None:
         """Collect user inputs and call pgp_process_file method."""
         ask_use_symmetric = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] How do you want to "
+            f"[cyan][{Utils.get_current_time()}][grey66] How do you want to "
             f"{action} the file (1=password, 2=PGP key)",
             choices=["1", "2"],
             show_choices=True,
@@ -561,7 +557,7 @@ class PGP:
         if action == "encrypt":
             if symmetric:
                 password = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] Enter a "
+                    f"[cyan][{Utils.get_current_time()}][grey66] Enter a "
                     f"password to encrypt the file(s)",
                     password=True
                 )
@@ -574,7 +570,7 @@ class PGP:
             else:
                 # Asymmetric encryption - recipients required
                 email_input = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] Enter the "
+                    f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
                     f"email address of the owner of the public key that will "
                     f"be used to {action} the file"
                 ).strip()
@@ -590,17 +586,14 @@ class PGP:
 
         else:
             # DECRYPTION - password only needed for symmetric-encrypted files
-            confirm = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Enter "
+            confirm = Confirm.ask(
+                f"[cyan][{Utils.get_current_time()}][grey66] Enter "
                 f"decryption password now? (leave blank for GPG prompt)",
-                choices=["y", "n"],
-                show_choices=True,
-                default="y"
             )
 
-            if confirm == "y":
+            if confirm:
                 password = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] Enter the "
+                    f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
                     f"password to decrypt the file(s)",
                     password=True
                 )
@@ -631,7 +624,7 @@ class PGP:
 
         # Email address (required for public-key encryption)
         email_input = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter recipient "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter recipient "
             "email address(es) (comma-separated)"
         ).strip()
 
@@ -640,11 +633,9 @@ class PGP:
                 f"[cyan][{Utils.get_current_time()}][yellow] No email "
                 "provided."
             )
-            confirm = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Proceed with "
+            confirm = Confirm.ask(
+                f"[cyan][{Utils.get_current_time()}][grey66] Proceed with "
                 "symmetric encryption instead?",
-                choices=["y", "n"],
-                show_choices=True
             )
             if confirm:
                 email_input = None
@@ -661,7 +652,7 @@ class PGP:
         # Password (required for symmetric encryption)
         if symmetric:
             password =Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Enter "
+                f"[cyan][{Utils.get_current_time()}][grey66] Enter "
                 f"passphrase for encryption"
             )
             if not password:
@@ -672,15 +663,13 @@ class PGP:
                 return
 
         elif action == "decrypt":
-            confirm = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][white] Do you want to "
+            confirm = Confirm.ask(
+                f"[cyan][{Utils.get_current_time()}][grey66] Do you want to "
                 "provide a passphrase now? (leave blank for GPG prompt)",
-                choices=["y", "n"],
-                show_choices=True
             )
             if confirm:
                 password = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] Enter "
+                    f"[cyan][{Utils.get_current_time()}][grey66] Enter "
                     f"passphrase for processing",
                     password=True
                 )
@@ -690,11 +679,9 @@ class PGP:
             password = None
 
         # Armored option
-        armored = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Use ASCII-armored "
+        armored = Confirm.ask(
+            f"[cyan][{Utils.get_current_time()}][grey66] Use ASCII-armored "
             "output (.asc)?",
-            choices=["y", "n"],
-            show_choices=True
         )
 
         # Process the directory
@@ -774,7 +761,7 @@ class PGP:
 
         # Output path (optional)
         output_path_input = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter output path "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter output path "
             "(leave blank for default)",
         ).strip("\"'")
         output_path = (
@@ -787,13 +774,11 @@ class PGP:
             # Symmetric vs asymmetric decision
             if use_symmetric:
             # Password -> required for symmetric encryption or decryption
-                armored_response = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][white] "
+                armored_response = Confirm.ask(
+                    f"[cyan][{Utils.get_current_time()}][grey66] "
                     f"Use ASCII-armored output (.asc)?",
-                    choices=["y", "n"],
-                    show_choices=True
                 )
-                use_armored = armored_response == "y"
+                use_armored = armored_response == True
                 armored_prompt_used = True
 
                 # Validate: symmetric encryption requires a password
@@ -836,14 +821,14 @@ class PGP:
 
         try:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"Reading file -> {target_file.name}..."
             )
 
             with open(target_file, "rb") as f:
                 if action == "encrypt":
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][white] "
+                        f"[cyan][{Utils.get_current_time()}][grey66] "
                         f"{action.capitalize()}ing file data..."
                     )
                     if use_symmetric:
@@ -1087,7 +1072,7 @@ class PGP:
                 f"[cyan][{Utils.get_current_time()}][green] "
                 f"Action Completed\n"
                 f"Successfully {action}ed {len(successful_files)} files in "
-                f"{target_dir} :"
+                f"{target_dir}:"
             )
             for processed_file in successful_files:
                 console.print(f"[green]  {processed_file.name}")
@@ -1096,7 +1081,7 @@ class PGP:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] "
                 "Warning\n"
-                f"Failed to {action} {len(failed_files)} files :"
+                f"Failed to {action} {len(failed_files)} files:"
             )
             for failed_file in failed_files:
                 console.print(f"[red]  {failed_file.name}")
@@ -1130,7 +1115,7 @@ class PGP:
             RuntimeError: If the GPG signing operation fails.
         """
         target_file = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter the path of "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter the path of "
             "the file to be signed"
         )
         target_file = Path(target_file).resolve()
@@ -1140,7 +1125,7 @@ class PGP:
             raise FileNotFoundError(f"Invalid target file -> {target_file}")
 
         signer_email = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter the email "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter the email "
             "address or key ID of the signer's private key"
         )
         if not signer_email:
@@ -1151,7 +1136,7 @@ class PGP:
             raise ValueError
 
         password = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] Enter the passphrase "
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter the passphrase "
             "for the signer's private key",
             password=True
         )
@@ -1160,7 +1145,7 @@ class PGP:
             self, "_armored", False)
 
         sig_type = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][white] What type of "
+            f"[cyan][{Utils.get_current_time()}][grey66] What type of "
             "signature do you want to use to sign this file? "
             "(1=clearsign, 2=detached, 3=other)",
             choices=["1", "2", "3"],
@@ -1192,11 +1177,11 @@ class PGP:
         # Calling the signing method
         try:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] Signing "
+                f"[cyan][{Utils.get_current_time()}][grey66] Signing "
                 f"file -> {target_file.name}..."
             )
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] Signature "
+                f"[cyan][{Utils.get_current_time()}][grey66] Signature "
                 f"will be written to -> {output_file.name}"
             )
 
@@ -1294,7 +1279,7 @@ class PGP:
 
         try:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"Verifying signature ->{signature_file.name}..."
             )
 
@@ -1384,12 +1369,12 @@ class PGP:
         # List available keys
         keys = self.gpg.list_keys()
         console.print(
-            f"[cyan][{Utils.get_current_time()}][white] Keys found: "
+            f"[cyan][{Utils.get_current_time()}][grey66] Keys found: "
             f"{len(keys)}"
         )
         for key in keys[:5]:  # Show first 5
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white]  - "
+                f"[cyan][{Utils.get_current_time()}][grey66]  - "
                 f"{key['uids'][0]} ({key['fingerprint'][:16]}...)"
             )
 

@@ -22,7 +22,7 @@ from pathlib import Path
 from rich.prompt import Prompt, Confirm
 from rich.traceback import install
 from typing import List
-from ui.log_config import get_logger
+from config.log_config import get_logger
 
 
 install(show_locals=True, console=console)
@@ -254,7 +254,7 @@ class KEY:
 
         try:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"Reading file: {target_file.name}..."
             )
             original_file_data = target_file.read_bytes()
@@ -264,11 +264,11 @@ class KEY:
             )
 
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] File "
+                f"[cyan][{Utils.get_current_time()}][grey66] File "
                 "content read successfully..."
             )
             console.print(
-                f"[cyan][{Utils.get_current_time()}][white] "
+                f"[cyan][{Utils.get_current_time()}][grey66] "
                 f"{action.capitalize()}ing file data..."
             )
 
@@ -344,7 +344,7 @@ class KEY:
             f"Target directory '{target_dir}' validated."
         )
         console.print(
-            f"[cyan][{Utils.get_current_time()}][white] Fetching "
+            f"[cyan][{Utils.get_current_time()}][grey66] Fetching "
             f"targets for {action}ion..."
         )
 
