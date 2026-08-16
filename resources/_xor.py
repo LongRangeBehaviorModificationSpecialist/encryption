@@ -59,8 +59,8 @@ class XOR:
 
     def _handle_xor_process_msg(self, action: str) -> None:
         message = Prompt.ask(
-            f"\n[cyan][{Utils.get_current_time()}][grey66] Enter "
-            "the message you want to XOR"
+            f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
+            "message you want to XOR"
         )
 
         if not message:
@@ -157,7 +157,7 @@ class XOR:
                     processed_data = processed_bytes.decode("utf-8")
                 except UnicodeDecodeError as e:
                     raise ValueError(
-                        "Decryption produced invalid text - wrong key or "
+                        "Decryption produced invalid text → wrong key or "
                         "corrupted data."
                     ) from e
 
@@ -168,7 +168,7 @@ class XOR:
                 f"[cyan][{Utils.get_current_time()}][red] Error "
                 f"during {action}ion -> {e}"
             )
-            raise
+            raise RuntimeError(f"Error during {action}ion → {e}") from e
 
         save_output = Confirm.ask(
             f"[cyan][{Utils.get_current_time()}][grey66] Do you "
@@ -194,7 +194,7 @@ class XOR:
 
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][green] "
-                    f"{action.capitalize()}ed message saved to -> "
+                    f"{action.capitalize()}ed message saved to → "
                     f"{output_file.resolve()}"
                 )
 
@@ -202,15 +202,18 @@ class XOR:
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][red] "
                     f"Could not write processed message to {output_file} "
-                    f"-> {e}"
+                    f"→ {e}"
                 )
+                raise RuntimeError(
+                    f"Could not write processed message to {output_file} "
+                    f"→ {e}"
+                ) from e
 
         else:
             console.print(
-                f"\n[cyan][{Utils.get_current_time()}][green] "
-                f"Action Successful\n"
-                f"\nThe {action}ed message is:\n"
-                f"\n    [grey66]{processed_data}\n"
+                f"[cyan][{Utils.get_current_time()}][green] Action "
+                f"successful. [grey66]The {action}ed message is → "
+                f"[blue]{processed_data}"
             )
 
         return processed_data
@@ -244,27 +247,26 @@ class XOR:
             ValueError: If the key is empty.
         """
 
-        console.print(f"\n\nThe random XOR key is -> {xor_key}\n\n")
+        # console.print(f"\n\nThe random XOR key is → {xor_key}\n\n")
 
         target_file = Path(target_file).resolve()
 
         if not target_file.is_file():
             Utils.print_not_file_error(target_file=target_file)
-            raise FileNotFoundError(f"Invalid target file : {target_file}")
+            raise FileNotFoundError(f"Invalid target file → {target_file}")
 
         if not Utils.verify_file_access(target_file=target_file):
             return
 
         if not xor_key:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] The XOR key must not be empty"
+                f"[cyan][{Utils.get_current_time()}][yellow] The XOR "
+                "key must not be empty"
             )
             raise ValueError("XOR key must not be empty.")
 
         key_len = len(xor_key)
         chunk_size = chunk_size or self.default_chunk_size
-
-
 
         # --- Determine output path ---
         if output_path:
@@ -279,8 +281,8 @@ class XOR:
         try:
             file_size = target_file.stat().st_size
             console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] Processing file -> "
-                f"{target_file.name} ({file_size:,} bytes)..."
+                f"[cyan][{Utils.get_current_time()}][grey66] Processing file → "
+                f"[blue]{target_file.name} ({file_size:,} bytes)..."
             )
 
             bytes_processed = 0
@@ -303,13 +305,13 @@ class XOR:
 
                     progress = (bytes_processed / file_size) * 100
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][grey66] Progress : "
+                        f"[cyan][{Utils.get_current_time()}][grey66] Progress: "
                         f"{progress:.1f}%",
                         end=""
                     )
             console.print(
-                f"\n[cyan][{Utils.get_current_time()}][green] Processed "
-                f"{target_file.name}  ->'  {output_file.name}"
+                f"[cyan][{Utils.get_current_time()}][green] Processed "
+                f"{target_file.name}  →  {output_file.name}"
             )
 
             return output_file
@@ -320,8 +322,10 @@ class XOR:
                 output_file.unlink(missing_ok=True)
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to process "
-                f"{target_file.name} : {e}")
-            raise
+                f"{target_file.name} → {e}")
+            raise RuntimeError(
+                f"Failed to process {target_file.name} → {e}"
+            ) from e
 
 
     def xor_process_folder(
@@ -374,15 +378,15 @@ class XOR:
 
         except Exception as e:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Failed to retrieve files "
-                f"from {target_dir} : {e}"
+                f"[cyan][{Utils.get_current_time()}][red] Failed to "
+                f"retrieve files from {target_dir} → {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] No valid files to encrypt "
-                f"in {target_dir}"
+                f"[cyan][{Utils.get_current_time()}][yellow] No valid "
+                f"files to encrypt in {target_dir}"
             )
             return []
 
@@ -411,8 +415,8 @@ class XOR:
 
             except Exception as e:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] Error during processing "
-                    f"{file_path.name} : {e}"
+                    f"[cyan][{Utils.get_current_time()}][red] Error during "
+                    f"processing {file_path.name} → {e}"
                 )
                 failed_files.append(file_path)
 
@@ -421,17 +425,17 @@ class XOR:
 
         if successful_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] Action Completed\n"
-                f"Successfully processed {len(successful_files)} files in "
-                f"{target_dir}:"
+                f"[cyan][{Utils.get_current_time()}][green] Action Completed. "
+                f"[grey66]Successfully processed {len(successful_files)} "
+                f"files in {target_dir}:"
             )
             for file in successful_files:
                 console.print(f"[green]  {file.name}")
 
         if failed_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Warning:\n"
-                f"Failed to process {len(failed_files)} files :"
+                f"[cyan][{Utils.get_current_time()}][red] Warning: "
+                f"Failed to process {len(failed_files)} files:"
             )
             for file in failed_files:
                 console.print(f"[red]  {file.name}")
