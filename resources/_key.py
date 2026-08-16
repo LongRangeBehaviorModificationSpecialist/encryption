@@ -26,7 +26,6 @@ from config.log_config import get_logger
 
 
 install(show_locals=True, console=console)
-# Creates "key" logger
 logger = get_logger("key")
 
 
@@ -305,11 +304,12 @@ class KEY:
             )
             raise
         except Exception as e:
+            failed_msg = f"Failed to {action} {target_file.name} -> {e}"
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] "
-                f"Failed to {action} {target_file.name} -> {e}"
+                f"{failed_msg}"
             )
-            raise
+            raise RuntimeError(f"{failed_msg}") from e
 
 
     def key_process_folder(
@@ -343,6 +343,7 @@ class KEY:
             f"[cyan][{Utils.get_current_time()}][green] "
             f"Target directory '{target_dir}' validated."
         )
+        
         console.print(
             f"[cyan][{Utils.get_current_time()}][grey66] Fetching "
             f"targets for {action}ion..."
