@@ -58,7 +58,7 @@ class PGP:
                 f"[cyan][{Utils.get_current_time()}][yellow] "
                 f"{gnupg_not_found_msg}"
             )
-            raise FileNotFoundError(f"{gnupg_not_found_msg}"
+            raise FileNotFoundError(f"{gnupg_not_found_msg}")
 
         # Calculate homedir independently of GPG instance
         self.gpg_homedir = self._get_gpg_homedir()
