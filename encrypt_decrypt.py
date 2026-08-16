@@ -113,7 +113,7 @@ class Main:
                                 console.print(
                                     f"{GLOBAL_CONFIG.yellow_line}"
                                     f"⚠ Failed to bind "
-                                    f"[{category_key}][{sub_key}] -> {e}"
+                                    f"[{category_key}][{sub_key}] → {e}"
                                 )
                         else:
                             console.print(
@@ -123,9 +123,9 @@ class Main:
                                 f"submenu [{category_key}][{sub_key}]"
                             )
                             console.print(
-                                f"[cyan][{Utils.get_current_time()}][grey58] "
+                                f"[cyan][{Utils.get_current_time()}][grey66] "
                                 f"Available methods in {item.handler_module}: "
-                                f"{[m for m in dir(module) if not m.startswith('_')]}"
+                               f"{[m for m in dir(module) if not m.startswith('_')]}"
                             )
                         # Debug info - list available methods
                         available = [
@@ -134,8 +134,8 @@ class Main:
                             and not m.startswith("_")
                         ]
                         console.print(
-                            f"[cyan][{Utils.get_current_time()}][grey58] "
-                            f"Available methods in {item.handler_module} -> "
+                            f"[cyan][{Utils.get_current_time()}][grey66] "
+                            f"Available methods in {item.handler_module} → "
                             f"{', '.join(available)}"
                         )
                         continue
@@ -160,7 +160,7 @@ class Main:
                         console.print(
                             f"[cyan][{Utils.get_current_time()}][red] "
                             f"✗ Error binding handler for [{category_key}]"
-                            f"[{sub_key}] -> {e}"
+                            f"[{sub_key}] → {e}"
                         )
                         continue
 
@@ -185,11 +185,11 @@ class Main:
                     except Exception as e:
                         console.print(
                             f"[cyan][{Utils.get_current_time()}][red] Error "
-                            f"executing handler: {type(e).__name__} -> {e}"
+                            f"executing handler: {type(e).__name__} → {e}"
                         )
                         import traceback
                         console.print(
-                            f"[cyan][{Utils.get_current_time()}][grey58] "
+                            f"[cyan][{Utils.get_current_time()}][grey66] "
                             "Traceback:"
                         )
                         console.print(traceback.format_exc())
@@ -231,12 +231,12 @@ class Main:
                     f"Invalid category requested: [ '{category_key}' ]"
                 )
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] Invalid "
-                    "category"
+                    f"[cyan][{Utils.get_current_time()}][red] An invalid "
+                    "category was entered"
                 )
                 return
 
-            logger.info(f"Entered submenu loop for category: {category_key}")
+            logger.info(f"Entered submenu loop for category → {category_key}")
 
             # Clear the screen before showing submenu
             Utils.clear_screen()
@@ -248,7 +248,7 @@ class Main:
                 selection = Prompt.ask(f"\n[yellow]ENTER CHOICE").strip()
                 normalized = selection.lower()
 
-                logger.debug(f"User selected: {normalized}")
+                logger.debug(f"User selected → {normalized}")
 
                 # Check for back command
                 if normalized in ["r"]:
@@ -274,7 +274,7 @@ class Main:
                 # Execute the selected operation
                 item = category.submenu_items[normalized]
                 logger.info(
-                    f"Executing operation: [{category_key}][{normalized}] -> "
+                    f"Executing operation: [{category_key}][{normalized}] → "
                     f"{item.label}"
                 )
 
@@ -317,7 +317,7 @@ class Main:
             return True
 
         except (KeyboardInterrupt, EOFError) as e:
-            logger.error(f"An error occured during this operation -> {e}")
+            logger.error(f"An error occured during this operation → {e}")
             # Exit on interrupt during prompt
             return False
 
@@ -383,8 +383,8 @@ class Main:
         category = self.config.main_categories.get(category_key)
         if not category:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Invalid category "
-                "selected"
+                f"[cyan][{Utils.get_current_time()}][red] An invalid category "
+                "was selected"
             )
             return
 
@@ -486,7 +486,7 @@ class Main:
                 sys.exit(1)
             except EOFError:
                 console.print(
-                    f"\n[cyan][{Utils.get_current_time()}][red] EOF "
+                    f"\n[cyan][{Utils.get_current_time()}][red] EOFError "
                     f"received. Exiting..."
                 )
                 logger.error("EOFError received. Program exited.")
@@ -508,18 +508,18 @@ if __name__ == "__main__":
             f"interrupted by user. Exiting..."
         )
         logger.info(
-            "KeyboardInterrupt -- The program was interrupted by the user."
+            "KeyboardInterrupt → The program was interrupted by the user."
         )
         sys.exit(0)
     except Exception as e:
-        logger.error(f"An unexpected error occured -> {e}")
+        logger.error(f"An unexpected error occured → {e}")
         logger.error("Full traceback below:")
         # Include traceback
         logger.error(f"{traceback.format_exc}")
 
         console.print(
             f"[cyan][{Utils.get_current_time()}][red] Unexpected "
-            f"error -> {e}"
+            f"error → {e}"
         )
         console.print(
             f"[cyan][{Utils.get_current_time()}][yellow] Full traceback:"
