@@ -56,7 +56,7 @@ class AES:
             The key as a byte string
         """
         # Log at START of important operations
-        logger.debug(
+        logger.info(
             f"Deriving key from password (length: "
             f"{len(password) if isinstance(password, str) else len(bytes(password))})"
         )
@@ -72,7 +72,7 @@ class AES:
 
         kdf = Scrypt(salt=salt, length=32, n=2**17, r=8, p=1)
 
-        logger.debug("Key derived successfully")
+        logger.info("Key derived successfully")
         return kdf.derive(pwd_buffer)
 
 
