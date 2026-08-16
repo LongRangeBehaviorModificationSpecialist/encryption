@@ -30,6 +30,7 @@ from pathlib import Path
 install(show_locals=True, console=console)
 logger = get_logger("aes")  # Creates "encryption_app.aes" logger
 
+
 class AES:
 
     def __init__(self) -> None:
@@ -46,6 +47,13 @@ class AES:
     ) -> bytes:
         """Derives a 256-bit key from a password buffer using Scrypt (N=2^17
         for improved GPU attack resistance).
+        
+        Args:
+            password: password from which the key fill be derived
+            salt: value of the salt to use when deriving the key
+            
+        Returns:
+            The key as a byte string
         """
         # Log at START of important operations
         logger.debug(
@@ -72,10 +80,15 @@ class AES:
         """Collect user inputs and call aes_process_file."""
         target_file = Utils.get_file_path()
         logger.info(f"The target_file was entered as '{target_file}'")
+        
         output_dir = Utils.get_output_path(target_path=target_file)
+        logger.info(f"The output_dir was entered as '{output_dir}'")
+        
         password = Utils.get_confirmed_password()
         logger.info(f"User entered password '{password}'")
+        
         logger.info(f"Action was input as '{action}'")
+        
         self.aes_process_file(
             target_file=target_file,
             output_dir=output_dir,
@@ -87,13 +100,18 @@ class AES:
     def _handle_aes_process_folder(self, action: str) -> None:
         target_dir = Utils.get_directory_path()
         logger.info(f"The target_dir was entered as '{target_dir}'")
+        
         output_dir = Utils.get_output_path(target_path=target_dir)
         logger.info(f"The output_dir was entered as '{output_dir}'")
+        
         password = Utils.get_confirmed_password()
         logger.info(f"User entered password '{password}'")
+        
         logger.info(f"Action was input as '{action}'")
+        
         recursive = Utils.select_recursive_option()
         logger.info(f"The recursive option was set to '{recursive}'")
+        
         self.aes_process_folder(
             target_dir=target_dir,
             output_dir=output_dir,
@@ -182,11 +200,14 @@ class AES:
                 # Generate fresh, random cryptographic parameters
                 salt = os.urandom(self.SALT_LENGTH)
                 logger.info(f"Encryption salt is '{salt}'")
+                
                 # 96-bit IV is standard for GCM
                 iv = os.urandom(self.IV_LENGTH)
                 logger.info(f"Encryption IV value is '{iv}'")
+                
                 key = self._derive_key(password, salt)
                 logger.info(f"Encryption key value is '{key}'")
+                
                 logger.info(f"File encryption started...")
 
                 aesgcm = AESGCM(key)
@@ -235,16 +256,19 @@ class AES:
                     # [ SALT ] [ IV ] [ CIPHERTEXT + TAG ]
                     salt = original_file_data[: self.SALT_LENGTH]
                     logger.info(f"Decryption salt value is '{salt}'")
+                    
                     iv = original_file_data[
                         self.SALT_LENGTH : self.SALT_LENGTH + self.IV_LENGTH
                     ]
                     logger.info(f"Decryption IV value is '{iv}'")
+                    
                     ciphertext_with_tag = original_file_data[
                         self.SALT_LENGTH + self.IV_LENGTH :
                     ]
 
                     key = self._derive_key(password, salt)
                     logger.info(f"Decryption key value is '{key}'")
+                    
                     logger.info(f"File decryption started...")
 
                     aesgcm = AESGCM(key)
@@ -292,7 +316,7 @@ class AES:
                 f"[cyan][{Utils.get_current_time()}][red] {other_error_msg}"
             )
             logger.error(f"{other_error_msg}")
-            return None
+            raise RuntimeError(f"{other_error_msg}") from e
 
 
     def aes_process_folder(
@@ -323,7 +347,6 @@ class AES:
         Raises:
             FileNotFoundError: If target file or key file does not exist.
             ValueError: If action is invalid or key file matches target file.
-
         """
         action = action.lower().strip()
         target_dir = Path(target_dir).resolve()
@@ -373,6 +396,7 @@ class AES:
                 f"{failed_retrieve_files_msg}"
             )
             logger.error(f"{failed_retrieve_files_msg}")
+            raise RuntimeError(f"{failed_retrieve_files_msg}") from e
 
         if not all_files:
             no_files_msg = f"No valid files to {action} in {target_dir}"
