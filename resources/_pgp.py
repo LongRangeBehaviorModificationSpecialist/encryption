@@ -185,7 +185,7 @@ class PGP:
             )
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] "
-                f"{current_method}() WAS NOT executed successful -> "
+                f"{current_method}() WAS NOT executed successful → "
                 f"{status_msg}. Please try again."
             )
 
@@ -218,7 +218,7 @@ class PGP:
 
             if not key_file.exists():
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] File not found: "
+                    f"[cyan][{Utils.get_current_time()}][red] File not found → "
                     f"{key_file}"
                 )
                 return
@@ -305,12 +305,12 @@ class PGP:
                 )
 
         except Exception as e:
-            logger.exception(f"Failed to import PGP key -> {e}")
+            logger.exception(f"Failed to import PGP key → {e}")
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Error importing "
                 f"key -> {e}"
             )
-            raise RuntimeError
+            raise RuntimeError(f"Failed to import PGP key → {e}") from e
 
 
     def pgp_export_public_key(
@@ -341,7 +341,7 @@ class PGP:
         if not public_key_data:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to export "
-                f"public key for Key ID -> {keyid}"
+                f"public key for Key ID → {keyid}"
             )
             raise
 
@@ -351,9 +351,11 @@ class PGP:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to write "
-                f"key to {output_file} -> {e}"
+                f"key to {output_file} → {e}"
             )
-            raise RuntimeError
+            raise RuntimeError(
+                f"Failed to write key to {output_file} → {e}"
+            ) from e
 
         console.print(
             f"[cyan][{Utils.get_current_time()}][grey66] [bold]Public"
@@ -397,10 +399,12 @@ class PGP:
         if not private_key_data:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to "
-                f"export private key for Key ID : {keyid}. Check the "
+                f"export private key for Key ID → {keyid}. Check the "
                 f"keyid/passphrase."
             )
-            raise RuntimeError(f"Failed to export private key ID {keyid}.")
+            raise RuntimeError(
+                f"Failed to export private key ID → {keyid}."
+            )
 
         try:
             with open(output_file, "w", newline="\n", encoding="utf-8") as f:
@@ -410,13 +414,15 @@ class PGP:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to write "
-                f"key to {output_file} -> {e}"
+                f"key to {output_file} → {e}"
             )
-            raise RuntimeError
+            raise RuntimeError(
+                f"Failed to write key to {output_file} → {e}"
+            ) from e
 
         console.print(
-            f"[cyan][{Utils.get_current_time()}][grey66] [bold]Private"
-            f"[/bold] key exported successfully to -> {output_file}"
+            f"[cyan][{Utils.get_current_time()}][grey66] [b]Private"
+            f"[/b] key exported successfully to → [blue]{output_file}"
         )
 
         return private_key_data
@@ -485,15 +491,15 @@ class PGP:
         if not key.fingerprint:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] PGP key "
-                f"generation failed -> {key.stderr}"
+                f"generation failed → {key.stderr}"
             )
-            raise RuntimeError("PGP key generation failed.")
+            raise RuntimeError("PGP key generation failed → {key.stderr}")
 
         keyid = str(key.fingerprint)
 
         # Display key summary information
         console.print(
-            f"\n[cyan][{Utils.get_current_time()}][green] PGP key pair "
+            f"[cyan][{Utils.get_current_time()}][green] PGP key pair "
             "created successfully!"
         )
 
@@ -611,9 +617,9 @@ class PGP:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Operation "
-                f"failed -> {e}"
+                f"failed → {e}"
             )
-            raise RuntimeError(f"Operation failed -> {e}) from e
+            raise RuntimeError(f"Operation failed → {e}) from e
 
 
     def _handle_pgp_process_folder(self, action: str) -> None:
@@ -635,7 +641,7 @@ class PGP:
         if not email_input and action == "encrypt":
             console.print(
                 f"[cyan][{Utils.get_current_time()}][yellow] No email "
-                "provided."
+                "provided"
             )
             proceed = Confirm.ask(
                 f"[cyan][{Utils.get_current_time()}][grey66] Proceed with "
@@ -709,8 +715,8 @@ class PGP:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Operation "
-                f"failed -> {e}")
-            raise RuntimeError(f"Operation failed {e}") from e
+                f"failed → {e}")
+            raise RuntimeError(f"Operation failed → {e}") from e
 
 
     def pgp_process_file(
@@ -762,7 +768,7 @@ class PGP:
                 f"[cyan][{Utils.get_current_time()}][red] "
                 f"{target_file.name} does not exist or is a directory."
             )
-            raise FileNotFoundError(f"Invalid target file -> {target_file}")
+            raise FileNotFoundError(f"Invalid target file → {target_file}")
 
         # Output path (optional)
         output_path_input = Prompt.ask(
@@ -827,7 +833,7 @@ class PGP:
         try:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][grey66] "
-                f"Reading file -> {target_file.name}..."
+                f"Reading file → {target_file.name}..."
             )
 
             with open(target_file, "rb") as f:
@@ -897,25 +903,25 @@ class PGP:
                     )
         except Exception as e:
             # Try to extract GPG-specific error message
-            if hasattr(e, 'stderr'):
-                logger.error(f"GPG stderr: {e.stderr}")
-            elif hasattr(e, 'status'):
-                logger.error(f"GPG status: {e.status}")
+            if hasattr(e, "stderr"):
+                logger.error(f"GPG stderr → {e.stderr}")
+            elif hasattr(e, "status"):
+                logger.error(f"GPG status → {e.status}")
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to "
-                f"execute GPG {action}ion -> {e}"
+                f"execute GPG {action}ion → {e}"
             )
             # Try to show helpful troubleshooting info
             if "broken pipe" in str(e).lower():
                 console.print(
                     f"[yellow]Troubleshooting: Check if pinentry is "
-                    f"installed. On Linux: sudo apt install pinentry-gnome3"
+                    f"installed. On Linux: 'sudo apt install pinentry-gnome3'"
                 )
                 console.print(
                     f"[yellow]Also verify GPG agent is running: "
                     "gpg-connect-agent reloadagent /bye"
                 )
-            raise RuntimeError(f"GPG operation failed: {e}") from e
+            raise RuntimeError(f"GPG operation failed → {e}") from e
 
         # Validate GPG status
         if not status.ok:
@@ -931,9 +937,9 @@ class PGP:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] PGP "
                 f"{action.title()}ion failed for {target_file.name}. GPG "
-                f"status -> {error_msg}"
+                f"status → {error_msg}"
             )
-            raise RuntimeError(f"PGP {action.title()}ion failed: {error_msg}")
+            raise RuntimeError(f"PGP {action.title()}ion failed → {error_msg}")
 
         # Log status
         if hasattr(self, "print_status"):
@@ -944,7 +950,7 @@ class PGP:
 
         console.print(
             f"[cyan][{Utils.get_current_time()}][green] File "
-            f"{action}ed successfully. {target_file.name}  ->  "
+            f"{action}ed successfully. {target_file.name}  →  "
             f"{output_file.name}"
         )
 
@@ -1038,7 +1044,7 @@ class PGP:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed to "
-                f"retrieve files from {target_dir} -> {e}"
+                f"retrieve files from {target_dir} → {e}"
             )
             return []
 
@@ -1067,7 +1073,7 @@ class PGP:
             except Exception as e:
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][red] Error during "
-                    f"{action}ing {file_path.name} -> {e}"
+                    f"{action}ing {file_path.name} → {e}"
                 )
                 failed_files.append(file_path)
 
@@ -1127,7 +1133,7 @@ class PGP:
 
         if not target_file.is_file():
             Utils.print_not_file_error(target_file=target_file)
-            raise FileNotFoundError(f"Invalid target file -> {target_file}")
+            raise FileNotFoundError(f"Invalid target file → {target_file}")
 
         signer_email = Prompt.ask(
             f"[cyan][{Utils.get_current_time()}][grey66] Enter the email "
@@ -1183,11 +1189,11 @@ class PGP:
         try:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][grey66] Signing "
-                f"file -> {target_file.name}..."
+                f"file → {target_file.name}..."
             )
             console.print(
                 f"[cyan][{Utils.get_current_time()}][grey66] Signature "
-                f"will be written to -> {output_file.name}"
+                f"will be written to → {output_file.name}"
             )
 
             with open(target_file, "rb") as f:
@@ -1202,14 +1208,14 @@ class PGP:
             )
             console.print(
                 f"[cyan][{Utils.get_current_time()}][green] Signature "
-                f"created -> {output_file.name}"
+                f"created → {output_file.name}"
             )
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] File signing "
-                f"failed -> {e}"
+                f"failed → {e}"
             )
-            raise RuntimeError(f"Failed to execute GPG signing -> {e}") from e
+            raise RuntimeError(f"Failed to execute GPG signing → {e}") from e
 
         if not status:
             if output_file.exists():
@@ -1218,7 +1224,7 @@ class PGP:
             error_msg = getattr(status, "stderr", "Unknown GPG error")
             raise RuntimeError(
                 f"[cyan][{Utils.get_current_time()}][red] PGP signing "
-                f"failed for -> {target_file.name}. GPG status -> "
+                f"failed for → {target_file.name}. GPG status → "
                 f"{error_msg}"
             )
 
@@ -1261,10 +1267,10 @@ class PGP:
         if not signature_file.is_file():
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] "
-                f"Signature file not found -> {signature_file}"
+                f"Signature file not found → {signature_file}"
             )
             raise FileNotFoundError(
-                f"Invalid signature file -> {signature_file}"
+                f"Invalid signature file → {signature_file}"
             )
 
         # Determine if this is a detached or inline/cleartext signature
@@ -1276,16 +1282,16 @@ class PGP:
             if not original_file.is_file():
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][red] "
-                    f"The original file not found -> {original_file}"
+                    f"The original file not found → {original_file}"
                 )
                 raise FileNotFoundError(
-                    f"Invalid original file -> {original_file}"
+                    f"Invalid original file → {original_file}"
                 )
 
         try:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][grey66] "
-                f"Verifying signature ->{signature_file.name}..."
+                f"Verifying signature → {signature_file.name}..."
             )
 
             if is_detached:
@@ -1301,7 +1307,7 @@ class PGP:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] "
-                f"Verification error for {signature_file.name} -> {e}"
+                f"Verification error for {signature_file.name} → {e}"
             )
             return False
 
@@ -1312,7 +1318,10 @@ class PGP:
                 f"Signature verification FAILED for {signature_file.name}."
             )
             if hasattr(verified, "stderr") and verified.stderr:
-                console.print(f"[red]  {verified.stderr.strip()}")
+                console.print(
+                    f"[cyan][{Utils.get_current_time()}][red] "
+                    f"{verified.stderr.strip()}"
+                )
             return False
 
         # If a specific signer was expected, verify the key matches
@@ -1337,8 +1346,8 @@ class PGP:
                     f"[cyan][{Utils.get_current_time()}][red] "
                     f"Signature is valid but was NOT produced by expected "
                     f"signer : {signer_email}.\n"
-                    f"  -> Actual signer key_id      : {actual_key_id}\n"
-                    f"  -> Actual signer fingerprint : {actual_fingerprint}"
+                    f"  → Actual signer key_id      : {actual_key_id}\n"
+                    f"  → Actual signer fingerprint : {actual_fingerprint}"
                 )
                 return False
 
