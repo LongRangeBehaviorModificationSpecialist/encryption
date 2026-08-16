@@ -308,7 +308,7 @@ class PGP:
             logger.exception(f"Failed to import PGP key → {e}")
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Error importing "
-                f"key -> {e}"
+                f"key → {e}"
             )
             raise RuntimeError(f"Failed to import PGP key → {e}") from e
 
@@ -359,7 +359,7 @@ class PGP:
 
         console.print(
             f"[cyan][{Utils.get_current_time()}][grey66] [bold]Public"
-            f"[/bold] key exported to -> {output_file}"
+            f"[/bold] key exported to → {output_file}"
         )
 
         return public_key_data
@@ -668,8 +668,8 @@ class PGP:
             )
             if not password:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow] Passphrase "
-                    "required for symmetric encryption."
+                    f"[cyan][{Utils.get_current_time()}][yellow] A passphrase "
+                    "is required for symmetric encryption"
                 )
                 return
 
@@ -796,10 +796,10 @@ class PGP:
                 if not password:
                     console.print(
                         f"[cyan][{Utils.get_current_time()}][yellow] "
-                        f"A password is required for symmetric encryption."
+                        f"A password is required for symmetric encryption"
                     )
                     raise ValueError(
-                        "Password required for symmetric encryption."
+                        "A password is required for symmetric encryption"
                     )
 
         # Determine output path and extension
@@ -844,7 +844,7 @@ class PGP:
                     )
                     if use_symmetric:
                         logger.info(
-                            f"Starting SYMMETRIC encrypt for: "
+                            f"Starting SYMMETRIC encrypt for → "
                             f"{target_file.name}"
                         )
 
@@ -869,10 +869,10 @@ class PGP:
                         )
 
                         logger.debug(
-                            f"Encryption status.ok: {status.ok}"
+                            f"Encryption status.ok → {status.ok}"
                         )
                         logger.debug(
-                            f"Encryption status.status: "
+                            f"Encryption status.status → "
                             f"{getattr(status, 'status', 'NO STATUS ATTR')}"
                         )
 
@@ -915,7 +915,7 @@ class PGP:
             if "broken pipe" in str(e).lower():
                 console.print(
                     f"[yellow]Troubleshooting: Check if pinentry is "
-                    f"installed. On Linux: 'sudo apt install pinentry-gnome3'"
+                    f"installed. On Linux → 'sudo apt install pinentry-gnome3'"
                 )
                 console.print(
                     f"[yellow]Also verify GPG agent is running: "
