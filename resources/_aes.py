@@ -152,7 +152,7 @@ class AES:
 
         if not target_file.is_file():
             invalid_target_file_msg = (
-                f"File validation for '{target_file.name}' failed -> the file "
+                f"File validation for '{target_file.name}' failed → the file "
                 "does not exist or is not a file."
             )
             console.print(
@@ -300,7 +300,7 @@ class AES:
                     raise ValueError(f"{invalid_tag_msg}")
 
             success_msg = (
-                f"{action.capitalize()}ed {target_file.name}  ->  "
+                f"{action.capitalize()}ed {target_file.name}  →  "
                 f"{output_file.name}"
             )
             console.print(
@@ -311,7 +311,7 @@ class AES:
             return output_file
 
         except Exception as e:
-            other_error_msg = f"Failed to {action} {target_file.name} -> {e}"
+            other_error_msg = f"Failed to {action} {target_file.name} → {e}"
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] {other_error_msg}"
             )
@@ -421,7 +421,7 @@ class AES:
             except Exception as e:
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][red] "
-                    f"Error during {action}ing {file_path.name}  ->  {e}"
+                    f"Error during {action}ing {file_path.name}  →  {e}"
                 )
                 failed_files.append(file_path)
 
