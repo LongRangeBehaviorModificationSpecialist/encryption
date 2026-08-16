@@ -130,10 +130,10 @@ class KEY:
         except IOError as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed "
-                f"to write key data to file -> {e}"
+                f"to write key data to file → {e}"
             )
             logger.error(f"IOError: Failed to write key data to file -> {e}")
-            raise
+            raise RuntimeError(f"Failed to write key data to file → {e}) from e
 
 
     def get_existing_key_file_path(self) -> Path:
@@ -228,15 +228,15 @@ class KEY:
         if not key_file_path.is_file():
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Key "
-                f"file not found -> {key_file_path}"
+                f"file not found → {key_file_path}"
             )
             logger.error(
                 f"FileNotFoundError - a key file was not found at "
                 f"{key_file_path}"
             )
             raise FileNotFoundError(
-                f"Invalid .key file -> {key_file_path}"
-            )
+                f"Invalid .key file → {key_file_path}"
+            ) from e
 
         # Prevent self-encryption guard
         if target_file == key_file_path:
@@ -290,7 +290,7 @@ class KEY:
 
             console.print(
                 f"[cyan][{Utils.get_current_time()}][green] "
-                f"{action.capitalize()}ed {target_file.name} ->  "
+                f"{action.capitalize()}ed {target_file.name}  →  "
                 f"{output_file.name}"
             )
 
@@ -304,7 +304,7 @@ class KEY:
             )
             raise
         except Exception as e:
-            failed_msg = f"Failed to {action} {target_file.name} -> {e}"
+            failed_msg = f"Failed to {action} {target_file.name} → {e}"
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] "
                 f"{failed_msg}"
@@ -380,7 +380,7 @@ class KEY:
         except Exception as e:
             console.print(
                 f"[cyan][{Utils.get_current_time()}][red] Failed "
-                f"to retrieve files from {target_dir} -> {e}"
+                f"to retrieve files from {target_dir} → {e}"
             )
             return []
 
@@ -405,7 +405,7 @@ class KEY:
             except Exception as e:
                 console.print(
                     f"[cyan][{Utils.get_current_time()}][red] "
-                    f"Error during {action}ing {file_path.name} -> {e}"
+                    f"Error during {action}ing {file_path.name} → {e}"
                 )
                 failed_files.append(file_path)
 
