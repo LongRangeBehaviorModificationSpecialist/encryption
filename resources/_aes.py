@@ -1,14 +1,14 @@
 # !/usr/bin/env python3
-"""AES encryption/decryption module."""
 
-# Import the console object from the main __init__.py file
-from . import console
+import os
+from pathlib import Path
+from typing import List, Literal
+
+# Imports from the main __init__.py file
+from . import console, install
 from config.log_config import get_logger
-from config.config import GLOBAL_CONFIG
-from rich.traceback import install
 from resources.vars import ENCRYPTED_EXT_LIST
-from utils import Utils
-from typing import List
+from utils import Utils, UIHandlerProtocol, RichUIHandler
 
 HAS_CRYPTO = False
 try:
@@ -18,26 +18,24 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     console.print(
-        f"[cyan][{Utils.get_current_time()}][yellow] Missing "
+        f"[cyan][{Utils.get_time()}][yellow] Missing "
         "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
 
-import os
-from pathlib import Path
 
-
-install(show_locals=True, console=console)
-logger = get_logger("aes")  # Creates "encryption_app.aes" logger
+logger = get_logger("aes")
+install()
 
 
 class AES:
 
-    def __init__(self) -> None:
+    def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
         # Standard 96-bit IV for AES-GCM
         self.IV_LENGTH = 12
         self.TAG_LENGTH = 16
         self.SALT_LENGTH = 16
+        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
 
 
     def _derive_key(
@@ -47,18 +45,18 @@ class AES:
     ) -> bytes:
         """Derives a 256-bit key from a password buffer using Scrypt (N=2^17
         for improved GPU attack resistance).
-        
+
         Args:
             password: password from which the key fill be derived
             salt: value of the salt to use when deriving the key
-            
+
         Returns:
             The key as a byte string
         """
         # Log at START of important operations
         logger.info(
             f"Deriving key from password (length: "
-            f"{len(password) if isinstance(password, str) else len(bytes(password))})"
+            f"{len(password) if isinstance(password, str) else len(bytes(password))}"
         )
         # If a string gets passed, encode it; otherwise use raw buffer
         # Convert string to bytes
@@ -80,15 +78,15 @@ class AES:
         """Collect user inputs and call aes_process_file."""
         target_file = Utils.get_file_path()
         logger.info(f"The target_file was entered as '{target_file}'")
-        
+
         output_dir = Utils.get_output_path(target_path=target_file)
         logger.info(f"The output_dir was entered as '{output_dir}'")
-        
+
         password = Utils.get_confirmed_password()
         logger.info(f"User entered password '{password}'")
-        
+
         logger.info(f"Action was input as '{action}'")
-        
+
         self.aes_process_file(
             target_file=target_file,
             output_dir=output_dir,
@@ -100,18 +98,18 @@ class AES:
     def _handle_aes_process_folder(self, action: str) -> None:
         target_dir = Utils.get_directory_path()
         logger.info(f"The target_dir was entered as '{target_dir}'")
-        
+
         output_dir = Utils.get_output_path(target_path=target_dir)
         logger.info(f"The output_dir was entered as '{output_dir}'")
-        
+
         password = Utils.get_confirmed_password()
         logger.info(f"User entered password '{password}'")
-        
+
         logger.info(f"Action was input as '{action}'")
-        
+
         recursive = Utils.select_recursive_option()
         logger.info(f"The recursive option was set to '{recursive}'")
-        
+
         self.aes_process_folder(
             target_dir=target_dir,
             output_dir=output_dir,
@@ -124,207 +122,203 @@ class AES:
     def aes_process_file(
             self,
             target_file: Path | str,
-            output_dir: Path | str,
+            output_dir: Path | str | None,
             password: str,
-            action: str
+            action: Literal["encrypt", "decrypt"]
     ) -> Path | None:
         """Reads and either encrypts or decrypts a single file using AES
         (GCM with native AEAD).
 
         Args:
-            file_path: Path of the file to be encrypted or decrypted
-            output_dir: Path to where the processed files will be saved. If
-                empty, processed files will be saved in the same folder as
-                the original files.
+            target_file: Path of the file to be encrypted or decrypted
+            output_dir: Destination directory. Defaults to target file's
+                directory if None.
             password: password to use for the encryption or decryption.
-            action: Operational mode, either 'encrypt' or 'decrypt'.
+            action: Operational mode ('encrypt' or 'decrypt').
 
         Returns:
-            Path: Path to the resulting encrypted or decrypted file.
+            Path: Path to the processed output file.
 
         Raises:
             FileNotFoundError: If target file or key file does not exist.
             ValueError: If action is invalid or key file matches target file.
+            PermissionError: If file access is restricted.
         """
         action = action.lower().strip()
-        target_file = Path(target_file).resolve()
-        logger.info(f"Starting {action}ion for file '{target_file}'")
+        if action not in ("encrypt", "decrypt"):
+            raise ValueError(
+                f"Invalid action '{action}'. Must be 'encrypt' or 'decrypt'."
+            )
+        target_path = Path(target_file).resolve()
+        logger.info(f"Starting {action}ion for file '{target_path}'")
 
-        if not target_file.is_file():
-            invalid_target_file_msg = (
-                f"File validation for '{target_file.name}' failed → the file "
+        if not target_path.is_file():
+            msg = (
+                f"File validation for '{target_path.name}' failed → the file "
                 "does not exist or is not a file."
             )
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] "
-                f"{invalid_target_file_msg}"
-            )
-            logger.error(f"{invalid_target_file_msg}")
-            raise FileNotFoundError(f"{invalid_target_file_msg}")
+            self.ui.error(msg)
+            logger.error(msg)
+            raise FileNotFoundError(msg)
 
-        if not Utils.verify_file_access(target_file=target_file):
-            return
+        if not Utils.verify_file_access(target_file=target_path):
+            msg = f"Access denied for file → '{target_path.name}'"
+            self.ui.error(msg)
+            raise PermissionError(msg)
+
+        # Resolve destination directory
+        destination_dir = (
+            Path(output_dir).resolve() if output_dir else target_path.parent
+        )
+        destination_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
-                f"Reading file : {target_file.name}..."
-            )
-            logger.info(f"Reading file '{target_file.name}'")
+            reading_file_msg = f"Reading file → '{target_path.name}'..."
+            self.ui.info(reading_file_msg)
+            logger.info(reading_file_msg)
 
-            original_file_data = target_file.read_bytes()
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] File "
-                "content read successfully..."
+            original_data = target_path.read_bytes()
+            read_success_msg = (
+                f"Content of '{target_path.name}' read successfully"
             )
-            logger.info(
-                f"Content of '{target_file.name}' read successfully"
-            )
+            self.ui.info(read_success_msg)
+            logger.info(read_success_msg)
 
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
-                f"{action.capitalize()}ing file data..."
-            )
-            logger.info(
+            action_msg = (
                 f"{action.capitalize()}ing file data of '{target_file.name}'"
             )
+            self.ui.info(action_msg)
+            logger.info(action_msg)
 
             if action == "encrypt":
                 FILE_EXT = "encrypted"
-                output_file = output_dir / target_file.with_name(
-                    f"{target_file.name}.{FILE_EXT}"
-                )
+                output_file = destination_dir / f"{target_path.name}.{FILE_EXT}"
                 logger.info(
-                    f"Encrypted file name will be: {target_file.name}.{FILE_EXT}"
+                    f"Encrypted file name will be → "
+                    f"{target_path.name}.{FILE_EXT}"
                 )
                 # Generate fresh, random cryptographic parameters
                 salt = os.urandom(self.SALT_LENGTH)
-                logger.info(f"Encryption salt is '{salt}'")
-                
+                logger.debug(f"Encryption salt is → '{salt}'")
+
                 # 96-bit IV is standard for GCM
                 iv = os.urandom(self.IV_LENGTH)
-                logger.info(f"Encryption IV value is '{iv}'")
-                
+                logger.debug(f"Encryption IV value is → '{iv}'")
+
                 key = self._derive_key(password, salt)
-                logger.info(f"Encryption key value is '{key}'")
-                
+                logger.debug(f"Encryption key value is → '{key}'")
+
                 logger.info(f"File encryption started...")
 
                 aesgcm = AESGCM(key)
 
-                encrypted_file_data = aesgcm.encrypt(
+                ciphertext = aesgcm.encrypt(
                     iv,
-                    original_file_data,
+                    original_data,
                     associated_data=None,
                 )
 
                 # Construct payload header: [ SALT ] [ IV ] [ CIPHERTEXT ]
-                encrypted_data = salt + iv + encrypted_file_data
+                payload = salt + iv + ciphertext
 
-                output_file.write_bytes(encrypted_data)
+                output_file.write_bytes(payload)
                 logger.info(
-                    f"Encrypted data written successfully for {target_file.name}"
+                    f"Encrypted data written successfully for "
+                    f"'{target_path.name}'"
                 )
 
             else:
                 FILE_EXT = "decrypted"
-                if target_file.suffix == ".encrypted":
-                    output_file = output_dir / target_file.with_suffix("")
-                else:
-                    output_file = output_dir / target_file.with_name(
-                        f"{target_file.name}.{FILE_EXT}"
-                    )
+                output_file = (
+                    destination_dir / target_path.stem
+                    if target_path.suffix.lower() == ".encrypted"
+                    else destination_dir / f"decrypted_{target_path.name}"
+                )
                 logger.info(
                     f"Decrypted file name will be '{output_file.name}'"
                 )
 
                 min_length = self.SALT_LENGTH + self.IV_LENGTH + 16
-                if len(original_file_data) < min_length:
-                    min_length_msg = (
-                        f"'{target_file.name}' is corrupted or too short to "
-                        "be a valid AES-GCM payload."
+
+                if len(original_data) < min_length:
+                    msg = (
+                        f"'{target_path.name}' is too short to be a valid "
+                        "AES-GCM payload."
                     )
-                    console.print(
-                        f"[cyan][{Utils.get_current_time()}][red] "
-                        f"{min_length_msg}"
-                    )
-                    logger.error(f"{min_length_msg}")
-                    raise ValueError(f"{min_length_msg}")
+                    self.ui.error(msg)
+                    logger.error(msg)
+                    raise ValueError(msg)
 
                 try:
                     # Parse payload layout:
                     # [ SALT ] [ IV ] [ CIPHERTEXT + TAG ]
-                    salt = original_file_data[: self.SALT_LENGTH]
-                    logger.info(f"Decryption salt value is '{salt}'")
-                    
-                    iv = original_file_data[
+                    salt = original_data[: self.SALT_LENGTH]
+                    logger.debug(f"Decryption salt value is → '{salt}'")
+
+                    iv = original_data[
                         self.SALT_LENGTH : self.SALT_LENGTH + self.IV_LENGTH
                     ]
-                    logger.info(f"Decryption IV value is '{iv}'")
-                    
-                    ciphertext_with_tag = original_file_data[
+                    logger.debug(f"Decryption IV value is → '{iv}'")
+
+                    ciphertext = original_data[
                         self.SALT_LENGTH + self.IV_LENGTH :
                     ]
 
                     key = self._derive_key(password, salt)
-                    logger.info(f"Decryption key value is '{key}'")
-                    
-                    logger.info(f"File decryption started...")
+                    logger.debug(f"Decryption key value is → '{key}'")
+
+                    logger.info("File decryption started...")
 
                     aesgcm = AESGCM(key)
 
                     # Decrypt and verify authentication tag
                     decrypted_data = aesgcm.decrypt(
                         iv,
-                        ciphertext_with_tag,
+                        ciphertext,
                         associated_data=None,
                     )
 
                     output_file.write_bytes(decrypted_data)
                     logger.info(
                         f"Decrypted data written to {output_file.name} "
-                        "successfully"
+                        "successfully",
+
                     )
 
-                except InvalidTag:
-                    invalid_tag_msg = (
-                        f"Decryption of {target_file.name} failed due to an "
+                except InvalidTag as err:
+                    msg = (
+                        f"Decryption of {target_path.name} failed due to an "
                         "invalid password or corrupted payload (authentication "
                         "tag check failed) (Invalid tag)"
                     )
-                    console.print(
-                        f"[cyan][{Utils.get_current_time()}][red] "
-                        f"{invalid_tag_msg}"
-                    )
-                    logger.error(f"{invalid_tag_msg}")
-                    raise ValueError(f"{invalid_tag_msg}")
+                    self.ui.error(msg)
+                    logger.error(msg)
+                    raise ValueError(msg) from err
 
-            success_msg = (
-                f"{action.capitalize()}ed {target_file.name}  →  "
+            self.ui.info(
+                f"{action.capitalize()}ed {target_path.name}  →  "
                 f"{output_file.name}"
             )
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][green] {success_msg}"
+            logger.info(
+                f"{action.capitalize()}ed {target_path.name}  →  "
+                f"{output_file.name}"
             )
-            logger.info(f"{success_msg}")
 
             return output_file
 
         except Exception as e:
-            other_error_msg = f"Failed to {action} {target_file.name} → {e}"
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] {other_error_msg}"
-            )
-            logger.error(f"{other_error_msg}")
-            raise RuntimeError(f"{other_error_msg}") from e
+            msg = f"Failed to {action} {target_path.name} → {e}"
+            self.ui.error(msg)
+            logger.error(msg)
+            raise RuntimeError(msg) from e
 
 
     def aes_process_folder(
             self,
             target_dir: Path | str,
-            output_dir: Path | str,
+            output_dir: Path | str | None,
             password: str,
-            action: str,
+            action: Literal["encrypt", "decrypt"],
             recursive: bool = True
     ) -> List[Path]:
         """Recursively encrypt or decrypt all valid  files within a directory
@@ -337,48 +331,45 @@ class AES:
                 empty, processed files will be saved in the same folder as
                 the original files.
             password: password to use for the encryption or decryption.
-            action: Operational mode, either 'encrypt' or 'decrypt'.
+            action: Operational mode ('encrypt' or 'decrypt').
             recursive: conduct the encryption or decryption operation
                 recursively (True or False).
 
         Returns:
-            Path: Path to the resulting encrypted or decrypted files.
+            list[Path]: Paths of successfully processed output files.
 
         Raises:
-            FileNotFoundError: If target file or key file does not exist.
-            ValueError: If action is invalid or key file matches target file.
+            ValueError: If action parameter is invalid.
+            RuntimeError: If directory reading fails.
         """
         action = action.lower().strip()
-        target_dir = Path(target_dir).resolve()
+        if action not in ("encrypt", "decrypt"):
+            raise ValueError(
+                f"Invalid action '{action}'. Must be 'encrypt' or 'decrypt'."
+            )
+        target_path = Path(target_dir).resolve()
 
-        if not Utils.verify_is_directory(target_dir=target_dir):
+        if not Utils.verify_is_directory(target_dir=target_path):
             return []
 
-        dir_validated_msg = f"Target directory '{target_dir}' validated."
-        console.print(
-            f"[cyan][{Utils.get_current_time()}][green] "
-            f"{dir_validated_msg}"
-        )
-        logger.info(f"{dir_validated_msg}")
+        self.ui.info(f"Target directory '{target_path}' validated.")
+        logger.info(f"Target directory {target_path} validated")
 
-        fetch_targets_msg = f"Fetching targets for {action}ion..."
-        console.print(
-            f"[cyan][{Utils.get_current_time()}][grey66] {fetch_targets_msg}"
-        )
-        logger.info(f"{fetch_targets_msg}")
+        self.ui.info(f"Fetching targets for {action}ion...")
+        logger.info(f"Fetching targets for {action}ion in {target_path}")
 
         try:
             # Dynamically filter files based on the requested action
             files_iterator = (
-                target_dir.rglob("*")
-                if recursive else target_dir.iterdir()
+                target_path.rglob("*")
+                if recursive else target_path.iterdir()
             )
 
             if action == "decrypt":
                 # Decrypt only files with .encrypted extension
                 all_files = [
                     f for f in files_iterator
-                    if f.is_file() and f.suffix in ENCRYPTED_EXT_LIST
+                    if f.is_file() and f.suffix.lower() in ENCRYPTED_EXT_LIST
                 ]
             else:
                 # Encrypt files EXCEPT those ending with excluded extensions
@@ -387,61 +378,55 @@ class AES:
                     if f.is_file()
                     and f.suffix.lower() not in ENCRYPTED_EXT_LIST
                 ]
-        except Exception as e:
-            failed_retrieve_files_msg = (
-                f"Failed to retrieve files from {target_dir} -> {e}"
-            )
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] "
-                f"{failed_retrieve_files_msg}"
-            )
-            logger.error(f"{failed_retrieve_files_msg}")
-            raise RuntimeError(f"{failed_retrieve_files_msg}") from e
+        except Exception as err:
+            msg = f"Failed to retrieve files from {target_path} → {err}"
+            self.ui.error(msg)
+            logger.error(msg)
+            raise RuntimeError(msg) from err
 
         if not all_files:
-            no_files_msg = f"No valid files to {action} in {target_dir}"
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] {no_files_msg}"
-            )
-            logger.error(f"{no_files_msg}")
+            msg = f"No valid files to {action} in {target_path}"
+            self.ui.warning(msg)
+            logger.warning(msg)
             return []
 
+        base_output_path = Path(output_dir).resolve() if output_dir else None
         successful_files: List[Path] = []
         failed_files: List[Path] = []
 
         for file_path in all_files:
             try:
+                file_output_dir = None
+                if base_output_path:
+                    relative_subpath = file_path.parent.relative_to(target_path)
+                    file_output_dir = base_output_path / relative_subpath
+
                 processed_path = self.aes_process_file(
                     target_file=file_path,
-                    output_dir=output_dir,
+                    output_dir=file_output_dir,
                     password=password,
                     action=action,
                 )
                 successful_files.append(processed_path)
-            except Exception as e:
-                console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] "
-                    f"Error during {action}ing {file_path.name}  →  {e}"
-                )
+            except Exception as err:
+                msg = f"Error during {action}ing {file_path.name} → {err}"
+                self.ui.error(msg)
+                logger.error(msg)
                 failed_files.append(file_path)
 
         if successful_files:
-            console.print(
-                "\n" + "[green]-" * 45 + "\n",
-                f"[green]** Action Completed **\n"
-                f"    Successfully {action}ed {len(successful_files)} files "
-                f"in {target_dir}:"
+            self.ui.success(
+                f"Successfully {action}ed {len(successful_files)} files in"
+                f"{target_path}:"
             )
             for processed_file in successful_files:
-                console.print(f"[green]        {processed_file.name}")
+                self.ui.info(f"        {processed_file.name}")
 
         if failed_files:
-            console.print(
-                "\n" + "-" * 45 + "\n",
-                f"[red]** Warning **\n"
-                f"    Failed to {action} {len(failed_files)} files:"
+            self.ui.warning(
+                f"Warning -- failed to {action} {len(failed_files)} files:"
             )
             for failed_file in failed_files:
-                console.print(f"[red]        {failed_file.name}")
+                self.ui.error(f"        {failed_file.name}")
 
         return successful_files

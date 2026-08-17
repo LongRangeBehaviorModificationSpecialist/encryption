@@ -16,6 +16,7 @@ class EncryptionMethod(Enum):
     AES_PASSWORD = "2"
     PGP = "3"
     XOR = "4"
+    detect = "5"
 
 
 @dataclass
@@ -254,6 +255,28 @@ MAIN_CATEGORIES_CONFIG = {
                 handler_module="xor",
                 handler_method="_handle_xor_process_msg",
                 handler_kwargs={"action": "decrypt"},
+            ),
+        }
+    ),
+    EncryptionMethod.detect.value: MainMenuCategory(
+        key="5",
+        label="Detect possible encrypted files",
+        description="Detect encrypted files",
+        method_enum=EncryptionMethod.detect,
+        submenu_items={
+            "1": SubMenuItem(
+                key="1",
+                label="Examine single file",
+                description="Check entropy for a single file",
+                handler_module="detect",
+                handler_method="_handle_inspect_file"
+            ),
+            "2": SubMenuItem(
+                key="2",
+                label="Examine directory for encrypted files",
+                description="Check entropy for all files in a folder",
+                handler_module="detect",
+                handler_method="scan_directory"
             ),
         }
     ),

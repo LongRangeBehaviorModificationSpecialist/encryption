@@ -2,10 +2,12 @@
 
 from rich.prompt import Prompt
 
-# Import the console object from the main __init__.py file
-from . import console
-from config.config import GLOBAL_CONFIG
+# Imports from the main __init__.py file
+from . import console, install
 from utils import Utils
+
+
+install()
 
 
 VERSION = "0.4.1785974400"
@@ -26,7 +28,7 @@ def display_menu(
         if clear_on_invalid:
             Utils.clear_screen()
         console.print(
-            f"\n\n[cyan][{Utils.get_current_time()}][yellow] \"{user_input}\" is not "
+            f"\n\n[cyan][{Utils.get_time()}][yellow] \"{user_input}\" is not "
             "a valid option. [/]"
             f"""[grey66]Valid options for this menu are: {', '.join(
                 f"'{c}'" for c in sorted(choices))}.\n\n"""

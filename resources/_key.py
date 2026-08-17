@@ -1,9 +1,17 @@
 # !/usr/bin/env python3
 
-# Import the console object from the main __init__.py file
-from . import console
+from datetime import datetime
+import hashlib
+from pathlib import Path
+from rich.prompt import Prompt, Confirm
+from rich.traceback import install
+from typing import List, Literal
+
+# Imports from the main __init__.py file
+from . import console, install
+from config.log_config import get_logger
 from resources.vars import ENCRYPTED_EXT_LIST
-from utils import Utils
+from utils import Utils, UIHandlerProtocol, RichUIHandler
 
 HAS_CRYPTO = False
 try:
@@ -11,25 +19,21 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     console.print(
-        f"[cyan][{Utils.get_current_time()}][yellow] Missing "
+        f"[cyan][{Utils.get_time()}][yellow] Missing "
         "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
 
-from datetime import datetime
-import hashlib
-from pathlib import Path
-from rich.prompt import Prompt, Confirm
-from rich.traceback import install
-from typing import List
-from config.log_config import get_logger
 
-
-install(show_locals=True, console=console)
 logger = get_logger("key")
+install()
 
 
 class KEY:
+
+    def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
+        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
+
 
     def _load_fernet(self, key_file_path: Path | str) -> Fernet:
         """Load and initialize a Fernet instance from a key file.
@@ -57,7 +61,7 @@ class KEY:
         """
         key_file_dir = Path(
             Prompt.ask(
-                f"\n[cyan][{Utils.get_current_time()}][grey66] Where "
+                f"\n[cyan][{Utils.get_time()}][grey66] Where "
                 "do you want to save the key file (folder path)?"
             ).strip().strip('"\'')
         )
@@ -66,7 +70,7 @@ class KEY:
         logger.info(f"The key file directory was input as [ '{key_file_dir}' ]")
 
         key_file_name = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter a name for "
+            f"[cyan][{Utils.get_time()}][grey66] Enter a name for "
             f"the key file (w/o file extension)"
         ).strip()
         logger.info(
@@ -97,16 +101,16 @@ class KEY:
             )
 
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] Key file "
+                f"[cyan][{Utils.get_time()}][green] Key file "
                 f"created successfully\n"
-                f"[cyan][{Utils.get_current_time()}][grey66] Key file saved "
+                f"[cyan][{Utils.get_time()}][grey66] Key file saved "
                 f"as: [blue][i]{key_file_dir}\{full_key_path.name}[/i]\n"
-                f"[cyan][{Utils.get_current_time()}][grey66] Key file hash "
+                f"[cyan][{Utils.get_time()}][grey66] Key file hash "
                 f"value (SHA256): [blue][i]{key_file_hash_value}"
             )
 
             make_key_verify_file = Confirm.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] Save a "
+                f"[cyan][{Utils.get_time()}][grey66] Save a "
                 f"verification file in the same folder as the .key file?"
             )
 
@@ -120,7 +124,7 @@ class KEY:
                 key_file_hash_file.write_text(log_content, encoding="utf-8")
                 key_verify_msg = (f"The key file verification was saved as:")
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][grey66] "
+                    f"[cyan][{Utils.get_time()}][grey66] "
                     f"{key_verify_msg}[blue][i]{key_file_hash_file}"
                 )
                 logger.info(f"{key_verify_msg} [ '{key_file_hash_file}' ]")
@@ -129,17 +133,17 @@ class KEY:
 
         except IOError as e:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Failed "
+                f"[cyan][{Utils.get_time()}][red] Failed "
                 f"to write key data to file → {e}"
             )
-            logger.error(f"IOError: Failed to write key data to file -> {e}")
-            raise RuntimeError(f"Failed to write key data to file → {e}) from e
+            logger.error(f"IOError: Failed to write key data to file → {e}")
+            raise RuntimeError(f"Failed to write key data to file → {e}") from e
 
 
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter the path of "
+            f"[cyan][{Utils.get_time()}][grey66] Enter the path of "
             "the .key file to use"
         ).strip("\"'")
 
@@ -148,11 +152,11 @@ class KEY:
         """Helper function to process encryption or decryption of a file."""
         logger.info("The '_handle_key_process_file()' method was called")
 
-        key_file_path = self.get_existing_key_file_path()
-        logger.info(f"The key file path was entered as '{key_file_path}'")
-
         target_file = Utils.get_file_path()
         logger.info(f"The target file was entered as '{target_file}'")
+
+        key_file_path = self.get_existing_key_file_path()
+        logger.info(f"The key file path was entered as '{key_file_path}'")
 
         logger.info(f"The action was entered as '{action}'")
 
@@ -189,10 +193,11 @@ class KEY:
 
 
     def key_process_file(
-            self,
-            key_file_path: Path | str,
-            target_file: Path | str,
-            action: str
+        self,
+        key_file_path: Path | str,
+        target_file: Path | str,
+        action: Literal["encrypt", "decrypt"],
+        ui: UIHandlerProtocol | None = None
     ) -> Path:
         """Reads and either encrypts or decrypts a single file using Fernet
         symmetric encryption.
@@ -206,110 +211,91 @@ class KEY:
             Path: Path to the resulting encrypted or decrypted file.
 
         Raises:
-            FileNotFoundError: If target file or key file does not exist.
-            ValueError: If action is invalid or key file matches target file.
+            ValueError: If action is invalid or paths target the same file.
+            FileNotFoundError: If the target or key file does not exist.
+            PermissionError: If read/write access to target file is restricted.
+            InvalidToken: If decryption fails due to an incorrect key.
         """
         logger.info("The 'key_process_file()' method was called")
 
         action = action.lower().strip()
-        target_file = Path(target_file).resolve()
-        logger.info("Path of the 'target_file' was resolved")
+        if action not in ("encrypt", "decrypt"):
+            raise ValueError(
+                f"Invalid action '{action}'. Must be 'encrypt' or 'decrypt'."
+        )
 
-        key_file_path = Path(key_file_path).resolve()
-        logger.info("Path of the 'key_file_path' was resolved")
+        target_path = Path(target_file).resolve()
+        key_path = Path(key_file_path).resolve()
 
-        if not target_file.is_file():
-            Utils.print_not_file_error(target_file=target_file)
-            raise FileNotFoundError(f"Invalid target file : {target_file}")
+        logger.info(f"Processing '{target_path.name}' (action: '{action})'")
 
-        if not Utils.verify_file_access(target_file=target_file):
-            return
+        if not target_path.is_file():
+            Utils.print_not_file_error(target_file=target_path)
+            raise FileNotFoundError(f"Invalid target file → {target_path}")
 
-        if not key_file_path.is_file():
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Key "
-                f"file not found → {key_file_path}"
+        if not Utils.verify_file_access(target_file=target_path):
+            raise PermissionError(
+                f"Access denied for target file → {target_path}"
             )
-            logger.error(
-                f"FileNotFoundError - a key file was not found at "
-                f"{key_file_path}"
-            )
+
+        if not key_path.is_file():
+            self.ui.warning(f"Key file not found → {key_path}")
+            logger.error(f"Key file was not found → {key_path}")
             raise FileNotFoundError(
-                f"Invalid .key file → {key_file_path}"
-            ) from e
+                f"Invalid .key file path → {key_path}"
+            )
 
         # Prevent self-encryption guard
-        if target_file == key_file_path:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] "
-                "Target file is the active key file. Aborting."
-            )
-            logger.error(
-                "ValueError - The same path was entered for the 'target_file' "
-                "and the 'key_file'. Cannot encrypt or decrypt the active key "
-                "file."
-            )
+        if target_path == key_path:
+            self.ui.warning("Target file is the active key file. Aborting.")
+            logger.error("Target and key file paths were identical. Aborted.")
             raise ValueError("Cannot encrypt or decrypt the active key file.")
 
         try:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
-                f"Reading file: {target_file.name}..."
-            )
-            original_file_data = target_file.read_bytes()
+            self.ui.info(f"Reading file → {target_path.name}")
+
+            file_data = target_path.read_bytes()
 
             fernet_obj = self._load_fernet(
-                key_file_path=key_file_path,
+                key_file_path=key_path,
             )
 
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] File "
-                "content read successfully..."
-            )
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
-                f"{action.capitalize()}ing file data..."
-            )
+            self.ui.info("File content read successfully...")
+            self.ui.info(f"{action.capitalize()}ing file data...")
 
             if action == "encrypt":
-                encrypted_data = fernet_obj.encrypt(original_file_data)
-                output_file = target_file.with_name(
-                    f"{target_file.name}.encrypted"
+                processed_data = fernet_obj.encrypt(file_data)
+                output_path = target_path.with_name(
+                    f"{target_path.name}.encrypted"
                 )
-                output_file.write_bytes(encrypted_data)
             else:
-                # Will throw an InvalidToken exception if the key is wrong
-                decrypted_data = fernet_obj.decrypt(original_file_data)
-                if target_file.suffix.lower() == ".encrypted":
-                    output_file = target_file.with_suffix("")
-                else:
-                    output_file = target_file.with_name(
-                        f"decrypted_{target_file.name}"
-                    )
-                output_file.write_bytes(decrypted_data)
+                processed_data =fernet_obj.decrypt(file_data)
+                output_path = (
+                    target_path.with_suffix("")
+                    if target_path.suffix.lower() == ".encrypted"
+                    else target_path.with_name(f"decrypted_{target_path.name}")
+                )
 
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][green] "
-                f"{action.capitalize()}ed {target_file.name}  →  "
-                f"{output_file.name}"
+            output_path.write_bytes(processed_data)
+
+            self.ui.success(
+                f"{action.capitalize()}ed {target_path.name}  →  "
+                f"{output_path.name}"
             )
 
-            return output_file
+            return output_path
 
         except InvalidToken:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] "
-                f"Decryption failed! The key provided is invalid for "
-                f"'{target_file.name}'"
+            self.ui.error(
+                f"Decryption failed! Invalid key for '{target_path.name}'"
             )
             raise
-        except Exception as e:
-            failed_msg = f"Failed to {action} {target_file.name} → {e}"
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] "
-                f"{failed_msg}"
+        except OSError as err:
+            failed_msg = (
+                f"I/O failure processing file {target_path.name} → {err}"
             )
-            raise RuntimeError(f"{failed_msg}") from e
+            self.ui.error(f"{failed_msg}")
+            raise RuntimeError(f"{failed_msg}") from err
 
 
     def key_process_folder(
@@ -340,12 +326,12 @@ class KEY:
             return []
 
         console.print(
-            f"[cyan][{Utils.get_current_time()}][green] "
+            f"[cyan][{Utils.get_time()}][green] "
             f"Target directory '{target_dir}' validated."
         )
-        
+
         console.print(
-            f"[cyan][{Utils.get_current_time()}][grey66] Fetching "
+            f"[cyan][{Utils.get_time()}][grey66] Fetching "
             f"targets for {action}ion..."
         )
 
@@ -379,14 +365,14 @@ class KEY:
                 ]
         except Exception as e:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Failed "
+                f"[cyan][{Utils.get_time()}][red] Failed "
                 f"to retrieve files from {target_dir} → {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] No "
+                f"[cyan][{Utils.get_time()}][yellow] No "
                 f"valid files to {action} in {target_dir}"
             )
             return []
@@ -404,7 +390,7 @@ class KEY:
                 successful_files.append(processed_path)
             except Exception as e:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] "
+                    f"[cyan][{Utils.get_time()}][red] "
                     f"Error during {action}ing {file_path.name} → {e}"
                 )
                 failed_files.append(file_path)

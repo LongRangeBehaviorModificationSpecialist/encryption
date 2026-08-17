@@ -5,35 +5,48 @@ from functools import wraps
 import os
 from pathlib import Path
 import re
+from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.traceback import install
 import subprocess
 import sys
 import time
+from typing import Callable, Protocol, Sequence
 
-# Import the console object from the main __init__.py file
-from resources import console
-from resources.vars import ICONS
 from config.config import GLOBAL_CONFIG
 from config.log_config import get_logger
+# Imports from the main __init__.py file
+from resources import console, install
 
 
 logger = get_logger("utils")
-install(show_locals=True)
+install()
+
+
+class UIHandlerProtocol(Protocol):
+    """Protocol defining the interface for UI message formatting."""
+
+    def info(self, msg: str) -> None: ...
+    def success(self, msg: str) -> None: ...
+    def warning(self, msg: str) -> None: ...
+    def error(self, msg: str) -> None: ...
 
 
 class Utils:
 
+    def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
+        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
+
     @staticmethod
     def timeit(function):
-        @wraps(funcunction)
+        @wraps(function)
         def timeit_wrapper(*args, **kwargs):
             start_time = time.perf_counter()
             result = function(*args, **kwargs)
             end_time = time.perf_counter()
             total_time = end_time - start_time
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] "
+                f"[cyan][{Utils.get_time()}][green] "
                 f"Operation [{function.__name__}()] was completed in "
                 f"{total_time:.4f} seconds"
             )
@@ -50,10 +63,7 @@ class Utils:
     @staticmethod
     def exit_application() -> None:
         """Print message to screen then exit the application."""
-        console.print(
-            f"\n\n[cyan][{Utils.get_current_time()}][yellow] "
-            "Exiting the application...\n"
-        )
+        Utils.ui.warning("Exiting the application...\n")
         sys.exit(0)
 
 
@@ -63,7 +73,7 @@ class Utils:
 
         Args:
             format: either "display" or "file" (safe for file naming).
-        
+
         Returns:
             Current date/time formatted in the requested style.
         """
@@ -81,7 +91,7 @@ class Utils:
 
 
     @staticmethod
-    def get_current_time() -> str:
+    def get_time() -> str:
         dt = datetime.now()
         time = dt.strftime("%H:%M:%S")
         # Pad to 6 then slice to 4
@@ -93,7 +103,7 @@ class Utils:
     @staticmethod
     def get_file_path() -> str:
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
+            f"[cyan][{Utils.get_time()}][grey66] Enter the "
             "path of the file to be processed"
         ).strip("\"'")
 
@@ -101,7 +111,7 @@ class Utils:
     @staticmethod
     def get_directory_path() -> str:
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
+            f"[cyan][{Utils.get_time()}][grey66] Enter the "
             f"full path of the directory containing the files to be "
             f"processed"
         ).strip("\"'")
@@ -147,7 +157,7 @@ class Utils:
             base_prompt = prompt_text
         else:
             base_prompt = (
-                f"[cyan][{Utils.get_current_time()}][grey66][-] Enter the "
+                f"[cyan][{Utils.get_time()}][grey66][-] Enter the "
                 "directory where you want to save the processed files "
                 "(press [Enter] to use the same folder)"
             )
@@ -166,29 +176,29 @@ class Utils:
         if not output_input or output_input.strip() == "":
             output_path = Path(default_dir)
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] ✓ Using same "
+                f"[cyan][{Utils.get_time()}][green] ✓ Using same "
                 f"directory: {output_path}"
             )
         else:
             output_path = Path(output_input).resolve()
             console.print(
-                f"[cyan][{Utils.get_current_time()}] Output directory: "
+                f"[cyan][{Utils.get_time()}] Output directory: "
                 f"{output_path}"
             )
 
         # Ensure output directory exists
         if not output_path.exists():
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] Creating output "
+                f"[cyan][{Utils.get_time()}][yellow] Creating output "
                 f"directory: {output_path}"
             )
             try:
                 output_path.mkdir(parents=True, exist_ok=True)
                 logger.info(f"Output directory '{output_path}' was created")
             except Exception as e:
-                failed_make_dir_msg = f"Failed to create {output_path} -> {e}"
+                failed_make_dir_msg = f"Failed to create {output_path} ← {e}"
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] "
+                    f"[cyan][{Utils.get_time()}][red] "
                     f"{failed_make_dir_msg}"
                 )
                 logger.error(f"{failed_make_dir_msg}")
@@ -204,7 +214,7 @@ class Utils:
         """Prompts the user for a yes/no answer and returns a boolean."""
         while True:
             recursive_input = Confirm.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
+                f"[cyan][{Utils.get_time()}][grey66] "
                 "Process subdirectories recursively?"
             )
             if not recursive_input:
@@ -221,7 +231,7 @@ class Utils:
         while True:
             # Prompt user and convert directly to a mutable bytearray
             raw_password = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] Enter "
+                f"[cyan][{Utils.get_time()}][grey66] Enter "
                 "the PASSWORD you want to use",
                 password=True
             ).encode("utf-8")
@@ -236,7 +246,7 @@ class Utils:
                 password_bytes[i] = 0
 
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Not a "
+                f"[cyan][{Utils.get_time()}][red] Not a "
                 "valid password. Please try again."
             )
 
@@ -295,7 +305,7 @@ class Utils:
             return False
         else:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] Your "
+                f"[cyan][{Utils.get_time()}][grey66] Your "
                 "password meets the minimum requirements. Continuing..."
             )
             return True
@@ -304,7 +314,7 @@ class Utils:
     @staticmethod
     def get_email_address() -> str:
         return Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter "
+            f"[cyan][{Utils.get_time()}][grey66] Enter "
             "the email address of the PGP key owner"
         ).strip().lower()
 
@@ -315,7 +325,7 @@ class Utils:
                 text: str
         ) -> str:
         return console.print(
-            f"[cyan][{Utils.get_current_time()}][green] Action "
+            f"[cyan][{Utils.get_time()}][green] Action "
             "successful\n"
             f"[grey66]The {text} file was saved as: {file_name}"
         )
@@ -344,11 +354,11 @@ class Utils:
     ) -> str:
         return (
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] ** Key file "
+                f"[cyan][{Utils.get_time()}][green] ** Key file "
                 f"created successfully\n"
-                f"[cyan][{Utils.get_current_time()}][grey66] Key file saved "
+                f"[cyan][{Utils.get_time()}][grey66] Key file saved "
                 f"as: [blue][i]{key_file_dir}\{full_key_path.name}[/i]\n"
-                f"[cyan][{Utils.get_current_time()}][grey66] Key file hash "
+                f"[cyan][{Utils.get_time()}][grey66] Key file hash "
                 f"value (SHA256): [blue][i]{key_file_hash_value}\n"
             )
         )
@@ -357,8 +367,8 @@ class Utils:
     @staticmethod
     def print_not_file_error(target_file: Path) -> str:
         return ( console.print(
-            f"[cyan][{Utils.get_current_time()}][red] Validation "
-            f"for {target_file.name} failed -> the file does not "
+            f"[cyan][{Utils.get_time()}][red] Validation "
+            f"for {target_file.name} failed → the file does not "
             "exist or is not a file."
             )
         )
@@ -367,41 +377,49 @@ class Utils:
     @staticmethod
     def verify_file_access(target_file: Path | str) -> bool:
         """Returns True if the user has permission to read the file."""
-        if not os.access(target_file, os.R_OK):
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] The "
-                "current user does not have the correct permissions to "
-                f"process {target_file.name}"
+        target_path = Path(target_file)
+        if not os.access(target_path, os.R_OK):
+            Utils.ui.error(
+                f"The current user does not have permission to access {target_path.name}"
             )
             return False
-        else:
-            return True
+        return True
 
 
     @staticmethod
-    def verify_is_directory(target_dir: Path | str) -> bool:
-        """Returns true if target_dir points to a directory."""
-        if not target_dir.is_dir():
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] "
-                f"{target_dir} does not exist or is not a valid directory"
-            )
-            return False
-        else:
-            return True
+    def verify_is_directory(target_dir: Path | str) -> Path:
+        """Validates target_dir and returns its resolved Path object.
+
+        Raises:
+            FileNotFoundError: If the path does not exist.
+            NotADirectoryError: If the path exists but is a file.
+        """
+        path = Path(target_dir).resolve()
+
+        if not path.exists():
+            msg = f"Directory not found → '{path}'"
+            Utils.ui.error(msg)
+            raise FileNotFoundError(msg)
+
+        if not path.is_dir():
+            msg = f"Expected a directory, but found a file → '{path}'"
+            Utils.ui.error(msg)
+            raise NotADirectoryError(msg)
+
+        return path
 
 
     @staticmethod
     def get_pgp_key_expire_date() -> str | None:
         """Get expiration from user, return as GNU format string."""
         expire_option = Confirm.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Do you "
+            f"[cyan][{Utils.get_time()}][grey66] Do you "
             "want to set an expiration date for the new key?",
         )
 
         if expire_option:
             expire_type = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
+                f"[cyan][{Utils.get_time()}][grey66] "
                 "Enter the expiration type (1=Days, 2=Date)",
                 choices=["1", "2"],
                 show_choices=True
@@ -410,7 +428,7 @@ class Utils:
             if expire_type == "1":
                 # GNU format: "365d", "1y", "6m" - most compatible!
                 days = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][grey66] "
+                    f"[cyan][{Utils.get_time()}][grey66] "
                     "Enter number of days (e.g., '365d', '1y', '6m')"
                 ).strip()
                 if days.isdigit() and int(days) > 0:
@@ -434,13 +452,13 @@ class Utils:
                         return f"{num_days}d"
                 else:
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow] "
+                        f"[cyan][{Utils.get_time()}][yellow] "
                         "Invalid number."
                     )
                     return None
             else:
                 date_str = Prompt.ask(
-                    f"[cyan][{Utils.get_current_time()}][grey66] "
+                    f"[cyan][{Utils.get_time()}][grey66] "
                     "Enter date (in 'YYYYMMDD' format)"
                 ).strip()
                 try:
@@ -448,7 +466,7 @@ class Utils:
                     parsed = datetime.strptime(date_str, "%Y%m%d").date()
                     if parsed <= datetime.now().date():
                         console.print(
-                            f"[cyan][{Utils.get_current_time()}][yellow] The "
+                            f"[cyan][{Utils.get_time()}][yellow] The "
                             "date must be in future"
                         )
                         return None
@@ -456,7 +474,7 @@ class Utils:
                     return f"{date_str}T000000"
                 except ValueError:
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][yellow] An "
+                        f"[cyan][{Utils.get_time()}][yellow] An "
                         "invalid date format was entered"
                     )
                     return None
@@ -474,33 +492,33 @@ class Utils:
 
             if attempts > max_attempts:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] Too many "
+                    f"[cyan][{Utils.get_time()}][red] Too many "
                     "failed attempts. Exiting..."
                 )
                 raise ValueError("Max passphrase attempts exceeded.")
 
             password = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] Enter passphrase",
+                f"[cyan][{Utils.get_time()}][grey66] Enter passphrase",
                 password=True
             )
 
             if not password:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow] Passphrase "
+                    f"[cyan][{Utils.get_time()}][yellow] Passphrase "
                     "cannot be empty."
                 )
                 continue
 
             # Confirmation entry
             confirm_password = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] Re-enter "
+                f"[cyan][{Utils.get_time()}][grey66] Re-enter "
                 f"passphrase to confirm",
                 password=True
             )
 
             if not confirm_password:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][yellow] "
+                    f"[cyan][{Utils.get_time()}][yellow] "
                     f"Passphrase cannot be empty"
                 )
                 continue
@@ -508,13 +526,13 @@ class Utils:
             # Check if they match
             if password == confirm_password:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][green] Passphrases "
+                    f"[cyan][{Utils.get_time()}][green] Passphrases "
                     "confirmed!"
                 )
                 return password
             else:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] Passphrases "
+                    f"[cyan][{Utils.get_time()}][red] Passphrases "
                     f"do not match! Try again (attempt {attempts}/"
                     f"{max_attempts})"
                 )
@@ -524,13 +542,13 @@ class Utils:
     def get_pgp_full_name() -> str:
         """Get full name of the PGP key owner."""
         full_name = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter full "
+            f"[cyan][{Utils.get_time()}][grey66] Enter full "
             "name of the PGP key owner"
         ).strip()
 
         if not full_name:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] A valid name "
+                f"[cyan][{Utils.get_time()}][yellow] A valid name "
                 "is required."
             )
             raise ValueError("Full name must be provided.")
@@ -541,16 +559,71 @@ class Utils:
     def get_pgp_email_address() -> str:
         """Get email address of the PGP key owner."""
         email_address = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter email "
+            f"[cyan][{Utils.get_time()}][grey66] Enter email "
             f"address of the PGP key owner"
         ).strip().lower()
 
         if not email_address or "@" not in email_address:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] Invalid or "
-                f"missing email address provided -> {email_address}"
+                f"[cyan][{Utils.get_time()}][yellow] Invalid or "
+                f"missing email address provided → {email_address}"
             )
             raise ValueError(
-                f"Invalid or missing email address provided -> {email_address}"
+                f"Invalid or missing email address provided → {email_address}"
             )
         return email_address
+
+
+class RichUIHandler:
+    """Handles Rich console outputs with standardized timestamping and color themes."""
+
+    def __init__(
+        self,
+        console: Console | None = None,
+        get_time: Callable[[], str] = Utils.get_time
+    ):
+        self.console = console or Console()
+        self.get_time = get_time
+
+    def _format(self, message: str, color: str) -> str:
+        timestamp = f"[cyan][{self.get_time()}][/cyan]"
+        return f"{timestamp} [{color}]{message}[/{color}]"
+
+    def info(self, message: str) -> None:
+        self.console.print(self._format(message, "grey66"))
+
+    def success(self, message: str) -> None:
+        self.console.print(self._format(message, "green"))
+
+    def warning(self, message: str) -> None:
+        self.console.print(self._format(message, "yellow"))
+
+    def error(self, message: str) -> None:
+        self.console.print(self._format(message, "red"))
+
+    def confirm(self, message: str) -> bool:
+        """Asks a boolean yes/no question in the console."""
+        formatted_prompt = self._format(message, "grey66")
+        return Confirm.ask(
+            formatted_prompt, console=self.console
+        )
+
+    def prompt(
+        self,
+        message: str,
+        choices: Sequence[str] | None = None,
+        default: str | None = None,
+        password: bool = False,
+        show_choices: bool = False
+    ) -> str:
+        """Prompts the user for text input."""
+        formatted_prompt = self._format(message, "grey66")
+        return Prompt.ask(
+            formatted_prompt,
+            console=self.console,
+            choices=choices,
+            default=default,
+            password=password,
+            show_choices=show_choices
+        )
+

@@ -3,16 +3,16 @@
 import base64
 from pathlib import Path
 from rich.prompt import Prompt, Confirm
-from rich.traceback import install
 from typing import List
 
-from . import console
-from config.config import GLOBAL_CONFIG
+from . import console, install
+from config.log_config import get_logger
 from resources.vars import ENCRYPTED_EXT_LIST
-from utils import Utils
+from utils import Utils, UIHandlerProtocol, RichUIHandler
 
 
-install(show_locals=True, console=console)
+logger = get_logger("xor")
+install()
 
 
 class XOR:
@@ -23,29 +23,30 @@ class XOR:
     output naming based on file suffix detection (.xor = encrypted).
     """
 
-    def __init__(self, default_chunk_size: int = 64 * 1024):
+    def __init__(self,
+        default_chunk_size: int = 64 * 1024,
+        ui: UIHandlerProtocol | None = None
+    ) -> None:
         """Initialize the XOR processor.
 
         Args:
             default_chunk_size: Bytes to read/write per iteration for large
             file handling.
         """
+        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
         self.default_chunk_size = default_chunk_size
 
 
     def get_xor_key(self) -> str:
         """Returns a UTF-8 encoded XOR key."""
         xor_key = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter "
+            f"[cyan][{Utils.get_time()}][grey66] Enter "
             "the key you want to use for the XOR operation",
             password=True
         )
 
         if not xor_key:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] The "
-                "XOR key cannot be empty"
-            )
+            self.ui.warning("The XOR key cannot be empty")
             raise ValueError("The XOR key cannot be empty.")
 
         return xor_key.encode("utf-8")
@@ -58,16 +59,10 @@ class XOR:
 
 
     def _handle_xor_process_msg(self, action: str) -> None:
-        message = Prompt.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Enter the "
-            "message you want to XOR"
-        )
+        message = self.ui.prompt("Enter the message you want to XOR")
 
         if not message:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] The "
-                "message to process cannot be empty"
-            )
+            self.ui.warning("The message to process cannot be empty")
             raise ValueError("The message cannot be empty.")
 
         xor_key = self.get_xor_key()
@@ -146,39 +141,34 @@ class XOR:
                 # Base64 → decode → XOR → UTF-8 plaintext
                 try:
                     decoded_bytes = base64.b64decode(message, validate=True)
-                except (base64.binascii.Error, ValueError) as e:
+                except (base64.binascii.Error, ValueError) as err:
                     raise ValueError(
                         "Input is not valid Base64 -- cannot decrypt."
-                    ) from e
+                    ) from err
 
                 processed_bytes = self._xor_bytes(decoded_bytes, xor_key)
 
                 try:
                     processed_data = processed_bytes.decode("utf-8")
-                except UnicodeDecodeError as e:
+                except UnicodeDecodeError as err:
                     raise ValueError(
                         "Decryption produced invalid text → wrong key or "
                         "corrupted data."
-                    ) from e
+                    ) from err
 
         except ValueError:
             raise
-        except Exception as e:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Error "
-                f"during {action}ion -> {e}"
-            )
-            raise RuntimeError(f"Error during {action}ion → {e}") from e
+        except Exception as err:
+            self.ui.error(f"An error during {action}ion → {err}")
+            raise RuntimeError(f"Error during {action}ion → {err}") from err
 
-        save_output = Confirm.ask(
-            f"[cyan][{Utils.get_current_time()}][grey66] Do you "
-            f"want to save the {action}ed message to a file?",
+        save_output = self.ui.confirm(
+            f"Do you want to save the {action}ed message to a file?"
         )
 
         if save_output:
-            output_file_input = Prompt.ask(
-                f"[cyan][{Utils.get_current_time()}][grey66] Enter "
-                "the file path to save the results"
+            output_file_input = self.ui.prompt(
+                "Enter the file path to save the results"
             )
             output_file = Path(output_file_input)
 
@@ -192,27 +182,22 @@ class XOR:
                 ) as f:
                     f.write(processed_data)
 
-                console.print(
-                    f"[cyan][{Utils.get_current_time()}][green] "
+                self.ui.success(
                     f"{action.capitalize()}ed message saved to → "
                     f"{output_file.resolve()}"
                 )
 
-            except Exception as e:
-                console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] "
-                    f"Could not write processed message to {output_file} "
-                    f"→ {e}"
+            except Exception as err:
+                msg = (
+                    f"Could not write processed message to "
+                    f"{output_file} → {err}"
                 )
-                raise RuntimeError(
-                    f"Could not write processed message to {output_file} "
-                    f"→ {e}"
-                ) from e
+                self.ui.error(msg)
+                raise RuntimeError(msg) from err
 
         else:
-            console.print(
-                f"[cyan][{Utils.get_current_time()}][green] Action "
-                f"successful. [grey66]The {action}ed message is → "
+            self.ui.success(
+                f"Action successful. [grey66]The {action}ed message is → "
                 f"[blue]{processed_data}"
             )
 
@@ -260,7 +245,7 @@ class XOR:
 
         if not xor_key:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] The XOR "
+                f"[cyan][{Utils.get_time()}][yellow] The XOR "
                 "key must not be empty"
             )
             raise ValueError("XOR key must not be empty.")
@@ -281,7 +266,7 @@ class XOR:
         try:
             file_size = target_file.stat().st_size
             console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] Processing file → "
+                f"[cyan][{Utils.get_time()}][grey66] Processing file → "
                 f"[blue]{target_file.name} ({file_size:,} bytes)..."
             )
 
@@ -305,12 +290,12 @@ class XOR:
 
                     progress = (bytes_processed / file_size) * 100
                     console.print(
-                        f"[cyan][{Utils.get_current_time()}][grey66] Progress: "
+                        f"[cyan][{Utils.get_time()}][grey66] Progress: "
                         f"{progress:.1f}%",
                         end=""
                     )
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] Processed "
+                f"[cyan][{Utils.get_time()}][green] Processed "
                 f"{target_file.name}  →  {output_file.name}"
             )
 
@@ -321,7 +306,7 @@ class XOR:
             if output_file.exists():
                 output_file.unlink(missing_ok=True)
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Failed to process "
+                f"[cyan][{Utils.get_time()}][red] Failed to process "
                 f"{target_file.name} → {e}")
             raise RuntimeError(
                 f"Failed to process {target_file.name} → {e}"
@@ -360,7 +345,7 @@ class XOR:
             return
 
         console.print(
-            f"[cyan][{Utils.get_current_time()}][green] {target_dir} validated. "
+            f"[cyan][{Utils.get_time()}][green] {target_dir} validated. "
             "Fetching files to process..."
         )
 
@@ -378,14 +363,14 @@ class XOR:
 
         except Exception as e:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Failed to "
+                f"[cyan][{Utils.get_time()}][red] Failed to "
                 f"retrieve files from {target_dir} → {e}"
             )
             return []
 
         if not all_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][yellow] No valid "
+                f"[cyan][{Utils.get_time()}][yellow] No valid "
                 f"files to encrypt in {target_dir}"
             )
             return []
@@ -399,7 +384,7 @@ class XOR:
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
             console.print(
-                f"[cyan][{Utils.get_current_time()}][grey66] "
+                f"[cyan][{Utils.get_time()}][grey66] "
                 f"[{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""
@@ -415,7 +400,7 @@ class XOR:
 
             except Exception as e:
                 console.print(
-                    f"[cyan][{Utils.get_current_time()}][red] Error during "
+                    f"[cyan][{Utils.get_time()}][red] Error during "
                     f"processing {file_path.name} → {e}"
                 )
                 failed_files.append(file_path)
@@ -425,7 +410,7 @@ class XOR:
 
         if successful_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][green] Action Completed. "
+                f"[cyan][{Utils.get_time()}][green] Action Completed. "
                 f"[grey66]Successfully processed {len(successful_files)} "
                 f"files in {target_dir}:"
             )
@@ -434,7 +419,7 @@ class XOR:
 
         if failed_files:
             console.print(
-                f"[cyan][{Utils.get_current_time()}][red] Warning: "
+                f"[cyan][{Utils.get_time()}][red] Warning: "
                 f"Failed to process {len(failed_files)} files:"
             )
             for file in failed_files:
