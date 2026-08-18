@@ -46,9 +46,9 @@ class RichUIHandler:
     """Handles Rich console outputs with standardized timestamping and color themes."""
 
     def __init__(
-        self,
-        console: Console | None = None,
-        get_time: Callable[[], str] = get_time
+            self,
+            console: Console | None = None,
+            get_time: Callable[[], str] = get_time
     ) -> None:
         self.console = console or Console()
         self.get_time = get_time
@@ -313,10 +313,8 @@ class Utils:
             boolean (True or False).
         """
         while True:
-            recursive_input = self.ui.confirm(
-                "Process subdirectories recursively?"
-            )
-            if not recursive_input:
+            recursive = self.ui.confirm("Process sub-directories recursively?")
+            if not recursive:
                 return False
             else:
                 return True
@@ -357,8 +355,8 @@ class Utils:
         # Byte-level symbol definitions
         symbols_bytes = b"!@#%&*()?<>-+=[]~^|"
 
-        # Convert string to bytes if passed as string,
-        # preserving bytearray if provided
+        # Convert string to bytes if passed as string, preserving
+        # bytearray if provided
         if isinstance(password, str):
             pwd_bytes = password.encode("utf-8")
         else:
@@ -398,16 +396,12 @@ class Utils:
             )
             return False
         else:
-            self.ui.info(
-                "Your password meets the minimum requirements. Continuing..."
-            )
+            self.ui.info("Password meets the requirements. Continuing...")
             return True
 
 
     def get_email_address(self) -> str:
-        return self.ui.prompt(
-            "Enter the email address of the PGP key owner"
-        ).strip().lower()
+        return self.ui.prompt("Enter the email of the key owner").strip().lower()
 
 
     def print_confirm_file_action(
@@ -416,7 +410,7 @@ class Utils:
                 text: str
         ) -> str:
         return self.ui.success(
-            "Action successful\n"
+            "Action successful. "
             f"[grey74]The '{text}' file was saved as → '{file_name}'"
         )
 
@@ -449,16 +443,16 @@ class Utils:
                 f"{key_file_dir}\{full_key_path.name}[/i]\n"
             ),
             self.ui.info(
-                f"Key file hash value (SHA256): [bright_blue][i]{key_file_hash_value}\n"
+                f"Key file hash value (SHA256): "
+                f"[bright_blue][i]{key_file_hash_value}\n"
             )
         )
 
 
     def print_not_file_error(self, target_file: Path) -> str:
-        return ( self.ui.error(
+        return self.ui.error(
             f"Validation for {target_file.name} failed → the file does not "
             "exist or is not a file."
-            )
         )
 
 
@@ -467,8 +461,10 @@ class Utils:
         target_path = Path(target_file)
         if not os.access(target_path, os.R_OK):
             self.ui.error(
-                f"The current user does not have permission to access {target_path.name}"
+                f"The current user does not have permission to access the "
+                f"file → {target_path.name}"
             )
+            logger.warning(f"The user did not have valid file permissions.")
             return False
         return True
 
