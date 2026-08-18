@@ -188,7 +188,7 @@ class PGP:
         """
         try:
             key_file = Prompt.ask(
-                f"[cyan][{Utils.get_time()}][grey66] Enter the "
+                f"[cyan][{Utils.get_time()}][grey74] Enter the "
                 f"file path to the PGP key you want to import"
             ).strip("\"'")
 
@@ -380,7 +380,7 @@ class PGP:
 
         # Optional: Add a comment field
         comment = Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey66] Enter a comment "
+            f"[cyan][{Utils.get_time()}][grey74] Enter a comment "
             f"(optional, e.g., 'Work Key')",
             default=""
         ).strip()
@@ -453,7 +453,7 @@ class PGP:
         )
 
         export_pub_key = Confirm.ask(
-            f"[cyan][{Utils.get_time()}][grey66] Do you want to "
+            f"[cyan][{Utils.get_time()}][grey74] Do you want to "
             "export the newly created PGP PUBLIC key?",
         )
         if export_pub_key:
@@ -461,7 +461,7 @@ class PGP:
             self.pgp_export_public_key(keyid=keyid)
 
         export_private_key = Confirm.ask(
-            f"[cyan][{Utils.get_time()}][grey66] Do you want to "
+            f"[cyan][{Utils.get_time()}][grey74] Do you want to "
             "export the newly created PGP PRIVATE key?",
         )
         if export_private_key:
@@ -477,7 +477,7 @@ class PGP:
     def _handle_pgp_process_file(self, action: str) -> None:
         """Collect user inputs and call pgp_process_file method."""
         ask_use_symmetric = Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey66] How do you want to "
+            f"[cyan][{Utils.get_time()}][grey74] How do you want to "
             f"{action} the file (1=password, 2=PGP key)",
             choices=["1", "2"],
             show_choices=True,
@@ -1224,12 +1224,12 @@ class PGP:
         # List available keys
         keys = self.gpg.list_keys()
         console.print(
-            f"[cyan][{Utils.get_time()}][grey66] Keys found: "
+            f"[cyan][{Utils.get_time()}][grey74] Keys found: "
             f"{len(keys)}"
         )
         for key in keys[:5]:  # Show first 5
             console.print(
-                f"[cyan][{Utils.get_time()}][grey66]  - "
+                f"[cyan][{Utils.get_time()}][grey74]  - "
                 f"{key['uids'][0]} ({key['fingerprint'][:16]}...)"
             )
 

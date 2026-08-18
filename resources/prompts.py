@@ -30,7 +30,7 @@ def display_menu(
         console.print(
             f"\n\n[cyan][{Utils.get_time()}][yellow] \"{user_input}\" is not "
             "a valid option. [/]"
-            f"""[grey66]Valid options for this menu are: {', '.join(
+            f"""[grey74]Valid options for this menu are: {', '.join(
                 f"'{c}'" for c in sorted(choices))}.\n\n"""
         )
 
@@ -43,7 +43,7 @@ def show_main_menu() -> str:
 ENCRYPT/DECRYPT APP MENU
 v.{VERSION}
 ----------------------------\n
-[yellow]What method do you want to use? (select one):[grey66]\n
+[yellow]What method do you want to use? (select one):[grey74]\n
 [1] Use a .key file
 [2] Use a password (AES.GCM)
 [3] Use PGP
@@ -62,7 +62,7 @@ def show_key_menu() -> str:
 ENCRYPT/DECRYPT FILE(S)
 WITH A .KEY FILE
 ----------------------------\n
-[yellow]Options:[grey66]\n
+[yellow]Options:[grey74]\n
 [1] Create a [bold]new[/bold] .key file\n
 [2] ENCRYPT a single file using a .key
 [3] DECRYPT a single file using a .key\n
@@ -83,7 +83,7 @@ def show_aes_menu() -> str:
 ENCRYPT/DECRYPT FILE(S)
 WITH A PASSWORD [AES-GCM]
 ----------------------------\n
-[yellow]Options:[grey66]\n
+[yellow]Options:[grey74]\n
 [1] ENCRYPT a single file
 [2] DECRYPT a single file\n
 [3] ENCRYPT all files in a folder
@@ -103,7 +103,7 @@ def show_pgp_menu() -> str:
 ENCRYPT/DECRYPT FILE(S)
 WITH PGP KEY
 ----------------------------\n
-[yellow]Options:[grey66]\n
+[yellow]Options:[grey74]\n
 [A] Debug PGP setup\n
 [1] Create new PGP key pair
 [2] Import a PGP key\n
@@ -128,7 +128,7 @@ def show_xor_menu() -> str:
 ENCRYPT/DECRYPT A MESSAGE OR
 FILE(S) USING AN XOR KEY
 ----------------------------\n
-[yellow]Options:[grey66]\n
+[yellow]Options:[grey74]\n
 [1] ENCRYPT a single message string
 [2] DECRYPT a single message string\n
 [R] Return to the main menu

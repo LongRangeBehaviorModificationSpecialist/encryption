@@ -1,5 +1,8 @@
 # !/usr/bin/env python3
 
+# Information about the Fernet (symmetric encryption) package can be found at:
+# https://cryptography.io/en/latest/fernet/
+
 from datetime import datetime
 import hashlib
 from pathlib import Path
@@ -61,7 +64,7 @@ class KEY:
         """
         key_file_dir = Path(
             Prompt.ask(
-                f"\n[cyan][{Utils.get_time()}][grey66] Where "
+                f"\n[cyan][{Utils.get_time()}][grey74] Where "
                 "do you want to save the key file (folder path)?"
             ).strip().strip('"\'')
         )
@@ -70,7 +73,7 @@ class KEY:
         logger.info(f"The key file directory was input as [ '{key_file_dir}' ]")
 
         key_file_name = Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey66] Enter a name for "
+            f"[cyan][{Utils.get_time()}][grey74] Enter a name for "
             f"the key file (w/o file extension)"
         ).strip()
         logger.info(
@@ -103,14 +106,14 @@ class KEY:
             console.print(
                 f"[cyan][{Utils.get_time()}][green] Key file "
                 f"created successfully\n"
-                f"[cyan][{Utils.get_time()}][grey66] Key file saved "
+                f"[cyan][{Utils.get_time()}][grey74] Key file saved "
                 f"as: [blue][i]{key_file_dir}\{full_key_path.name}[/i]\n"
-                f"[cyan][{Utils.get_time()}][grey66] Key file hash "
+                f"[cyan][{Utils.get_time()}][grey74] Key file hash "
                 f"value (SHA256): [blue][i]{key_file_hash_value}"
             )
 
             make_key_verify_file = Confirm.ask(
-                f"[cyan][{Utils.get_time()}][grey66] Save a "
+                f"[cyan][{Utils.get_time()}][grey74] Save a "
                 f"verification file in the same folder as the .key file?"
             )
 
@@ -124,7 +127,7 @@ class KEY:
                 key_file_hash_file.write_text(log_content, encoding="utf-8")
                 key_verify_msg = (f"The key file verification was saved as:")
                 console.print(
-                    f"[cyan][{Utils.get_time()}][grey66] "
+                    f"[cyan][{Utils.get_time()}][grey74] "
                     f"{key_verify_msg}[blue][i]{key_file_hash_file}"
                 )
                 logger.info(f"{key_verify_msg} [ '{key_file_hash_file}' ]")
@@ -143,7 +146,7 @@ class KEY:
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
         return Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey66] Enter the path of "
+            f"[cyan][{Utils.get_time()}][grey74] Enter the path of "
             "the .key file to use"
         ).strip("\"'")
 
@@ -331,7 +334,7 @@ class KEY:
         )
 
         console.print(
-            f"[cyan][{Utils.get_time()}][grey66] Fetching "
+            f"[cyan][{Utils.get_time()}][grey74] Fetching "
             f"targets for {action}ion..."
         )
 

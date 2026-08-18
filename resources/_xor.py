@@ -40,7 +40,7 @@ class XOR:
     def get_xor_key(self) -> str:
         """Returns a UTF-8 encoded XOR key."""
         xor_key = Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey66] Enter "
+            f"[cyan][{Utils.get_time()}][grey74] Enter "
             "the key you want to use for the XOR operation",
             password=True
         )
@@ -197,7 +197,7 @@ class XOR:
 
         else:
             self.ui.success(
-                f"Action successful. [grey66]The {action}ed message is → "
+                f"Action successful. [grey74]The {action}ed message is → "
                 f"[blue]{processed_data}"
             )
 
@@ -266,7 +266,7 @@ class XOR:
         try:
             file_size = target_file.stat().st_size
             console.print(
-                f"[cyan][{Utils.get_time()}][grey66] Processing file → "
+                f"[cyan][{Utils.get_time()}][grey74] Processing file → "
                 f"[blue]{target_file.name} ({file_size:,} bytes)..."
             )
 
@@ -290,7 +290,7 @@ class XOR:
 
                     progress = (bytes_processed / file_size) * 100
                     console.print(
-                        f"[cyan][{Utils.get_time()}][grey66] Progress: "
+                        f"[cyan][{Utils.get_time()}][grey74] Progress: "
                         f"{progress:.1f}%",
                         end=""
                     )
@@ -384,7 +384,7 @@ class XOR:
             # Progress indicator
             progress_bar = f"{idx}/{total_files} [{idx/total_files*100:.0f}%]"
             console.print(
-                f"[cyan][{Utils.get_time()}][grey66] "
+                f"[cyan][{Utils.get_time()}][grey74] "
                 f"[{progress_bar}] "
                 f"Processing: {file_path.name}...",
                 end=""
@@ -411,7 +411,7 @@ class XOR:
         if successful_files:
             console.print(
                 f"[cyan][{Utils.get_time()}][green] Action Completed. "
-                f"[grey66]Successfully processed {len(successful_files)} "
+                f"[grey74]Successfully processed {len(successful_files)} "
                 f"files in {target_dir}:"
             )
             for file in successful_files:

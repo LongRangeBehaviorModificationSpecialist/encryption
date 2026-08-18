@@ -1,5 +1,8 @@
 # !/usr/bin/env python3
 
+# Python cryptography library documentation is available at:
+
+
 from functools import partial
 import logging
 from rich.console import Console
@@ -122,7 +125,7 @@ class Main:
                                 f"submenu [{category_key}][{sub_key}]"
                             )
                             console.print(
-                                f"[cyan][{Utils.get_time()}][grey66] "
+                                f"[cyan][{Utils.get_time()}][grey74] "
                                 f"Available methods in {item.handler_module}: "
                                 f"{[m for m in dir(module) if not m.startswith('_')]}"
                             )
@@ -133,7 +136,7 @@ class Main:
                             and not m.startswith("_")
                         ]
                         console.print(
-                            f"[cyan][{Utils.get_time()}][grey66] "
+                            f"[cyan][{Utils.get_time()}][grey74] "
                             f"Available methods in {item.handler_module} → "
                             f"{', '.join(available)}"
                         )
@@ -187,7 +190,7 @@ class Main:
                         )
                         # import traceback
                         # console.print(
-                        #     f"[cyan][{Utils.get_time()}][grey66] "
+                        #     f"[cyan][{Utils.get_time()}][grey74] "
                         #     "Traceback:"
                         # )
                         # console.print(traceback.format_exc())
@@ -302,7 +305,7 @@ class Main:
         try:
 
             response = Confirm.ask(
-                f"\n[cyan][{Utils.get_time()}][grey66] Task complete! "
+                f"\n[cyan][{Utils.get_time()}][grey74] Task complete! "
                 "Return to previous menu?"
             )
 
@@ -343,7 +346,7 @@ class Main:
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
             menu_table.add_row(
-                f"[white][{key}] {category.label} [grey66]"
+                f"[white][{key}] {category.label} [grey74]"
                 f"[{category.description}]"
             )
 
@@ -362,7 +365,7 @@ class Main:
             ),
             title_align="center",
             subtitle=(
-                f"[grey66][dim][i]Written by: {self._author} | Last Updated: "
+                f"[grey74][dim][i]Written by: {self._author} | Last Updated: "
                 f"{self._last_updated}"
             ),
             subtitle_align="center",
@@ -404,7 +407,7 @@ class Main:
         for sub_key in sorted(category.submenu_items.keys()):
             item = category.submenu_items[sub_key]
             sub_menu_table.add_row(
-                f"[white][{sub_key}] {item.label} [grey66][{item.description}]"
+                f"[white][{sub_key}] {item.label} [grey74][{item.description}]"
             )
 
         sub_menu_table.add_row()
