@@ -214,16 +214,11 @@ class Utils:
 
 
     def get_file_path(self) -> str:
-        return self.ui.prompt(
-            "Enter the path of the file to be processed"
-        ).strip("\"'")
+        return self.ui.prompt("Path of the file to be processed").strip("\"'")
 
 
     def get_directory_path(self) -> str:
-        return self.ui.prompt(
-            "Enter the full path of the directory containing the files "
-            "to be processed"
-        ).strip("\"'")
+        return self.ui.prompt("Path of the directory to be processed").strip("\"'")
 
 
     def get_output_path(
@@ -278,12 +273,7 @@ class Utils:
         # Ask user for input
         output_input = self.ui.prompt(
             prompt_display,
-            # default=default_dir,  # ← Makes [Enter] use the same directory
-            # show_default=True
         )
-
-        # if output_input is not None:
-        #     output_input = output_input.strip("\"'")
 
         # Handle empty/whitespace input
         if not output_input or output_input.strip("\"'") == "":
@@ -388,11 +378,12 @@ class Utils:
         )
 
         # If the criteria are not satisfied, print message to screen
-        if not (has_min_length
-                and has_digit
-                and has_upper
-                and has_lower
-                and has_symbol):
+        if not (
+            has_min_length
+            and has_digit
+            and has_upper
+            and has_lower
+            and has_symbol):
             console.print(
                 f"{GLOBAL_CONFIG.red_line}\n"
                 "Your password did not meet the minimun requirements. "
