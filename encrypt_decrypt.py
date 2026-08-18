@@ -1,7 +1,15 @@
 # !/usr/bin/env python3
 
-# Python cryptography library documentation is available at:
-
+#TODO - Make this an "all in one tool"? Options to add:
+#TODO - (A) encode/decode text repo
+#TODO - (B) text/file hasher
+#TODO - (C) timestamp converter (most common formats)
+#TODO - (D) QR code generator (with options to pick custom colors)
+#TODO - (E) image-to-base64 / base64-to-image converter
+#TODO - (F) password generator (w/ various requirements)
+#TODO - (G) file type checker (signatures vs. extensions)
+#TODO - (H) key word searcher (file names and contents)
+#TODO - (I) file hash searcher (read from txt file or input)
 
 from functools import partial
 import logging
@@ -39,7 +47,6 @@ install(show_locals=True, console=console)
 # Set up logging FIRST (before anything else)
 logger = setup_logging(log_dir="logs", log_level=logging.DEBUG)
 logger = get_logger("main")
-
 
 
 class Main:
@@ -108,12 +115,12 @@ class Main:
                                 )
                             except Exception as err:
                                 self.ui.error(
-                                    f"⚠ Failed to bind "
+                                    f"Failed to bind "
                                     f"[{category_key}][{sub_key}] → {err}"
                                 )
                         else:
                             self.ui.warning(
-                                f"⚠ Warning: Method '{item.handler_method}' "
+                                f"Warning: Method '{item.handler_method}' "
                                 f"not found in '{item.handler_module}' for "
                                 f"submenu [{category_key}][{sub_key}]"
                             )
@@ -136,7 +143,7 @@ class Main:
                     # Verify it's actually callable
                     if not callable(handler):
                         self.ui.error(
-                            f"✗ Error: '{item.handler_method}' is not "
+                            f"Error: '{item.handler_method}' is not "
                             f"callable (it's a {type(handler).__name__}) "
                             f"for submenu {category_key}][{sub_key}]"
                         )
@@ -150,7 +157,7 @@ class Main:
                         )
                     except Exception as err:
                         msg = (
-                            f"✗ Error binding handler for [{category_key}]"
+                            f"Error binding handler for [{category_key}]"
                             f"[{sub_key}] → {err}"
                         )
                         self.ui.error(msg)
