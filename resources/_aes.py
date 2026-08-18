@@ -8,17 +8,18 @@ from typing import List, Literal
 from . import console, install
 from config.log_config import get_logger
 from resources.vars import ENCRYPTED_EXT_LIST
-from utils import Utils, UIHandlerProtocol, RichUIHandler
+from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
 HAS_CRYPTO = False
 try:
-    from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+    # from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     from cryptography.exceptions import InvalidTag
     HAS_CRYPTO = True
 except ImportError:
     console.print(
-        f"[cyan][{Utils.get_time()}][yellow] Missing "
+        f"[cyan][{get_time()}][yellow] Missing "
         "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
@@ -35,57 +36,21 @@ class AES:
         self.IV_LENGTH = 12
         self.TAG_LENGTH = 16
         self.SALT_LENGTH = 16
-        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
-
-
-    def _derive_key(
-            self,
-            password: bytearray | bytes | str,
-            salt: bytes
-    ) -> bytes:
-        """Derives a 256-bit key from a password buffer using Scrypt (N=2^17
-        for improved GPU attack resistance).
-
-        Args:
-            password: password from which the key fill be derived
-            salt: value of the salt to use when deriving the key
-
-        Returns:
-            The key as a byte string
-        """
-        # Log at START of important operations
-        logger.info(
-            f"Deriving key from password (length: "
-            f"{len(password) if isinstance(password, str) else len(bytes(password))}"
-        )
-        # If a string gets passed, encode it; otherwise use raw buffer
-        # Convert string to bytes
-        if isinstance(password, str):
-            pwd_buffer = password.encode("utf-8")
-        elif isinstance(password, bytearray):
-            # Convert bytearray to immutable bytes
-            pwd_buffer = bytes(password)
-        else:
-            pwd_buffer = password
-
-        kdf = Scrypt(salt=salt, length=32, n=2**17, r=8, p=1)
-
-        logger.info("Key derived successfully")
-        return kdf.derive(pwd_buffer)
+        self.ui = ui or RichUIHandler(get_time=get_time)
 
 
     def _handle_aes_process_file(self, action: str) -> None:
         """Collect user inputs and call aes_process_file."""
-        target_file = Utils.get_file_path()
-        logger.info(f"The target_file was entered as '{target_file}'")
+        target_file = Utils.get_file_path(self)
+        logger.info(f"The target_file was entered as → '{target_file}'")
 
-        output_dir = Utils.get_output_path(target_path=target_file)
-        logger.info(f"The output_dir was entered as '{output_dir}'")
+        output_dir = Utils.get_output_path(self, target_path=target_file)
+        logger.info(f"The output_dir was entered as → '{output_dir}'")
 
-        password = Utils.get_confirmed_password()
-        logger.info(f"User entered password '{password}'")
+        password = Utils.get_confirmed_password(self)
+        logger.info(f"User entered password → '{password}'")
 
-        logger.info(f"Action was input as '{action}'")
+        logger.info(f"Action was input as → '{action}'")
 
         self.aes_process_file(
             target_file=target_file,
@@ -96,19 +61,19 @@ class AES:
 
 
     def _handle_aes_process_folder(self, action: str) -> None:
-        target_dir = Utils.get_directory_path()
-        logger.info(f"The target_dir was entered as '{target_dir}'")
+        target_dir = Utils.get_directory_path(self)
+        logger.info(f"The target_dir was entered as → '{target_dir}'")
 
-        output_dir = Utils.get_output_path(target_path=target_dir)
-        logger.info(f"The output_dir was entered as '{output_dir}'")
+        output_dir = Utils.get_output_path(self, target_path=target_dir)
+        logger.info(f"The output_dir was entered as → '{output_dir}'")
 
-        password = Utils.get_confirmed_password()
-        logger.info(f"User entered password '{password}'")
+        password = Utils.get_confirmed_password(self)
+        logger.info(f"User entered password → '{password}'")
 
-        logger.info(f"Action was input as '{action}'")
+        logger.info(f"Action was input as → '{action}'")
 
-        recursive = Utils.select_recursive_option()
-        logger.info(f"The recursive option was set to '{recursive}'")
+        recursive = Utils.select_recursive_option(self)
+        logger.info(f"The recursive option was set to → '{recursive}'")
 
         self.aes_process_folder(
             target_dir=target_dir,
@@ -161,7 +126,7 @@ class AES:
             logger.error(msg)
             raise FileNotFoundError(msg)
 
-        if not Utils.verify_file_access(target_file=target_path):
+        if not Utils.verify_file_access(self, target_file=target_path):
             msg = f"Access denied for file → '{target_path.name}'"
             self.ui.error(msg)
             raise PermissionError(msg)
@@ -173,11 +138,18 @@ class AES:
         destination_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            reading_file_msg = f"Reading file → '{target_path.name}'..."
-            self.ui.info(reading_file_msg)
-            logger.info(reading_file_msg)
+            if action == "encrypt":
+                in_color, out_color = "bright_green", "bright_red"
+            else:
+                in_color, out_color = "bright_red", "bright_green"
+
+            self.ui.info(
+                f"Reading the [{in_color}][i]{target_path.name}[/i][/] file..."
+            )
+            logger.info(f"Reading file → '{target_path.name}'")
 
             original_data = target_path.read_bytes()
+
             read_success_msg = (
                 f"Content of '{target_path.name}' read successfully"
             )
@@ -185,7 +157,7 @@ class AES:
             logger.info(read_success_msg)
 
             action_msg = (
-                f"{action.capitalize()}ing file data of '{target_file.name}'"
+                f"{action.capitalize()}ing file data of '{target_path.name}'"
             )
             self.ui.info(action_msg)
             logger.info(action_msg)
@@ -199,14 +171,14 @@ class AES:
                 )
                 # Generate fresh, random cryptographic parameters
                 salt = os.urandom(self.SALT_LENGTH)
-                logger.debug(f"Encryption salt is → '{salt}'")
+                logger.debug(f"Encryption salt is → [ {salt} ]")
 
                 # 96-bit IV is standard for GCM
                 iv = os.urandom(self.IV_LENGTH)
-                logger.debug(f"Encryption IV value is → '{iv}'")
+                logger.debug(f"Encryption IV value is → [ {iv} ]")
 
-                key = self._derive_key(password, salt)
-                logger.debug(f"Encryption key value is → '{key}'")
+                key = Utils._derive_key(self, password, salt)
+                logger.debug(f"Encryption key value is → [ {key} ]")
 
                 logger.info(f"File encryption started...")
 
@@ -235,7 +207,7 @@ class AES:
                     else destination_dir / f"decrypted_{target_path.name}"
                 )
                 logger.info(
-                    f"Decrypted file name will be '{output_file.name}'"
+                    f"Decrypted file name will be → '{output_file.name}'"
                 )
 
                 min_length = self.SALT_LENGTH + self.IV_LENGTH + 16
@@ -253,19 +225,19 @@ class AES:
                     # Parse payload layout:
                     # [ SALT ] [ IV ] [ CIPHERTEXT + TAG ]
                     salt = original_data[: self.SALT_LENGTH]
-                    logger.debug(f"Decryption salt value is → '{salt}'")
+                    logger.debug(f"Decryption salt value is → [ {salt} ]")
 
                     iv = original_data[
                         self.SALT_LENGTH : self.SALT_LENGTH + self.IV_LENGTH
                     ]
-                    logger.debug(f"Decryption IV value is → '{iv}'")
+                    logger.debug(f"Decryption IV value is → [ {iv} ]")
 
                     ciphertext = original_data[
                         self.SALT_LENGTH + self.IV_LENGTH :
                     ]
 
-                    key = self._derive_key(password, salt)
-                    logger.debug(f"Decryption key value is → '{key}'")
+                    key = Utils._derive_key(self, password, salt)
+                    logger.debug(f"Decryption key value is → [ {key} ]")
 
                     logger.info("File decryption started...")
 
@@ -280,7 +252,7 @@ class AES:
 
                     output_file.write_bytes(decrypted_data)
                     logger.info(
-                        f"Decrypted data written to {output_file.name} "
+                        f"Decrypted data written to '{output_file.name}' "
                         "successfully",
 
                     )
@@ -295,22 +267,23 @@ class AES:
                     logger.error(msg)
                     raise ValueError(msg) from err
 
-            self.ui.info(
-                f"{action.capitalize()}ed {target_path.name}  →  "
-                f"{output_file.name}"
+            self.ui.success(
+                f"{action.capitalize()}ed [{in_color}]"
+                f"[i]{target_path.name}[/i]  [grey74]→  "
+                f"[{out_color}][i]{output_file.name}"
             )
             logger.info(
-                f"{action.capitalize()}ed {target_path.name}  →  "
-                f"{output_file.name}"
+                f"{action.capitalize()}ed '{target_path.name}'  →  "
+                f"'{output_file.name}'"
             )
 
             return output_file
 
-        except Exception as e:
-            msg = f"Failed to {action} {target_path.name} → {e}"
+        except Exception as err:
+            msg = f"Failed to {action} {target_path.name} → {err}"
             self.ui.error(msg)
             logger.error(msg)
-            raise RuntimeError(msg) from e
+            raise RuntimeError(msg) from err
 
 
     def aes_process_folder(
@@ -349,7 +322,7 @@ class AES:
             )
         target_path = Path(target_dir).resolve()
 
-        if not Utils.verify_is_directory(target_dir=target_path):
+        if not Utils.verify_is_directory(self, target_dir=target_path):
             return []
 
         self.ui.info(f"Target directory '{target_path}' validated.")

@@ -53,7 +53,7 @@ def setup_logging(
 
     # Log startup info
     logger.info(f"=== Application started ===")
-    logger.info(f"Log file: [ '{log_file}' ]")
+    logger.info(f"Log file → [ '{log_file}' ]")
 
     # Store log path for reference
     logger.log_file = str(log_file)

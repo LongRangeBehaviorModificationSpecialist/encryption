@@ -1,21 +1,19 @@
+# !/usr/bin/env python3
+
 import csv
 from datetime import datetime
 import magic
 import math
-import numpy as np
-import os
 from pathlib import Path
-from shlex import split
-import struct
-from typing import Any, Dict, List, Tuple
-import magic
 from rich.console import Console
 from rich.table import Table
+from shlex import split
+from typing import Any, Dict, List, Tuple
 
 # Imports from the main __init__.py file
 from . import console, install
 from config.log_config import get_logger
-from utils import Utils, UIHandlerProtocol, RichUIHandler
+from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
 
 logger = get_logger("detect")
@@ -73,12 +71,8 @@ class FileAnalyzer:
     }
 
     def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
-        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
+        self.ui = ui or RichUIHandler(get_time=get_time)
 
-    #
-    # Second option for calculating entropy of files
-    # Gemini AI says this method is ~20-50 times faster
-    #
 
     def _calculate_entropy(self, data: bytes) -> float:
         """Calculates Shannon entropy using vectorized NumPy operations."""
@@ -99,14 +93,6 @@ class FileAnalyzer:
 
         return entropy
 
-        # arr = np.frombuffer(data, dtype=np.uint8)
-        # counts = np.bincount(arr, minlength=256)
-
-        # # Filter non-zero frequencies to avoid log2(0) runtime warnings
-        # probs = counts[counts > 0] / len(arr)
-
-        # return float(-np.sum(probs * np.log2(probs)))
-
 
     def _chi_square_test(self, data: bytes) -> float:
         """
@@ -122,29 +108,36 @@ class FileAnalyzer:
             byte_counts[byte] += 1
 
         expected = len(data) / 256
-        chi_square = sum((observed - expected) ** 2 / expected
-                        for observed in byte_counts)
+        chi_square = sum(
+            (observed - expected) ** 2 / expected for observed in byte_counts)
 
         # Normalize to 0-1 scale (approximate)
         max_chi = len(data) * 255 / 256  # Worst case
         normalized = min(chi_square / max_chi, 1.0)
 
-        return 1.0 - normalized  # Higher = more uniform = more likely encrypted
+        # Higher = more uniform = more likely encrypted
+        return 1.0 - normalized
 
 
     def _run_length_check(self, data: bytes, max_run: int = 100) -> bool:
-        """Check for suspiciously long runs of identical bytes."""
+        """Check for suspiciously long runs of identical bytes.
+
+        Returns:
+            True or False
+        """
         if len(data) < max_run:
             return True
 
         current_byte = data[0]
         run_length = 1
 
-        for byte in data[1:max_run * 2]:  # Only check first ~200 bytes
+        # Only check first ~200 bytes
+        for byte in data[1:max_run * 2]:
             if byte == current_byte:
                 run_length += 1
                 if run_length > max_run:
-                    return False  # Found suspicious run
+                    # Found suspicious run
+                    return False
             else:
                 current_byte = byte
                 run_length = 1
@@ -167,10 +160,10 @@ class FileAnalyzer:
                 return [(0, f.read())]
 
         regions = [
-            0,  # Beginning (headers)
-            file_size // 4,  # Quarter point
-            file_size // 2,  # Middle
-            3 * file_size // 4,  # Three-quarter point
+            0,                        # Beginning (headers)
+            file_size // 4,           # Quarter point
+            file_size // 2,           # Middle
+            3 * file_size // 4,       # Three-quarter point
             file_size - sample_size,  # End
         ]
 
@@ -195,8 +188,6 @@ class FileAnalyzer:
             self.ui.warning("No files provided")
             return
         logger.info(f"The file path(s) were entered as '{raw_input}'")
-
-        # target_files = [target_file]
 
         self.scan_files(file_paths=paths)
 
@@ -283,8 +274,8 @@ class FileAnalyzer:
                         )
                     return result
 
-            # Check known compression signatures (exclude from encryption
-            # detection)
+            # Check known compression signatures (exclude from
+            # encryption detection)
             for fmt_name, magic_bytes in self.COMPRESSED_MAGIC_BYTES.items():
                 if header.startswith(magic_bytes):
                     result["is_encrypted"] = False
@@ -296,8 +287,10 @@ class FileAnalyzer:
                     )
                     return result
 
-            # Skip high-entropy checks for known media files (reduces false positives)
-            if mime_type.startswith(("image/", "video/", "audio/")) or mime_type == "application/pdf":
+            # Skip high-entropy checks for known media files
+            # (reduces false positives)
+            media_prefixes = ("image/", "video/", "audio/", "application/pdf")
+            if mime_type.startswith(media_prefixes):
                 result["is_encrypted"] = False
                 result["confidence"] = "High"
                 result["confidence_score"] = 0.90
@@ -323,7 +316,9 @@ class FileAnalyzer:
                 )
             elif avg_ent >= self.ENTROPY_THRESHOLDS["medium_confidence"]:
                 confidence_components.append(0.80)
-                result["analysis_notes"].append(f"High entropy: {avg_ent:.4f}")
+                result["analysis_notes"].append(
+                    f"High entropy: {avg_ent:.4f}"
+                )
             elif avg_ent >= self.ENTROPY_THRESHOLDS["low_confidence"]:
                 confidence_components.append(0.50)
                 result["analysis_notes"].append(
@@ -334,12 +329,14 @@ class FileAnalyzer:
 
             # Factor 2: Entropy variance (should be consistent across file)
             if result["entropy_variance"] < 0.05:
-                confidence_components.append(0.90)  # Consistent = likely truly encrypted
+                # Consistent = likely truly encrypted
+                confidence_components.append(0.90)
                 result["analysis_notes"].append(
                     "Low entropy variance across regions"
                 )
             elif result["entropy_variance"] > 0.3:
-                confidence_components.append(0.30)  # High variance suggests mixed content
+                # High variance suggests mixed content
+                confidence_components.append(0.30)
                 result["analysis_notes"].append(
                     "High entropy variance - possible mixed content"
                 )
@@ -356,13 +353,21 @@ class FileAnalyzer:
             # Factor 4: No suspicious byte runs
             if not has_suspicious_runs:
                 confidence_components.append(0.70)
-                result["analysis_notes"].append("No suspicious run lengths detected")
+                result["analysis_notes"].append(
+                    "No suspicious run lengths detected"
+                )
             else:
                 confidence_components.append(0.40)
-                result["analysis_notes"].append("Suspicious run lengths found - may be weak encryption or compressed")
+                result["analysis_notes"].append(
+                    "Suspicious run lengths found - may be weak encryption "
+                    "or compressed"
+                )
 
             # Combined confidence score
-            combined_score = sum(confidence_components) / len(confidence_components)
+            combined_score = (
+                sum(confidence_components) /
+                len(confidence_components)
+            )
             result["confidence_score"] = round(combined_score, 2)
 
             # Final determination
@@ -410,22 +415,25 @@ class FileAnalyzer:
 
 
     def scan_directory(self) -> List[Dict[str, Any]]:
-        """Scans all files within a directory and reports encryption statuses."""
+        """Scans all files within a directory and reports encryption
+        statuses.
+        """
         path_input = self.ui.prompt(
-            "Enter the file path(s) of the file to be checked (separated by spaces)"
+            "Enter the file path(s) of the file to be checked (separated "
+            "by spaces)"
         ).strip("\"'")
         path = Path(path_input)
         logger.info(f"The target_dir was entered as '{path}'")
 
         if not path.exists():
-            print(f"❌ The input path does not exist → '{path}'")
+            self.ui.error(f"The input path does not exist → '{path}'")
             return
 
         if path.is_file():
             files = [path]
 
         elif path.is_dir():
-            recursive = Utils.select_recursive_option()
+            recursive = Utils.select_recursive_option(self)
             logger.info(f"The recursive option was set to → '{recursive}'")
 
             if recursive:
@@ -449,11 +457,11 @@ class FileAnalyzer:
                 )
 
         else:
-            self.ui.info(f"❌ Not a valid file or directory: {path}")
+            self.ui.error(f"Not a valid file or directory → {path}")
             return
 
         if not files:
-            self.ui.info("❌ No files found to scan.")
+            self.ui.warning("No files found to scan.")
             return
 
         self.scan_files(
@@ -497,7 +505,11 @@ class FileAnalyzer:
             size_str = f"{file_size:,}B" if file_size < 1024 else f"{file_size/1024:.1f}KB" if file_size < 1048576 else f"{file_size/1048576:.1f}MB"
 
             # Get detected format
-            detected_format = result.get("detected_format") or result.get("mime_type") or "Unknown"
+            detected_format = (
+                result.get("detected_format")
+                or result.get("mime_type")
+                or "Unknown"
+            )
 
             # is_encrypted is now boolean
             is_encrypted = result.get("is_encrypted", False)
@@ -518,7 +530,10 @@ class FileAnalyzer:
             confidence_str = f"{confidence_level} ({confidence_score:.0%})"
 
             # Add entropy info
-            avg_entropy = result.get("avg_entropy") or result.get("entropy", 0.0)
+            avg_entropy = (
+                result.get("avg_entropy")
+                or result.get("entropy", 0.0)
+            )
             entropy_str = f"{avg_entropy:.2f}/8.0"
 
             table.add_row(
@@ -534,27 +549,29 @@ class FileAnalyzer:
         console = Console()
         console.print(table)
 
-        # Print additional analysis notes for encrypted files (second separate loop)
+        # Print additional analysis notes for encrypted files
+        # (second separate loop)
         encrypted_results = [
-            r for r in results if r.get("is_encrypted") and r.get("analysis_notes")
+            r for r in results
+            if r.get("is_encrypted") and r.get("analysis_notes")
         ]
         if encrypted_results:
-            console.print("\n[bold cyan]Detailed Analysis:[/bold cyan]")
+            console.print("\n[bold cyan]Detailed Analysis:")
             for result in encrypted_results:
-                console.print(f"  [cyan]• {result['file_name']}[/cyan]")
+                console.print(f"  [cyan]• {result['file_name']}")
                 for note in result["analysis_notes"]:
-                    console.print(f"    [dim]- {note}[/dim]")
+                    console.print(f"    [dim]- {note}")
 
         # Print summary statistics (after both loops finish)
         total_files = len(results)
         encrypted_count = sum(1 for r in results if r.get("is_encrypted"))
         error_count = sum(1 for r in results if r.get("error"))
 
-        console.print(f"\n[bold green]Summary:[/bold green]\n")
+        console.print(f"\n[bold green]Summary:\n")
         console.print(f"  Total Files: {total_files}")
-        console.print(f"  Encrypted/Detected: [bold red]{encrypted_count}[/bold red]")
+        console.print(f"  Encrypted/Detected: [red]{encrypted_count}")
         console.print(f"  Plaintext: [green]{total_files - encrypted_count - error_count}[/green]")
-        console.print(f"  Errors: [yellow]{error_count}[/yellow]\n")
+        console.print(f"  Errors: [yellow]{error_count}\n")
 
         if results:
             export = self.ui.confirm("Export results to CSV?")
@@ -578,9 +595,9 @@ class FileAnalyzer:
 
 
     def export_results_csv(
-        self,
-        results: List[Dict[str, Any]],
-        output_path: Path = None
+            self,
+            results: List[Dict[str, Any]],
+            output_path: Path = None
     ) -> Path:
         """Export analysis results to a CSV file.
 

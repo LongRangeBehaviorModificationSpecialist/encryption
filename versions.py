@@ -5,7 +5,7 @@
 # Single source of version info
 __version__ = "0.4.1785974400"
 __author__ = "@mikespon"
-__last_updated__ = "14-Aug-2026"
+__last_updated__ = "18-Aug-2026"
 __license__ = "MIT"
 __description__ = "DATA ENCRYPTOR/DECRYPTOR Utility"
 

@@ -7,7 +7,6 @@ from functools import partial
 import logging
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
 from rich.table import Table
 from rich.traceback import install
 import signal
@@ -24,7 +23,7 @@ from resources._key import KEY
 from resources._pgp import PGP
 from resources._xor import XOR
 from resources.detect import FileAnalyzer
-from utils import Utils, UIHandlerProtocol, RichUIHandler
+from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 from versions import (
     __version__,
     __author__,
@@ -36,18 +35,11 @@ from versions import (
 console = Console()
 install(show_locals=True, console=console)
 
+
 # Set up logging FIRST (before anything else)
 logger = setup_logging(log_dir="logs", log_level=logging.DEBUG)
 logger = get_logger("main")
 
-
-def get_exit_message(config) -> str:
-    """Print exit confirmation message then exit app."""
-    console.print(
-        f"\n[green]Exiting the application...\n"
-        f"[grey58]Done"
-    )
-    sys.exit(0)
 
 
 class Main:
@@ -57,7 +49,7 @@ class Main:
         """Initialize the application and register signal handlers."""
         # Register SIGINT handler during initialization
         signal.signal(signal.SIGINT, self.handle_sigint)
-        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
+        self.ui = ui or RichUIHandler(get_time=get_time)
         # Use the pre-built config instance
         self.config = GLOBAL_CONFIG
         self._author = __author__
@@ -92,6 +84,7 @@ class Main:
 
     def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
+        console.print("\n")
         self.ui.warning("Operation cancelled by user. Exiting...\n")
         sys.exit(0)
 
@@ -113,20 +106,19 @@ class Main:
                                     handler,
                                     **item.handler_kwargs
                                 )
-                            except Exception as e:
-                                console.print(
+                            except Exception as err:
+                                self.ui.error(
                                     f"⚠ Failed to bind "
-                                    f"[{category_key}][{sub_key}] → {e}"
+                                    f"[{category_key}][{sub_key}] → {err}"
                                 )
                         else:
-                            console.print(
+                            self.ui.warning(
                                 f"⚠ Warning: Method '{item.handler_method}' "
-                                f"not found in {item.handler_module} for "
+                                f"not found in '{item.handler_module}' for "
                                 f"submenu [{category_key}][{sub_key}]"
                             )
-                            console.print(
-                                f"[cyan][{Utils.get_time()}][grey74] "
-                                f"Available methods in {item.handler_module}: "
+                            self.ui.info(
+                                f"Available methods in {item.handler_module} → "
                                 f"{[m for m in dir(module) if not m.startswith('_')]}"
                             )
                         # Debug info - list available methods
@@ -135,8 +127,7 @@ class Main:
                             if callable(getattr(module, m))
                             and not m.startswith("_")
                         ]
-                        console.print(
-                            f"[cyan][{Utils.get_time()}][grey74] "
+                        self.ui.info(
                             f"Available methods in {item.handler_module} → "
                             f"{', '.join(available)}"
                         )
@@ -144,7 +135,7 @@ class Main:
 
                     # Verify it's actually callable
                     if not callable(handler):
-                        console.print(
+                        self.ui.error(
                             f"✗ Error: '{item.handler_method}' is not "
                             f"callable (it's a {type(handler).__name__}) "
                             f"for submenu {category_key}][{sub_key}]"
@@ -157,12 +148,13 @@ class Main:
                             handler,
                             **item.handler_kwargs
                         )
-                    except Exception as e:
-                        console.print(
-                            f"[cyan][{Utils.get_time()}][red] "
+                    except Exception as err:
+                        msg = (
                             f"✗ Error binding handler for [{category_key}]"
-                            f"[{sub_key}] → {e}"
+                            f"[{sub_key}] → {err}"
                         )
+                        self.ui.error(msg)
+                        logger.error(msg)
                         continue
 
 
@@ -183,36 +175,31 @@ class Main:
                     try:
                         handler(**menu_item.handler_kwargs)
                         return True
-                    except Exception as e:
-                        console.print(
-                            f"[cyan][{Utils.get_time()}][red] Error "
-                            f"executing handler: {type(e).__name__} → {e}"
+                    except Exception as err:
+                        self.ui.error(
+                            f"Error executing handler: {type(err).__name__} → "
+                            f"{err}"
                         )
                         # import traceback
-                        # console.print(
-                        #     f"[cyan][{Utils.get_time()}][grey74] "
-                        #     "Traceback:"
-                        # )
-                        # console.print(traceback.format_exc())
+                        # self.ui.info("Traceback:")
+                        # self.ui.info(traceback.format_exc())
                         # return False
                 else:
-                    console.print(
-                        f"[cyan][{Utils.get_time()}][red] Method "
-                        f"'{menu_item.handler_method}' not found or not "
-                        f"callable in {menu_item.handler_module}"
+                    self.ui.error(
+                        f"Method '{menu_item.handler_method}' not found or "
+                        f"not callable in {menu_item.handler_module}"
                     )
                     return False
             else:
-                console.print(
-                    f"[cyan][{Utils.get_time()}][red] Module "
-                    f"'{menu_item.handler_module}' not found"
+                self.ui.error(
+                    f"Module '{menu_item.handler_module}' not found"
                 )
                 return False
 
         # No handler configured
-        console.print(
-            f"[cyan][{Utils.get_time()}][yellow] No handler "
-            f"configured for this item"
+        self.ui.warning(
+            f"No handler configured for this item → "
+            f"{menu_item.handler_module} / {menu_item.handler_method}"
         )
         return False
 
@@ -231,22 +218,24 @@ class Main:
                 logger.error(
                     f"Invalid category requested: [ '{category_key}' ]"
                 )
-                console.print(
-                    f"[cyan][{Utils.get_time()}][red] An invalid "
-                    "category was entered"
-                )
+                self.ui.error("An invalid category was entered")
                 return
 
-            logger.info(f"Entered submenu loop for category → {category_key}")
+            logger.info(
+                f"User entered submenu loop for category → {category_key}"
+            )
 
             # Clear the screen before showing submenu
-            Utils.clear_screen()
+            Utils.clear_screen(self)
 
             # Show the submenu
             self.display_sub_menu(category_key)
 
             try:
-                selection = Prompt.ask(f"\n[yellow]ENTER CHOICE").strip()
+                selection = self.ui.prompt(
+                    "\n\nENTER CHOICE",
+                    menu_prompt=True,
+                ).strip()
                 normalized = selection.lower()
 
                 logger.debug(f"User selected → {normalized}")
@@ -259,16 +248,15 @@ class Main:
 
                 # Check for quit
                 if normalized in ["q"]:
-                    console.print(get_exit_message(self.config))
                     logger.info("User chose to exit from submenu")
                     exit_program = True
+                    Utils.exit_application(self)
                     return
 
                 # Validate submenu item exists
                 if normalized not in category.submenu_items.keys():
-                    console.print(
-                        f"[cyan][{Utils.get_time()}][red] Invalid "
-                        "choice. Try again or press \"R\" to go back."
+                    self.ui.error(
+                        "Invalid choice. Try again or press \"R\" to go back."
                     )
                     continue
 
@@ -287,10 +275,9 @@ class Main:
                     return
 
             except KeyboardInterrupt:
-                console.print(
-                    f"\n[cyan][{Utils.get_time()}][yellow] "
-                    "Interrupted by user."
-                )
+                msg = "Application was interrupted by user (Ctrl+C)"
+                self.ui.warning(msg)
+                logger.warning(msg)
                 return
             except EOFError:
                 return
@@ -304,14 +291,13 @@ class Main:
         """
         try:
 
-            response = Confirm.ask(
-                f"\n[cyan][{Utils.get_time()}][grey74] Task complete! "
-                "Return to previous menu?"
+            response = self.ui.confirm(
+                "Task complete! Return to previous menu?"
             )
 
             if not response:
                 logger.info("The application was closed by the user")
-                console.print(get_exit_message(self.config))
+                Utils.exit_application(self)
                 return False
 
             logger.info("User returned to the previous menu")
@@ -340,7 +326,9 @@ class Main:
             safe_box=True,
         )
 
-        menu_table.add_row(f"\n[yellow]What method do you want to use?\n")
+        menu_table.add_row(
+            f"\n[light_goldenrod1]What method do you want to use?\n"
+        )
 
         # Display main categories (1-4)
         for key in sorted(self.config.main_categories.keys()):
@@ -352,7 +340,7 @@ class Main:
 
         # Add quit option
         menu_table.add_row()  # Blank row
-        menu_table.add_row(f"[yellow][Q] Quit Program")
+        menu_table.add_row("[Q] Quit the application")
 
         # Blank line at end
         menu_table.add_row()
@@ -361,7 +349,7 @@ class Main:
         menu_panel = Panel.fit(
             renderable=menu_table,
             title=(
-                f"[blue][i]\n{self.config.app_name} (v.{self._version})"
+                f"[bright_blue][i]\n{self.config.app_name} (v.{self._version})"
             ),
             title_align="center",
             subtitle=(
@@ -383,10 +371,7 @@ class Main:
         logger.info(f"User viewing submenu for category → {category_key}")
         category = self.config.main_categories.get(category_key)
         if not category:
-            console.print(
-                f"[cyan][{Utils.get_time()}][red] An invalid category "
-                "was selected"
-            )
+            self.ui.warning("An invalid category was selected")
             return
 
         sub_menu_table = Table(
@@ -401,7 +386,7 @@ class Main:
             safe_box=True,
         )
 
-        sub_menu_table.add_row(f"\n[yellow]Options:\n")
+        sub_menu_table.add_row(f"\n[light_goldenrod1]Options:\n")
 
         # Display sub-menu items
         for sub_key in sorted(category.submenu_items.keys()):
@@ -425,7 +410,7 @@ class Main:
         sub_menu_panel = Panel.fit(
             renderable=sub_menu_table,
             title=(
-                f"[blue][i][{self.config.title_color}]\n{category.label}"
+                f"[bright_blue][i][{self.config.title_color}]\n{category.label}"
             ),
             title_align="center",
         )
@@ -443,27 +428,29 @@ class Main:
         exit_program = False
         while not exit_program:
             # Clear the screen before showing MAIN MENU
-            Utils.clear_screen()
+            Utils.clear_screen(self)
 
             # Show the main app menu
             self.display_main_menu()
 
             try:
-                selection = Prompt.ask(f"\n[yellow]ENTER CHOICE").strip()
+                selection = self.ui.prompt(
+                    "\n\nENTER CHOICE",
+                    menu_prompt=True,
+                ).strip()
 
                 normalized = selection.lower()
 
                 # Check for quit
                 if normalized in ["q"]:
-                    console.print(get_exit_message(self.config))
                     exit_program = True
+                    Utils.exit_application(self)
                     break
 
                 # Validate main category
                 if normalized not in self.config.main_categories.keys():
-                    console.print(
-                        f"[cyan][{Utils.get_time()}][yellow] Invalid "
-                        f"choice. Please enter 1-4 or 'Q' to quit."
+                    self.ui.warning(
+                        "Invalid choice. Please enter 1-4 or 'Q' to quit."
                     )
                     continue
 
@@ -476,19 +463,15 @@ class Main:
                     break
 
             except KeyboardInterrupt:
-                console.print(
-                    f"\n\n[cyan][{Utils.get_time()}][yellow] Program "
-                    "interrupted by user..."
+                self.ui.warning(
+                    "Program interrupted by user (Ctrl+C)..."
                 )
                 logger.info("Program interrupted by user (KeyboardInterrupt)")
-                console.print(get_exit_message(self.config))
                 exit_program = True
+                Utils.exit_application(self)
                 sys.exit(1)
             except EOFError:
-                console.print(
-                    f"\n[cyan][{Utils.get_time()}][red] EOFError "
-                    f"received. Exiting..."
-                )
+                self.ui.error("EOFError received. Exiting...")
                 logger.error("EOFError received. Program exited.")
                 exit_program = True
                 sys.exit(1)
@@ -508,13 +491,13 @@ if __name__ == "__main__":
             "KeyboardInterrupt → The program was interrupted by the user."
         )
         sys.exit(0)
-    except Exception as e:
-        logger.error(f"An unexpected error occured → {e}")
+    except Exception as err:
+        logger.error(f"An unexpected error occured → {err}")
         logger.error("Full traceback below:")
         # Include traceback
         logger.error(traceback.format_exc())
 
-        app.ui.error(f"Unexpected error → {e}")
+        app.ui.error(f"Unexpected error → {err}")
         app.ui.warning("Full traceback:")
         # Shows exact line causing error
         app.ui.info(traceback.format_exc())

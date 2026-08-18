@@ -3,26 +3,26 @@
 # Information about the Fernet (symmetric encryption) package can be found at:
 # https://cryptography.io/en/latest/fernet/
 
+import base64
 from datetime import datetime
 import hashlib
 from pathlib import Path
-from rich.prompt import Prompt, Confirm
-from rich.traceback import install
 from typing import List, Literal
 
 # Imports from the main __init__.py file
 from . import console, install
 from config.log_config import get_logger
 from resources.vars import ENCRYPTED_EXT_LIST
-from utils import Utils, UIHandlerProtocol, RichUIHandler
+from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
 HAS_CRYPTO = False
 try:
     from cryptography.fernet import Fernet, InvalidToken
+    import secrets
     HAS_CRYPTO = True
 except ImportError:
     console.print(
-        f"[cyan][{Utils.get_time()}][yellow] Missing "
+        f"[cyan][{get_time()}][yellow] Missing "
         "dependency: currently missing the 'cryptography' package.\n"
         "It can be installed using the 'pip install cryptography' command"
     )
@@ -35,7 +35,7 @@ install()
 class KEY:
 
     def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
-        self.ui = ui or RichUIHandler(get_time=Utils.get_time)
+        self.ui = ui or RichUIHandler(get_time=get_time)
 
 
     def _load_fernet(self, key_file_path: Path | str) -> Fernet:
@@ -56,26 +56,25 @@ class KEY:
 
 
     def generate_and_save_key(self) -> bytes:
-        """Generates a secure Fernet key, saves it, and generates a SHA-256
-        metadata log.
+        """Generates a secure Fernet key (random or password-derived),
+        saves it, and generates a SHA-256 metadata log.
 
         Returns:
             bytes: The generated key.
         """
         key_file_dir = Path(
-            Prompt.ask(
-                f"\n[cyan][{Utils.get_time()}][grey74] Where "
-                "do you want to save the key file (folder path)?"
-            ).strip().strip('"\'')
+            self.ui.prompt(
+                "Where do you want to save the key file (folder path)?"
+            ).strip('"\'')
         )
         key_file_dir = key_file_dir.resolve()
 
         logger.info(f"The key file directory was input as [ '{key_file_dir}' ]")
 
-        key_file_name = Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey74] Enter a name for "
-            f"the key file (w/o file extension)"
+        key_file_name = self.ui.prompt(
+            "Enter a name for the key file (w/o file extension)"
         ).strip()
+
         logger.info(
             f"The key file name was entered as [ '{key_file_name}' ]"
         )
@@ -87,10 +86,36 @@ class KEY:
         full_key_path = key_file_dir / f"{dt}_{key_file_name}.key"
         logger.info(f"Full path to the .key file is [ '{full_key_path}' ]")
 
-        key = Fernet.generate_key()
-        logger.info(
-            "The key was generated successfully using 'Fernet.generate_key()'"
+        use_password = self.ui.confirm(
+            "Do you want to use a password to derive the key ('N' will "
+            "generate a random key)?"
         )
+
+        if use_password:
+            password = Utils.get_confirmed_password(self)
+            # Generate random salt and save it alongside the key
+            salt = secrets.token_bytes(16)
+            logger.info("Salt generated for Argon2id key derivation")
+
+            key = base64.urlsafe_b64encode(
+                Utils._derive_key(self, password, salt)
+            )
+
+            logger.info("Key derived successfully using Argon2id")
+
+            salt_path =full_key_path.with_suffix("salt")
+            salt_path.write_bytes(salt)
+            logger.info(f"Salt file saved as [ '{salt_path}' ]")
+            self.ui.info(
+                f"Salt filed saved as → [bright_blue][i]{salt_path}[/i][/blue]"
+            )
+        else:
+            key = Fernet.generate_key()
+            logger.info(
+                "The key was generated successfully using the "
+                "'Fernet.generate_key()' method"
+            )
+
         logger.info(f"Key value is [ {key} ]")
 
         try:
@@ -103,51 +128,49 @@ class KEY:
                 f"[ '{key_file_hash_value}' ]"
             )
 
-            console.print(
-                f"[cyan][{Utils.get_time()}][green] Key file "
-                f"created successfully\n"
-                f"[cyan][{Utils.get_time()}][grey74] Key file saved "
-                f"as: [blue][i]{key_file_dir}\{full_key_path.name}[/i]\n"
-                f"[cyan][{Utils.get_time()}][grey74] Key file hash "
-                f"value (SHA256): [blue][i]{key_file_hash_value}"
+            self.ui.success("Key file created successfully")
+            self.ui.info(
+                f"Key file saved as → "
+                f"[bright_blue][i]{key_file_dir}\{full_key_path.name}"
+            )
+            self.ui.info(
+                "Key file hash value (SHA256) → "
+                f"[bright_blue][i]{key_file_hash_value}"
             )
 
-            make_key_verify_file = Confirm.ask(
-                f"[cyan][{Utils.get_time()}][grey74] Save a "
-                f"verification file in the same folder as the .key file?"
+            make_key_verify_file = self.ui.confirm(
+                "Save a verification file in the same folder as the .key file?"
             )
 
             if make_key_verify_file:
                 key_file_hash_file = full_key_path.with_suffix(".key.sha256")
                 log_content = Utils.format_key_file_log(
-                    timestamp= Utils.get_date_time(format="display"),
+                    self,
+                    timestamp= Utils.get_date_time(self, format="display"),
                     key_path=full_key_path,
                     hash_value=key_file_hash_value,
                 )
                 key_file_hash_file.write_text(log_content, encoding="utf-8")
                 key_verify_msg = (f"The key file verification was saved as:")
-                console.print(
-                    f"[cyan][{Utils.get_time()}][grey74] "
-                    f"{key_verify_msg}[blue][i]{key_file_hash_file}"
+                self.ui.info(
+                    f"{key_verify_msg}[bright_blue][i]{key_file_hash_file}"
                 )
                 logger.info(f"{key_verify_msg} [ '{key_file_hash_file}' ]")
 
             return full_key_path
 
-        except IOError as e:
-            console.print(
-                f"[cyan][{Utils.get_time()}][red] Failed "
-                f"to write key data to file → {e}"
-            )
-            logger.error(f"IOError: Failed to write key data to file → {e}")
-            raise RuntimeError(f"Failed to write key data to file → {e}") from e
+        except IOError as err:
+            self.ui.error(f"Failed to write key data to file → {err}")
+            logger.error(f"IOError: Failed to write key data to file → {err}")
+            raise RuntimeError(
+                f"Failed to write key data to file → {err}"
+            ) from err
 
 
     def get_existing_key_file_path(self) -> Path:
         """Prompts for a key file path and loop-validates its existence."""
-        return Prompt.ask(
-            f"[cyan][{Utils.get_time()}][grey74] Enter the path of "
-            "the .key file to use"
+        return self.ui.prompt(
+            "Enter the path of the .key file to use"
         ).strip("\"'")
 
 
@@ -155,7 +178,7 @@ class KEY:
         """Helper function to process encryption or decryption of a file."""
         logger.info("The '_handle_key_process_file()' method was called")
 
-        target_file = Utils.get_file_path()
+        target_file = Utils.get_file_path(self)
         logger.info(f"The target file was entered as '{target_file}'")
 
         key_file_path = self.get_existing_key_file_path()
@@ -179,10 +202,10 @@ class KEY:
         key_file_path = self.get_existing_key_file_path()
         logger.info(f"The key_file_path was entered as '{key_file_path}'")
 
-        target_dir = Utils.get_directory_path()
+        target_dir = Utils.get_directory_path(self)
         logger.info(f"The target_dir was entered as '{target_dir}'")
 
-        recursive = Utils.select_recursive_option()
+        recursive = Utils.select_recursive_option(self)
         logger.info(f"The recursive variable was entered as '{recursive}'")
 
         logger.info(f"The action was entered as '{action}'")
@@ -233,10 +256,10 @@ class KEY:
         logger.info(f"Processing '{target_path.name}' (action: '{action})'")
 
         if not target_path.is_file():
-            Utils.print_not_file_error(target_file=target_path)
+            Utils.print_not_file_error(self, target_file=target_path)
             raise FileNotFoundError(f"Invalid target file → {target_path}")
 
-        if not Utils.verify_file_access(target_file=target_path):
+        if not Utils.verify_file_access(self, target_file=target_path):
             raise PermissionError(
                 f"Access denied for target file → {target_path}"
             )
@@ -325,18 +348,12 @@ class KEY:
         target_dir = Path(target_dir).resolve()
         key_file_path = Path(key_file_path).resolve()
 
-        if not Utils.verify_is_directory(target_dir=target_dir):
+        if not Utils.verify_is_directory(self, target_dir=target_dir):
             return []
 
-        console.print(
-            f"[cyan][{Utils.get_time()}][green] "
-            f"Target directory '{target_dir}' validated."
-        )
+        self.ui.success(f"Target directory '{target_dir}' validated.")
 
-        console.print(
-            f"[cyan][{Utils.get_time()}][grey74] Fetching "
-            f"targets for {action}ion..."
-        )
+        self.ui.info(f"Fetching targets for {action}ion...")
 
         # Ensure key_file_path is resolved to prevent key self-encryption
         if key_file_path:
@@ -366,18 +383,14 @@ class KEY:
                     and f.suffix.lower() not in ENCRYPTED_EXT_LIST
                     and f.resolve() != key_file_path
                 ]
-        except Exception as e:
-            console.print(
-                f"[cyan][{Utils.get_time()}][red] Failed "
-                f"to retrieve files from {target_dir} → {e}"
+        except Exception as err:
+            self.ui.error(
+                f"Failed to retrieve files from {target_dir} → {err}"
             )
             return []
 
         if not all_files:
-            console.print(
-                f"[cyan][{Utils.get_time()}][yellow] No "
-                f"valid files to {action} in {target_dir}"
-            )
+            self.ui.warning(f"No valid files to {action} in {target_dir}")
             return []
 
         successful_files: List[Path] = []
@@ -391,10 +404,9 @@ class KEY:
                     action=action,
                 )
                 successful_files.append(processed_path)
-            except Exception as e:
-                console.print(
-                    f"[cyan][{Utils.get_time()}][red] "
-                    f"Error during {action}ing {file_path.name} → {e}"
+            except Exception as err:
+                self.ui.error(
+                    f"Error during {action}ing {file_path.name} → {err}"
                 )
                 failed_files.append(file_path)
 
