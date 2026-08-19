@@ -1,7 +1,17 @@
 # !/usr/bin/env python3
 
-# Python cryptography library documentation is available at:
-
+#TODO - Make this an "all in one tool"? Options to add:
+#TODO - (A) encode/decode text repo
+#TODO       Import the encoding/decoding files and then add them to the
+#TODO       __init__ method.
+#TODO - (B) text/file hasher
+#TODO - (C) timestamp converter (most common formats)
+#TODO - (D) QR code generator (with options to pick custom colors)
+#TODO - (E) image-to-base64 / base64-to-image converter
+#TODO - (F) password generator (w/ various requirements)
+#TODO - (G) file type checker (signatures vs. extensions)
+#TODO - (H) key word searcher (file names and contents)
+#TODO - (I) file hash searcher (read from txt file or input)
 
 from functools import partial
 import logging
@@ -19,10 +29,6 @@ from config.config import (
     SubMenuItem,
     SubMenuCategory,
 )
-
-#TODO - Import the encoding/decoding files and then add them to the
-#TODO   __init__ method.
-
 
 from config.log_config import setup_logging, get_logger
 from resources._aes import AES
@@ -46,7 +52,6 @@ install(show_locals=True, console=console)
 # Set up logging FIRST (before anything else)
 logger = setup_logging(log_dir="logs", log_level=logging.DEBUG)
 logger = get_logger("main")
-
 
 
 class Main:
