@@ -11,7 +11,7 @@ from shlex import split
 from typing import Any, Dict, List, Tuple
 
 # Imports from the main __init__.py file
-from . import console, install
+from .. import install
 from config.log_config import get_logger
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 

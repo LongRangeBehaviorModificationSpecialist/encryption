@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Literal
 
 # Imports from the main __init__.py file
-from . import console, install
+from .. import console, install
 from config.log_config import get_logger
 from resources.vars import ENCRYPTED_EXT_LIST
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time

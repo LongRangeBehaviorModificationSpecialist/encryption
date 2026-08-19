@@ -31,11 +31,11 @@ from config.config import (
 )
 
 from config.log_config import setup_logging, get_logger
-from resources._aes import AES
-from resources._key import KEY
-from resources._pgp import PGP
-from resources._xor import XOR
-from resources.detect import FileAnalyzer
+from resources.encrypt_decrypt._aes import AES
+from resources.encrypt_decrypt._key import KEY
+from resources.encrypt_decrypt._pgp import PGP
+from resources.encrypt_decrypt._xor import XOR
+from resources.encrypt_decrypt.detect import FileAnalyzer
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 from versions import (
     __version__,
@@ -198,49 +198,27 @@ class Main:
             self,
             menu_item: Union[SubMenuItem, SubMenuCategory]
     ) -> bool:
-        """Execute the handler for a menu item (leaf or mid-tier)
+        """Execute a pre-bound handler callable.
 
         Args:
-            menu_item: Either a SubMenuItem or a SubMenuCategory with
-                a direct handler attached.
+            menu_item: A SubMenuItem or SubMenuCategory with a
+                handler_callable attached by _bind_handlers.
 
         Returns:
             True if handler executed successfully, False otherwise
         """
-        if menu_item.handler_module and menu_item.handler_method:
-            module = self._modules.get(menu_item.handler_module)
-            if module:
-                handler = getattr(module, menu_item.handler_method, None)
-                if handler and callable(handler):
-                    try:
-                        handler(**menu_item.handler_kwargs)
-                        return True
-                    except Exception as err:
-                        self.ui.error(
-                            f"Error executing handler: "
-                            f"{type(err).__name__} → {err}"
-                        )
-                        import traceback
-                        self.ui.info("Traceback:")
-                        self.ui.warning(traceback.format_exc())
-                        return False
-                else:
-                    self.ui.error(
-                        f"Method '{menu_item.handler_method}' not found or "
-                        f"not callable in {menu_item.handler_module}"
-                    )
-                    return False
-            else:
+        if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
+            try:
+                menu_item.handler_callable()
+                return True
+            except Exception as err:
                 self.ui.error(
-                    f"Module '{menu_item.handler_module}' not found"
+                    f"Error executing handler: {type(err).__name__} → {err}"
                 )
                 return False
 
-        # No handler configured
-        self.ui.warning(
-            f"No handler configured for this item → "
-            f"{menu_item.handler_module} / {menu_item.handler_method}"
-        )
+        self.ui.warning("No handler configured for this item")
+
         return False
 
 
@@ -566,7 +544,11 @@ class Main:
         console.print(sub_menu_panel)
 
 
-    def display_sub_sub_menu(self, category_key: str, sub_cat_key: str) -> None:
+    def display_sub_sub_menu(
+            self,
+            category_key: str,
+            sub_cat_key: str
+    ) -> None:
         """Render the third-tier (sub-submenu) for a specific SubMenuCategory.
 
         Args:
@@ -620,7 +602,6 @@ class Main:
         )
 
         console.print(sub_sub_panel)
-
 
 
     def main(self, ui: UIHandlerProtocol | None = None) -> None:

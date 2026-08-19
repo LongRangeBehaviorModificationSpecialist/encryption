@@ -343,7 +343,10 @@ class Utils:
             self.ui.error("Not a valid password. Please try again.")
 
 
-    def validate_password(self, password: bytearray | bytes | str) -> bool:
+    def validate_password(
+            self,
+            password: bytearray | bytes | str
+    ) -> bool:
         """Validates if a password meets the strength requirements.
 
         Args:

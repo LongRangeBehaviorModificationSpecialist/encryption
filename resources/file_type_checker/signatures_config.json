@@ -1,0 +1,15 @@
+{
+    "_instructions": [
+        "Add custom file signatures here. Each key is a file extension (including the dot) and the value is either a single hex string or a LIST of hex strings (for formats with multiple valid headers). Supported hex formats: 'FFD8', 'FF D8', '\\xff\\xd8'. Entries here override any built-in signatures with the same extension."
+    ],
+    "signatures": {
+        ".jpg": "FF D8",
+        ".jpeg": "FF D8",
+        ".png": "89 50 4E 47 0D 0A 1A 0A",
+        ".gif": [
+            "47 49 46 38 37 61",
+            "47 49 46 38 39 61"
+        ],
+        ".pdf": "%PDF-"
+    }
+}

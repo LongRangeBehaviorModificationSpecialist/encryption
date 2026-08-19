@@ -4,7 +4,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from rich.console import Console
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 
 console = Console()
@@ -16,7 +16,7 @@ class EncryptionMethod(Enum):
     AES_PASSWORD = "2"
     PGP = "3"
     XOR = "4"
-    detect = "5"
+    DETECT = "5"
 
 
 class EncodeDecodeMethod(Enum):
@@ -32,17 +32,23 @@ class EncodeDecodeMethod(Enum):
     FROM_MORSE_CODE = "9"
 
 
+class FileTypeCheckerMethod(Enum):
+    CHECK_FILE = "1",
+    CHECK_FOLDER = "2"
+
+
 @dataclass
 class SubMenuItem:
     """Represents a leaf-level menu action item configuration for
     level 2 menu items.
-    ."""
+    """
     key: str
     label: str
     description: Optional[str] = None
     handler_module: str = None
     handler_method: str = None
     handler_kwargs: Dict[str, Any] = field(default_factory=dict)
+    handler_callable: Optional[Callable] = None
 
 
 @dataclass
@@ -58,12 +64,17 @@ class SubMenuCategory:
     key: str
     label: str
     description: str
-    method_enum: Union[EncryptionMethod, EncodeDecodeMethod]
+    method_enum: Union[
+        EncryptionMethod,
+        EncodeDecodeMethod,
+        FileTypeCheckerMethod,
+    ]
     submenu_items: Dict[str, SubMenuItem] = field(default_factory=dict)
     # --- Optional direct-handler fields ---
     handler_module: Optional[str] = None
     handler_method: Optional[str] = None
     handler_kwargs: Dict[str, Any] = field(default_factory=dict)
+    handler_callable: Optional[Callable] = None
 
 
 @dataclass
@@ -120,12 +131,14 @@ MAIN_CATEGORIES_CONFIG = {
         label="Encryption / Decryption Tools",
         description="All encryption and decryption methods",
         submenu_categories={
+            # LEVEL 1 sub-menu (with child menu)
             EncryptionMethod.KEY_BASED.value: SubMenuCategory(
                 key="1",
                 label="Use a .key file",
                 description="Encryption/decryption using generated key files",
                 method_enum=EncryptionMethod.KEY_BASED,
                 submenu_items={
+                    # LEVEL 2 menu item
                     "1": SubMenuItem(
                         key="1",
                         label="Create a new .key file",
@@ -133,6 +146,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_module="key",
                         handler_method="generate_and_save_key",
                     ),
+                    # LEVEL 2 menu item
                     "2": SubMenuItem(
                         key="2",
                         label="ENCRYPT a single file using a .key",
@@ -141,6 +155,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_key_process_file",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "3  ": SubMenuItem(
                         key="3",
                         label="DECRYPT a single file using a .key",
@@ -149,6 +164,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_key_process_file",
                         handler_kwargs={"action": "decrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "4": SubMenuItem(
                         key="4",
                         label="ENCRYPT all files in a folder using a .key",
@@ -157,6 +173,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_key_process_folder",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "5": SubMenuItem(
                         key="5",
                         label="DECRYPT all files in a folder using a .key",
@@ -167,12 +184,14 @@ MAIN_CATEGORIES_CONFIG = {
                     )
                 },
             ),
+            # LEVEL 1 sub-menu (with child menu)
             EncryptionMethod.AES_PASSWORD.value: SubMenuCategory(
                 key="2",
                 label="Use a password (AES-GCM)",
                 description="Symmetric encryption using AES-256-GCM",
                 method_enum=EncryptionMethod.AES_PASSWORD,
                 submenu_items={
+                    # LEVEL 2 menu item
                     "1": SubMenuItem(
                         key="1",
                         label="ENCRYPT a single file with password",
@@ -181,6 +200,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_aes_process_file",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "2": SubMenuItem(
                         key="2",
                         label="DECRYPT a single file with password",
@@ -189,6 +209,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_aes_process_file",
                         handler_kwargs={"action": "decrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "3": SubMenuItem(
                         key="3",
                         label="ENCRYPT all files in folder with password",
@@ -197,6 +218,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_aes_process_folder",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "4": SubMenuItem(
                         key="4",
                         label="DECRYPT all files in folder with password",
@@ -207,12 +229,14 @@ MAIN_CATEGORIES_CONFIG = {
                     ),
                 }
             ),
+            # LEVEL 1 sub-menu (with child menu)
             EncryptionMethod.PGP.value: SubMenuCategory(
                 key="3",
                 label="Use a PGP (password or PGP key)",
                 description="Symmetric/Asymmetric encryption using PGP/GPG",
                 method_enum=EncryptionMethod.PGP,
                 submenu_items={
+                    # LEVEL 2 menu item
                     "1": SubMenuItem(
                         key="1",
                         label="Create new PGP key pair",
@@ -220,6 +244,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_module="pgp",
                         handler_method="generate_pgp_key_pair",
                     ),
+                    # LEVEL 2 menu item
                     "2": SubMenuItem(
                         key="2",
                         label="Import a PGP key",
@@ -227,6 +252,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_module="pgp",
                         handler_method="import_key",
                     ),
+                    # LEVEL 2 menu item
                     "3": SubMenuItem(
                         key="3",
                         label="ENCRYPT a file using PGP",
@@ -235,6 +261,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_pgp_process_file",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "4": SubMenuItem(
                         key="4",
                         label="DECRYPT a file using PGP",
@@ -243,6 +270,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_pgp_process_file",
                         handler_kwargs={"action": "decrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "5": SubMenuItem(
                         key="5",
                         label="ENCRYPT all files in folder using PGP",
@@ -251,6 +279,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_pgp_process_folder",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "6": SubMenuItem(
                         key="6",
                         label="DECRYPT all files in folder using PGP",
@@ -259,6 +288,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_pgp_process_folder",
                         handler_kwargs={"action": "decrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "7": SubMenuItem(
                         key="7",
                         label="Sign a document with PGP",
@@ -266,6 +296,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_module="pgp",
                         handler_method="pgp_sign_file",
                     ),
+                    # LEVEL 2 menu item
                     "8": SubMenuItem(
                         key="8",
                         label="Verify a PGP signature",
@@ -275,12 +306,14 @@ MAIN_CATEGORIES_CONFIG = {
                     ),
                 }
             ),
+            # LEVEL 1 sub-menu (with child menu)
             EncryptionMethod.XOR.value: SubMenuCategory(
                 key="4",
                 label="Use XOR",
                 description="Simple XOR encryption for text strings",
                 method_enum=EncryptionMethod.XOR,
                 submenu_items={
+                    # LEVEL 2 menu item
                     "1": SubMenuItem(
                         key="1",
                         label="ENCRYPT message string with XOR",
@@ -289,6 +322,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_xor_process_msg",
                         handler_kwargs={"action": "encrypt"},
                     ),
+                    # LEVEL 2 menu item
                     "2": SubMenuItem(
                         key="2",
                         label="DECRYPT message string with XOR",
@@ -299,24 +333,27 @@ MAIN_CATEGORIES_CONFIG = {
                     ),
                 }
             ),
-            EncryptionMethod.detect.value: SubMenuCategory(
+            # LEVEL 1 sub-menu (with child menu)
+            EncryptionMethod.DETECT.value: SubMenuCategory(
                 key="5",
                 label="Detect possible encrypted files",
                 description="Detect encrypted files",
-                method_enum=EncryptionMethod.detect,
+                method_enum=EncryptionMethod.DETECT,
                 submenu_items={
+                    # LEVEL 2 menu item
                     "1": SubMenuItem(
                         key="1",
                         label="Examine single file",
                         description="Check entropy for a single file",
-                        handler_module="detect",
+                        handler_module="DETECT",
                         handler_method="_handle_inspect_file"
                     ),
+                    # LEVEL 2 menu item
                     "2": SubMenuItem(
                         key="2",
                         label="Examine directory for encrypted files",
                         description="Check entropy for all files in a folder",
-                        handler_module="detect",
+                        handler_module="DETECT",
                         handler_method="scan_directory"
                     ),
                 }
@@ -329,6 +366,7 @@ MAIN_CATEGORIES_CONFIG = {
         label="Data Converter, Encoder, & Decoder",
         description="Convert files between various encoded formats",
         submenu_categories={
+            # LEVEL 1 sub-menu (w/o child menu)
             EncodeDecodeMethod.FROM_ASCII.value: SubMenuCategory(
                 key="1",
                 label="From ASCII",
@@ -336,8 +374,8 @@ MAIN_CATEGORIES_CONFIG = {
                 method_enum=EncodeDecodeMethod.FROM_ASCII,
                 handler_module="ascii",
                 handler_method="run_ascii_converter",
-                # handler_kwargs="",
             ),
+            # LEVEL 1 sub-menu (w/o child menu)
             EncodeDecodeMethod.FROM_BASE64.value: SubMenuCategory(
                 key="2",
                 label="From Base64",
@@ -346,13 +384,41 @@ MAIN_CATEGORIES_CONFIG = {
                 handler_module="base64",
                 handler_method="run_base64_converter",
             ),
-            EncodeDecodeMethod.FROM_BASE64.value: SubMenuCategory(
+            # LEVEL 1 sub-menu (w/o child menu)
+            EncodeDecodeMethod.FROM_BINARY.value: SubMenuCategory(
                 key="3",
                 label="From Binary",
                 description="Convert Binary strings",
                 method_enum=EncodeDecodeMethod.FROM_BINARY,
                 handler_module="binary",
                 handler_method="run_binary_converter",
+            ),
+        },
+    ),
+    "3": MainMenuCategory(
+        key="3",
+        label="File Type Checker",
+        description="Validate file extension against file header",
+        submenu_categories={
+            # LEVEL 1 sub-menu (w/o child menu)
+            FileTypeCheckerMethod.CHECK_FILE.value: SubMenuCategory(
+                key="1",
+                label="Check single file",
+                description="Validate one file extension vs. it's header",
+                method_enum=FileTypeCheckerMethod.CHECK_FILE,
+                handler_module="file_type_checker",
+                handler_method="run_file_checker",
+                handler_kwargs={"type": "file"},
+            ),
+            # LEVEL 1 sub-menu (w/o child menu)
+            FileTypeCheckerMethod.CHECK_FILE.value: SubMenuCategory(
+                key="2",
+                label="Check all files in directory",
+                description="Validate all files in a directory",
+                method_enum=FileTypeCheckerMethod.CHECK_FOLDER,
+                handler_module="file_type_checker",
+                handler_method="run_file_checker",
+                handler_kwargs={"type": "folder"},
             ),
         },
     ),

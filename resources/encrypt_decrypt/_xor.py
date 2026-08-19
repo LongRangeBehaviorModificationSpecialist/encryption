@@ -3,7 +3,7 @@
 import base64
 from pathlib import Path
 
-from . import install
+from .. import install
 from config.log_config import get_logger
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
