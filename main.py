@@ -12,11 +12,18 @@ from rich.traceback import install
 import signal
 import sys
 import traceback
+from typing import Union
 
 from config.config import (
     GLOBAL_CONFIG,
     SubMenuItem,
+    SubMenuCategory,
 )
+
+#TODO - Import the encoding/decoding files and then add them to the
+#TODO   __init__ method.
+
+
 from config.log_config import setup_logging, get_logger
 from resources._aes import AES
 from resources._key import KEY
@@ -90,79 +97,107 @@ class Main:
 
 
     def _bind_handlers(self) -> None:
-        """Bind partial functions for all submenu items."""
+        """Bind partial functions for all menu items across all tiers."""
         # Iterate through each main category
         for category_key, category in self.config.main_categories.items():
+
             # Iterate through each submenu item in that category
-            for sub_key, item in category.submenu_items.items():
-                if item.handler_module and item.handler_method:
+            for sub_key, sub_cat in category.submenu_categories.items():
+
+                # ── Case 1: SubMenuCategory has a direct handler ──
+                if sub_cat.handler_module and sub_cat.handler_method:
                     # Get the module instance
-                    module = self._modules.get(item.handler_module)
+                    module = self._modules.get(sub_cat.handler_module)
+
                     if module:
-                        handler = getattr(module, item.handler_method, None)
+                        handler = getattr(module, sub_cat.handler_method, None)
+
                         if handler and callable(handler):
+
                             try:
-                                item.handler_callable = partial(
+                                sub_cat.handler_callable = partial(
                                     handler,
-                                    **item.handler_kwargs
+                                    **sub_cat.handler_kwargs
                                 )
+                                logger.info(
+                                f"Bound handler → "
+                                f"[{category_key}][{sub_key}] "
+                                f"{sub_cat.handler_module}."
+                                f"{sub_cat.handler_method}"
+                            )
                             except Exception as err:
                                 self.ui.error(
-                                    f"⚠ Failed to bind "
+                                    f"Failed to bind "
                                     f"[{category_key}][{sub_key}] → {err}"
                                 )
                         else:
                             self.ui.warning(
-                                f"⚠ Warning: Method '{item.handler_method}' "
-                                f"not found in '{item.handler_module}' for "
-                                f"submenu [{category_key}][{sub_key}]"
+                                f"Method '{sub_cat.handler_method}' "
+                                f"not found in '{sub_cat.handler_module}"
                             )
+                            available = [
+                                m for m in dir(module)
+                                if callable(getattr(module, m))
+                                and not m.startswith("_")
+                            ]
                             self.ui.info(
-                                f"Available methods in {item.handler_module} → "
-                                f"{[m for m in dir(module) if not m.startswith('_')]}"
+                                f"Available → {', '.join(available)}"
                             )
-                        # Debug info - list available methods
-                        available = [
-                            m for m in dir(module)
-                            if callable(getattr(module, m))
-                            and not m.startswith("_")
-                        ]
-                        self.ui.info(
-                            f"Available methods in {item.handler_module} → "
-                            f"{', '.join(available)}"
-                        )
-                        continue
+                    continue
 
-                    # Verify it's actually callable
-                    if not callable(handler):
-                        self.ui.error(
-                            f"✗ Error: '{item.handler_method}' is not "
-                            f"callable (it's a {type(handler).__name__}) "
-                            f"for submenu {category_key}][{sub_key}]"
-                        )
-                        continue
+                # ── Case 2: SubMenuCategory has submenu_items (third tier) ──
+                for item_key, item in sub_cat.submenu_items.items():
+                    if item.handler_module and item.handler_method:
+                            module = self._modules.get(item.handler_module)
+                            if module:
+                                handler = getattr(
+                                    module,
+                                    item.handler_method,
+                                    None,
+                                )
+                                if handler and callable(handler):
+                                    try:
+                                        item.handler_callable = partial(
+                                            handler,
+                                            **item.handler_kwargs
+                                        )
+                                        logger.info(
+                                            f"Bound handler → "
+                                            f"[{category_key}][{sub_key}]"
+                                            f"[{item_key}] "
+                                            f"{item.handler_module}."
+                                            f"{item.handler_method}"
+                                        )
+                                    except Exception as err:
+                                        self.ui.error(
+                                            f"Failed to bind "
+                                            f"[{category_key}][{sub_key}]"
+                                            f"[{item_key}] → {err}"
+                                        )
+                                else:
+                                    self.ui.warning(
+                                        f"Method '{item.handler_method}' "
+                                        f"not found in '{item.handler_module}'"
+                                    )
+                                    available = [
+                                        m for m in dir(module)
+                                        if callable(getattr(module, m))
+                                        and not m.startswith("_")
+                                    ]
+                                    self.ui.info(
+                                        f"Available → {', '.join(available)}"
+                                    )
 
-                    try:
-                        # Create the partial function with handler_kwargs
-                        item.handler_callable = partial(
-                            handler,
-                            **item.handler_kwargs
-                        )
-                    except Exception as err:
-                        msg = (
-                            f"✗ Error binding handler for [{category_key}]"
-                            f"[{sub_key}] → {err}"
-                        )
-                        self.ui.error(msg)
-                        logger.error(msg)
-                        continue
 
-
-    def _call_handler(self, menu_item: SubMenuItem) -> bool:
-        """Execute the handler for a submenu item.
+    def _call_handler(
+            self,
+            menu_item: Union[SubMenuItem, SubMenuCategory]
+    ) -> bool:
+        """Execute the handler for a menu item (leaf or mid-tier)
 
         Args:
-            menu_item: The SubMenuItem to execute
+            menu_item: Either a SubMenuItem or a SubMenuCategory with
+                a direct handler attached.
 
         Returns:
             True if handler executed successfully, False otherwise
@@ -177,13 +212,13 @@ class Main:
                         return True
                     except Exception as err:
                         self.ui.error(
-                            f"Error executing handler: {type(err).__name__} → "
-                            f"{err}"
+                            f"Error executing handler: "
+                            f"{type(err).__name__} → {err}"
                         )
-                        # import traceback
-                        # self.ui.info("Traceback:")
-                        # self.ui.info(traceback.format_exc())
-                        # return False
+                        import traceback
+                        self.ui.info("Traceback:")
+                        self.ui.warning(traceback.format_exc())
+                        return False
                 else:
                     self.ui.error(
                         f"Method '{menu_item.handler_method}' not found or "
@@ -205,10 +240,13 @@ class Main:
 
 
     def run_submenu_loop(self, category_key: str) -> None:
-        """Run the submenu loop for a selected category.
+        """Run the submenu loop for a selected top-level category.
+
+        Handles both direct-handler SubMenuCategories (2-tier) and
+        SubMenuCategories with nested SubMenuItems (3-tier).
 
         Args:
-            category_key: Key from main_categories (e.g., "1", "2", "3", "4")
+            category_key: Key from main_categories (e.g., "1", "2")
         """
         exit_program = False
 
@@ -221,14 +259,10 @@ class Main:
                 self.ui.error("An invalid category was entered")
                 return
 
-            logger.info(
-                f"User entered submenu loop for category → {category_key}"
-            )
-
             # Clear the screen before showing submenu
             Utils.clear_screen(self)
 
-            # Show the submenu
+            # Show the middle-tier (level 1) sub-menu
             self.display_sub_menu(category_key)
 
             try:
@@ -253,25 +287,133 @@ class Main:
                     Utils.exit_application(self)
                     return
 
-                # Validate submenu item exists
-                if normalized not in category.submenu_items.keys():
+                # Look up the SubMenuCategory by key
+                sub_cat = category.submenu_categories.get(normalized)
+                if not sub_cat:
                     self.ui.error(
                         "Invalid choice. Try again or press \"R\" to go back."
                     )
                     continue
 
-                # Execute the selected operation
-                item = category.submenu_items[normalized]
+                # ── Branch A: Direct handler (encode/decode) ──
+                if sub_cat.handler_module and sub_cat.handler_method:
+                    logger.info(
+                        f"Executing direct handler: "
+                        f"[{category_key}][{normalized}] → {sub_cat.label}"
+                    )
+                    self._call_handler(sub_cat)
+
+                    if not self._ask_continue():
+                        exit_program = True
+                        return
+                    continue  # Back to the submenu loop
+
+                # ── Branch B: Has submenu_items (encryption) ──
+                if not sub_cat.submenu_items:
+                    self.ui.warning(
+                        "This category has no available actions."
+                    )
+                    continue
+
+                # Enter the third-tier (sub-submenu) loop
+                self.run_sub_submenu_loop(category_key, normalized)
+
+                if not self._ask_continue():
+                    exit_program = True
+                    return
+
+
+                # # Validate submenu item exists
+                # if normalized not in category.submenu_items.keys():
+                #     self.ui.error(
+                #         "Invalid choice. Try again or press \"R\" to go back."
+                #     )
+                #     continue
+
+                # # Execute the selected operation
+                # item = category.submenu_items[normalized]
+                # logger.info(
+                #     f"Executing operation: [{category_key}][{normalized}] → "
+                #     f"{item.label}"
+                # )
+
+                # self._call_handler(item)
+
+                # # Ask if user wants to continue
+                # if not self._ask_continue():
+                #     exit_program = True
+                #     return
+
+            except KeyboardInterrupt:
+                msg = "Application was interrupted by user (Ctrl+C)"
+                self.ui.warning(msg)
+                logger.warning(msg)
+                return
+            except EOFError:
+                return
+
+
+    def run_sub_submenu_loop(
+            self,
+            category_key: str,
+            sub_cat_key: str
+    ) -> None:
+        """Run the third-tier (sub-submenu) loop for categories that
+        have nested SubMenuItems (e.g., encryption methods).
+
+        Args:
+            category_key: Top-level menu key
+            sub_cat_key: Middle-tier SubMenuCategory key
+        """
+        exit_loop = False
+
+        while not exit_loop:
+            category = self.config.main_categories.get(category_key)
+            if not category:
+                return
+
+            sub_cat = category.submenu_categories.get(sub_cat_key)
+            if not sub_cat:
+                return
+
+            Utils.clear_screen(self)
+
+            # Display third-tier menu
+            self.display_sub_sub_menu(category_key, sub_cat_key)
+
+            try:
+                selection = self.ui.prompt(
+                    "\n\nENTER CHOICE",
+                    menu_prompt=True,
+                ).strip()
+                normalized = selection.lower()
+
+                if normalized in ["r"]:
+                    logger.debug("User returned to submenu")
+                    return
+
+                if normalized in ["q"]:
+                    logger.info("User chose to exit from sub-submenu")
+                    Utils.exit_application(self)
+                    return
+
+                if normalized not in sub_cat.submenu_items.keys():
+                    self.ui.error(
+                        "Invalid choice. Try again or press \"R\" to go back."
+                    )
+                    continue
+
+                item = sub_cat.submenu_items[normalized]
                 logger.info(
-                    f"Executing operation: [{category_key}][{normalized}] → "
+                    f"Executing operation: "
+                    f"[{category_key}][{sub_cat_key}][{normalized}] → "
                     f"{item.label}"
                 )
 
                 self._call_handler(item)
 
-                # Ask if user wants to continue
                 if not self._ask_continue():
-                    exit_program = True
+                    exit_loop = True
                     return
 
             except KeyboardInterrupt:
@@ -363,11 +505,11 @@ class Main:
 
 
     def display_sub_menu(self, category_key: str) -> None:
-        """Render submenu for a specific encryption category.
+        """Render the middle-tier submenu for a top-level category.
 
         Args:
-            category_key: Keys from main_categories
-        """
+            category_key: Key from main_categories
+            """
         logger.info(f"User viewing submenu for category → {category_key}")
         category = self.config.main_categories.get(category_key)
         if not category:
@@ -388,20 +530,21 @@ class Main:
 
         sub_menu_table.add_row(f"\n[light_goldenrod1]Options:\n")
 
-        # Display sub-menu items
-        for sub_key in sorted(category.submenu_items.keys()):
-            item = category.submenu_items[sub_key]
+        # ── Changed: iterate submenu_categories, not submenu_items ──
+        for sub_key in sorted(category.submenu_categories.keys()):
+            sub_cat = category.submenu_categories[sub_key]
             sub_menu_table.add_row(
-                f"[white][{sub_key}] {item.label} [grey74][{item.description}]"
+                f"[white][{sub_key}] {sub_cat.label} [grey74]"
+                f"[{sub_cat.description}]"
             )
 
         sub_menu_table.add_row()
 
         # Add back option
-        sub_menu_table.add_row(f"[white][R] Return to the main menu")
+        sub_menu_table.add_row(f"[R] Return to the main menu")
 
         # Add exit option
-        sub_menu_table.add_row(f"[white][Q] Quit the application")
+        sub_menu_table.add_row(f"[Q] Quit the application")
 
         # Blank line at end
         sub_menu_table.add_row()
@@ -416,6 +559,63 @@ class Main:
         )
 
         console.print(sub_menu_panel)
+
+
+    def display_sub_sub_menu(self, category_key: str, sub_cat_key: str) -> None:
+        """Render the third-tier (sub-submenu) for a specific SubMenuCategory.
+
+        Args:
+            category_key: Top-level menu key
+            sub_cat_key: Middle-tier SubMenuCategory key
+        """
+        logger.info(
+            f"User viewing sub-submenu for "
+            f"[{category_key}][{sub_cat_key}]"
+        )
+        category = self.config.main_categories.get(category_key)
+        if not category:
+            return
+
+        sub_cat = category.submenu_categories.get(sub_cat_key)
+        if not sub_cat:
+            return
+
+        sub_sub_table = Table(
+            box=None,
+            show_header=False,
+            header_style=self.config.header_style,
+            show_lines=False,
+            show_edge=False,
+            pad_edge=True,
+            padding=(0, 5, 0, 1),
+            expand=False,
+            safe_box=True,
+        )
+
+        sub_sub_table.add_row(f"\n[light_goldenrod1]Actions:\n")
+
+        for item_key in sorted(sub_cat.submenu_items.keys()):
+            item = sub_cat.submenu_items[item_key]
+            sub_sub_table.add_row(
+                f"[white][{item_key}] {item.label} [grey74]"
+                f"[{item.description}]"
+            )
+
+        sub_sub_table.add_row()
+        sub_sub_table.add_row("[R] Return to the previous menu")
+        sub_sub_table.add_row("[Q] Quit the application")
+        sub_sub_table.add_row()
+
+        sub_sub_panel = Panel.fit(
+            renderable=sub_sub_table,
+            title=(
+                f"[bright_blue][i][{self.config.title_color}]\n{sub_cat.label}"
+            ),
+            title_align="center",
+        )
+
+        console.print(sub_sub_panel)
+
 
 
     def main(self, ui: UIHandlerProtocol | None = None) -> None:
