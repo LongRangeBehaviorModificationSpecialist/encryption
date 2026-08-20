@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 """External configuration for menu items and application settings."""
 
 from dataclasses import dataclass, field
@@ -24,17 +24,22 @@ class EncodeDecodeMethod(Enum):
     FROM_ASCII = "1"
     FROM_BASE64 = "2"
     FROM_BINARY = "3"
-    FROM_DEC_INT = "4"
-    FROM_DEC_STR = "5"
+    FROM_DECIMAL_INT = "4"
+    FROM_DECIMAL_STR = "5"
     FROM_HEX = "6"
     FROM_OCT = "7"
-    ROT_STR = "8"
+    ROTATE_STR = "8"
     FROM_MORSE_CODE = "9"
 
 
 class FileTypeCheckerMethod(Enum):
-    CHECK_FILE = "1",
+    CHECK_FILE = "1"
     CHECK_FOLDER = "2"
+
+
+class TimeConvertMethod(Enum):
+    TIME_DECODE = "1"
+    TIME_ENCODE = "2"
 
 
 @dataclass
@@ -68,6 +73,7 @@ class SubMenuCategory:
         EncryptionMethod,
         EncodeDecodeMethod,
         FileTypeCheckerMethod,
+        TimeConvertMethod,
     ]
     submenu_items: Dict[str, SubMenuItem] = field(default_factory=dict)
     # --- Optional direct-handler fields ---
@@ -91,7 +97,7 @@ class AppConfig:
     """Central application configuration."""
 
     # Application metadata
-    app_name: str = "ENCRYPTION|DECRYPTION APPLICATION"
+    app_name: str = "VECTOR CLI APPLICATIONS"
     version_source: str = "versions"  # Module to load version from
 
     # Display settings
@@ -100,7 +106,6 @@ class AppConfig:
     credits_justify: str = "left"
 
     # Colors (Rich color codes)
-    title_color: str = "blue"
     header_style: str = "#2070b2"
     warning_color: str = "yellow3"
     success_color: str = "green3"
@@ -125,7 +130,7 @@ class AppConfig:
 
 # Configure main categories first
 MAIN_CATEGORIES_CONFIG = {
-    # LEVEL 0 - Encryption/Decryption Tools
+    # LEVEL 0 menu item - Encryption / Decryption Tools
     "1": MainMenuCategory(
         key="1",
         label="Encryption / Decryption Tools",
@@ -360,7 +365,7 @@ MAIN_CATEGORIES_CONFIG = {
             ),
         },
     ),
-    # LEVEL 0 - Encoding/Decoding Menu
+    # LEVEL 0 menu item - Data Converter, Encoder, & Decoder
     "2": MainMenuCategory(
         key="2",
         label="Data Converter, Encoder, & Decoder",
@@ -372,8 +377,9 @@ MAIN_CATEGORIES_CONFIG = {
                 label="From ASCII",
                 description="Decode ASCII-encoded content",
                 method_enum=EncodeDecodeMethod.FROM_ASCII,
-                handler_module="ascii",
-                handler_method="run_ascii_converter",
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "ascii"},
             ),
             # LEVEL 1 sub-menu (w/o child menu)
             EncodeDecodeMethod.FROM_BASE64.value: SubMenuCategory(
@@ -381,8 +387,9 @@ MAIN_CATEGORIES_CONFIG = {
                 label="From Base64",
                 description="Convert Base64 encoded strings",
                 method_enum=EncodeDecodeMethod.FROM_BASE64,
-                handler_module="base64",
-                handler_method="run_base64_converter",
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "base64"},
             ),
             # LEVEL 1 sub-menu (w/o child menu)
             EncodeDecodeMethod.FROM_BINARY.value: SubMenuCategory(
@@ -390,11 +397,73 @@ MAIN_CATEGORIES_CONFIG = {
                 label="From Binary",
                 description="Convert Binary strings",
                 method_enum=EncodeDecodeMethod.FROM_BINARY,
-                handler_module="binary",
-                handler_method="run_binary_converter",
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "binary"},
+            ),
+            # LEVEL 1 sub-menu (with child menu)
+            EncodeDecodeMethod.FROM_DECIMAL_INT.value: SubMenuCategory(
+                key="4",
+                label="From Decimal Integer",
+                description="Convert Decimal Integer",
+                method_enum=EncodeDecodeMethod.FROM_DECIMAL_INT,
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "decimal_int"},
+            ),
+            # LEVEL 1 sub-menu (with child menu)
+            EncodeDecodeMethod.FROM_DECIMAL_STR.value: SubMenuCategory(
+                key="5",
+                label="From Decimal String",
+                description="Convert Decimal String",
+                method_enum=EncodeDecodeMethod.FROM_DECIMAL_STR,
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "decimal_str"},
+            ),
+            # LEVEL 1 sub-menu (with child menu)
+            EncodeDecodeMethod.FROM_HEX.value: SubMenuCategory(
+                key="6",
+                label="From Hexadecimal",
+                description="Convert Hexadecimal Value",
+                method_enum=EncodeDecodeMethod.FROM_HEX,
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "hexadecimal"},
+            ),
+            # LEVEL 1 sub-menu (with child menu)
+            EncodeDecodeMethod.FROM_OCT.value: SubMenuCategory(
+                key="7",
+                label="From Octal",
+                description="Convert Octal Value",
+                method_enum=EncodeDecodeMethod.FROM_OCT,
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "octal"},
+            ),
+            # LEVEL 1 sub-menu (with child menu)
+            EncodeDecodeMethod.ROTATE_STR.value: SubMenuCategory(
+                key="8",
+                label="Rotate String",
+                description="Rotate string value 'n' places",
+                method_enum=EncodeDecodeMethod.ROTATE_STR,
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "rotate_string"},
+            ),
+            # LEVEL 1 sub-menu (with child menu)
+            EncodeDecodeMethod.FROM_MORSE_CODE.value: SubMenuCategory(
+                key="9",
+                label="From Morse Code",
+                description="Convert Morse Code to string",
+                method_enum=EncodeDecodeMethod.FROM_MORSE_CODE,
+                handler_module="encode_decode",
+                handler_method="run_encode_decode",
+                handler_kwargs={"input_type": "morse_code"},
             ),
         },
     ),
+    # LEVEL 0 menu item - File Type Checker
     "3": MainMenuCategory(
         key="3",
         label="File Type Checker",
@@ -406,22 +475,50 @@ MAIN_CATEGORIES_CONFIG = {
                 label="Check single file",
                 description="Validate one file extension vs. it's header",
                 method_enum=FileTypeCheckerMethod.CHECK_FILE,
-                handler_module="file_type_checker",
+                handler_module="file_checker",
                 handler_method="run_file_checker",
                 handler_kwargs={"type": "file"},
             ),
             # LEVEL 1 sub-menu (w/o child menu)
-            FileTypeCheckerMethod.CHECK_FILE.value: SubMenuCategory(
+            FileTypeCheckerMethod.CHECK_FOLDER.value: SubMenuCategory(
                 key="2",
                 label="Check all files in directory",
                 description="Validate all files in a directory",
                 method_enum=FileTypeCheckerMethod.CHECK_FOLDER,
-                handler_module="file_type_checker",
+                handler_module="file_checker",
                 handler_method="run_file_checker",
                 handler_kwargs={"type": "folder"},
             ),
         },
     ),
+    # LEVEL 0 menu item - Time Decoder / Encoder
+    "4": MainMenuCategory(
+        key="4",
+        label="Time Decoder / Encoder",
+        description="Encode or Decode timestamp values",
+        submenu_categories={
+            # LEVEL 1 sub-menu (w/o child menu)
+            TimeConvertMethod.TIME_DECODE.value: SubMenuCategory(
+                key="1",
+                label="Decode a timestamp value",
+                description="",
+                method_enum=TimeConvertMethod.TIME_DECODE,
+                handler_module="time_converter",
+                handler_method="_handle_time_decode_encode",
+                handler_kwargs={"method": "decode"},
+            ),
+            # LEVEL 1 sub-menu (w/o child menu)
+            TimeConvertMethod.TIME_ENCODE.value: SubMenuCategory(
+                key="1",
+                label="Encode a string to a timestamp value",
+                description="",
+                method_enum=TimeConvertMethod.TIME_ENCODE,
+                handler_module="time_converter",
+                handler_method="_handle_time_decode_encode",
+                handler_kwargs={"method": "encode"},
+            )
+        }
+    )
 }
 
 

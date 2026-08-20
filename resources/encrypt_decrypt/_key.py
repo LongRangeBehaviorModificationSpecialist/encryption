@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 # Information about the Fernet (symmetric encryption) package can be found at:
 # https://cryptography.io/en/latest/fernet/

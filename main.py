@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 #TODO - Make this an "all in one tool"? Options to add:
 #TODO - (A) encode/decode text repo
@@ -36,12 +36,15 @@ from resources.encrypt_decrypt._key import KEY
 from resources.encrypt_decrypt._pgp import PGP
 from resources.encrypt_decrypt._xor import XOR
 from resources.encrypt_decrypt.detect import FileAnalyzer
+from resources.file_checker import FileCheckRunner
+from resources.time_converter import TimestampConverter
+from resources.encode_decode import EncodeDecode
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 from versions import (
     __version__,
     __author__,
     __last_updated__,
-    get_version_string
+    get_version_string,
 )
 
 
@@ -80,6 +83,9 @@ class Main:
         self.pgp = PGP()
         self.xor = XOR()
         self.detect = FileAnalyzer()
+        self.encode_decode = EncodeDecode()
+        self.file_checker = FileCheckRunner()
+        self.time_converter = TimestampConverter()
 
         # Map handler names to actual method references
         self._modules = {
@@ -88,6 +94,9 @@ class Main:
             "pgp": self.pgp,
             "xor": self.xor,
             "detect": self.detect,
+            "encode_decode": self.encode_decode,
+            "file_checker": self.file_checker,
+            "time_converter": self.time_converter,
         }
 
         self._bind_handlers()
@@ -305,28 +314,6 @@ class Main:
                     exit_program = True
                     return
 
-
-                # # Validate submenu item exists
-                # if normalized not in category.submenu_items.keys():
-                #     self.ui.error(
-                #         "Invalid choice. Try again or press \"R\" to go back."
-                #     )
-                #     continue
-
-                # # Execute the selected operation
-                # item = category.submenu_items[normalized]
-                # logger.info(
-                #     f"Executing operation: [{category_key}][{normalized}] → "
-                #     f"{item.label}"
-                # )
-
-                # self._call_handler(item)
-
-                # # Ask if user wants to continue
-                # if not self._ask_continue():
-                #     exit_program = True
-                #     return
-
             except KeyboardInterrupt:
                 msg = "Application was interrupted by user (Ctrl+C)"
                 self.ui.warning(msg)
@@ -417,7 +404,8 @@ class Main:
         try:
 
             response = self.ui.confirm(
-                "Task complete! Return to previous menu?"
+                "Return to previous menu?",
+                default="y"
             )
 
             if not response:
@@ -452,7 +440,7 @@ class Main:
         )
 
         menu_table.add_row(
-            f"\n[light_goldenrod1]What method do you want to use?\n"
+            f"\n[light_goldenrod1]What do you want to do?\n"
         )
 
         # Display main categories (1-4)
@@ -474,7 +462,7 @@ class Main:
         menu_panel = Panel.fit(
             renderable=menu_table,
             title=(
-                f"[bright_blue][i]\n{self.config.app_name} (v.{self._version})"
+                f"[bright_blue]\n{self.config.app_name} (v.{self._version})"
             ),
             title_align="center",
             subtitle=(
@@ -517,7 +505,7 @@ class Main:
         for sub_key in sorted(category.submenu_categories.keys()):
             sub_cat = category.submenu_categories[sub_key]
             sub_menu_table.add_row(
-                f"[white][{sub_key}] {sub_cat.label} [grey74]"
+                f"[white][{sub_key}] {sub_cat.label} [grey58]"
                 f"[{sub_cat.description}]"
             )
 
@@ -536,7 +524,7 @@ class Main:
         sub_menu_panel = Panel.fit(
             renderable=sub_menu_table,
             title=(
-                f"[bright_blue][i][{self.config.title_color}]\n{category.label}"
+                f"[bright_blue][i]\n{category.label}"
             ),
             title_align="center",
         )
@@ -596,7 +584,7 @@ class Main:
         sub_sub_panel = Panel.fit(
             renderable=sub_sub_table,
             title=(
-                f"[bright_blue][i][{self.config.title_color}]\n{sub_cat.label}"
+                f"[bright_blue][i]\n{sub_cat.label}"
             ),
             title_align="center",
         )

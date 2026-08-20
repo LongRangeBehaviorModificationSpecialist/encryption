@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 argon-cffi >= 25.1.0
 python-gnupg == 0.5.6

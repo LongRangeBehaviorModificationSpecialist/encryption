@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 from argon2.low_level import hash_secret_raw, Type
 from datetime import datetime
@@ -58,15 +58,23 @@ class RichUIHandler:
         self.error_color = "bright_red"
         self.menu_prompt_color = "light_goldenrod1"
 
-    def _format(self, message: str, color: str) -> str:
-        timestamp = f"[cyan][{self.get_time()}][/cyan]"
-        return f"{timestamp} [{color}]{message}[/{color}]"
+    def _format(
+            self,
+            message: str,
+            color: str,
+            exited: bool | None = None
+    ) -> str:
+        timestamp = f"[magenta][{self.get_time()}][/magenta]"
+        if not exited:
+            return f"{timestamp} [{color}]{message}[/{color}]"
+        else:
+            return f"\n{timestamp} [{color}]{message}[/{color}]"
 
     def info(self, message: str) -> None:
         self.console.print(self._format(message, self.default_color))
 
-    def success(self, message: str) -> None:
-        self.console.print(self._format(message, self.success_color))
+    def success(self, message: str, exited: bool | None = None) -> None:
+        self.console.print(self._format(message, self.success_color, exited))
 
     def warning(self, message: str) -> None:
         self.console.print(self._format(message, self.warning_color))
@@ -74,12 +82,13 @@ class RichUIHandler:
     def error(self, message: str) -> None:
         self.console.print(self._format(message, self.error_color))
 
-    def confirm(self, message: str) -> bool:
+    def confirm(self, message: str, default: str | None = None) -> bool:
         """Asks a boolean yes/no question in the console."""
         formatted_prompt = self._format(message, self.default_color)
         return Confirm.ask(
             formatted_prompt,
             console=self.console,
+            default=default,
         )
 
     def prompt(
@@ -187,7 +196,7 @@ class Utils:
 
     def exit_application(self) -> None:
         """Print message to screen then exit the application."""
-        self.ui.success(f"Exiting the application...\n")
+        self.ui.success(f"Exiting the application...\n", exited=True)
         sys.exit(0)
 
 
@@ -211,6 +220,16 @@ class Utils:
         )
 
         return current_time
+
+
+    def get_time_converter_input(self, method: str) -> str:
+        if method == "decode":
+            return self.ui.prompt("Input the timestamp to be decoded")
+        else:
+            return self.ui.prompt(
+                "Enter a datetime to encode (format: "
+                "YYYY-MM-DD HH:MM:SS[.fff]) UTC"
+            )
 
 
     def get_file_path(self) -> str:
@@ -318,6 +337,52 @@ class Utils:
                 return False
             else:
                 return True
+
+
+    def get_confirmed_password(self) -> str | None:
+        """Prompt user for passphrase until confirmation matches.
+
+        Returns:
+            The password as a string.
+        """
+        max_attempts = 3  # prevent infinite loops
+        attempts = 0
+
+        while True:
+            attempts += 1
+
+            if attempts > max_attempts:
+                self.ui.error("Too many failed attempts. Exiting...")
+                raise ValueError("Max passphrase attempts exceeded.")
+
+            password = self.ui.prompt(
+                "Enter passphrase",
+                password=True
+            )
+
+            if not password:
+                self.ui.warning("Passphrase cannot be empty.")
+                continue
+
+            # Confirmation entry
+            confirm_password = self.ui.prompt(
+                "Re-enter passphrase to confirm",
+                password=True
+            )
+
+            if not confirm_password:
+                self.ui.warning("Passphrase cannot be empty")
+                continue
+
+            # Check if they match
+            if password == confirm_password:
+                self.ui.success("Passphrases match. Continuing...")
+                return password
+            else:
+                self.ui.error(
+                    f"Passphrases do not match! Try again (attempt {attempts}/"
+                    f"{max_attempts})"
+                )
 
 
     def get_password(self) -> bytearray:
@@ -550,52 +615,6 @@ class Utils:
                     self.ui.warning("An invalid date format was entered")
                     return None
         return None
-
-
-    def get_confirmed_password(self) -> str | None:
-        """Prompt user for passphrase until confirmation matches.
-
-        Returns:
-            The password as a string.
-        """
-        max_attempts = 3  # prevent infinite loops
-        attempts = 0
-
-        while True:
-            attempts += 1
-
-            if attempts > max_attempts:
-                self.ui.error("Too many failed attempts. Exiting...")
-                raise ValueError("Max passphrase attempts exceeded.")
-
-            password = self.ui.prompt(
-                "Enter passphrase",
-                password=True
-            )
-
-            if not password:
-                self.ui.warning("Passphrase cannot be empty.")
-                continue
-
-            # Confirmation entry
-            confirm_password = self.ui.prompt(
-                "Re-enter passphrase to confirm",
-                password=True
-            )
-
-            if not confirm_password:
-                self.ui.warning("Passphrase cannot be empty")
-                continue
-
-            # Check if they match
-            if password == confirm_password:
-                self.ui.success("Passphrases match. Continuing...")
-                return password
-            else:
-                self.ui.error(
-                    f"Passphrases do not match! Try again (attempt {attempts}/"
-                    f"{max_attempts})"
-                )
 
 
     def get_pgp_full_name(self) -> str:

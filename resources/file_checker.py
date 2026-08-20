@@ -1,6 +1,5 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
-from .. import install
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
 import json
@@ -8,6 +7,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from . import install
 from config.log_config import get_logger
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
@@ -75,10 +75,12 @@ class FileTypeValidator:
         if not config_path:
             # Get the directory where the config file lives
             module_dir = os.path.dirname(os.path.abspath(__file__))
-            self.config_path = os.path.join(
+            self.ui.info(f"'module_dir' is {module_dir}")
+            config_path = os.path.join(
                 module_dir,
-                'signature_config.json'
+                "\\resources\\file_checker\\signature_config.json"
             )
+            self.ui.success(f"'config_path' → {config_path}")
             self.load_config(config_path)
 
         if self.config_path:
@@ -211,19 +213,19 @@ class FileTypeValidator:
         Parse a hex string into raw bytes.
 
         Supports three input styles:
-          - Python-style escapes:  "\\xff\\xd8"
-          - Space-separated hex:  "FF D8"
-          - Contiguous hex:        "FFD8"
+            - Python-style escapes:  "\\xff\\xd8"
+            - Space-separated hex:   "FF D8"
+            - Contiguous hex:        "FFD8"
         """
         hex_str = hex_str.strip()
 
         # Python-style escape sequences
-        if '\\x' in hex_str:
+        if "\\x" in hex_str:
             # eval is avoided; manually parse \xNN sequences
             result = bytearray()
             i = 0
             while i < len(hex_str):
-                if hex_str[i] == '\\' and i + 3 < len(hex_str) and hex_str[i + 1] == 'x':
+                if hex_str[i] == '\\' and i + 3 < len(hex_str) and hex_str[i + 1] == "x":
                     byte_val = int(hex_str[i + 2:i + 4], 16)
                     result.append(byte_val)
                     i += 4

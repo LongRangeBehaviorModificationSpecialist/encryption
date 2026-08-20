@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 ENCRYPTED_EXT_LIST = {
     ".encrypted", ".enc", ".asc", ".pgp", ".gpg", ".key", "xor"
