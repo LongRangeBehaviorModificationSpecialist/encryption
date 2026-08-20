@@ -56,8 +56,7 @@ class FileTypeValidator:
             max_workers: Optional[int] = None,
             ui: UIHandlerProtocol | None = None
     ):
-        """
-        Initialise the validator.
+        """Initialise the validator.
 
         Args:
             config_path: Path to a JSON config file with custom signatures.
@@ -78,7 +77,7 @@ class FileTypeValidator:
             self.ui.info(f"'module_dir' is {module_dir}")
             config_path = os.path.join(
                 module_dir,
-                "\\resources\\file_checker\\signature_config.json"
+                "\\resources\\signature_config.json"
             )
             self.ui.success(f"'config_path' → {config_path}")
             self.load_config(config_path)
@@ -89,8 +88,7 @@ class FileTypeValidator:
 
     # --- Config file handling
     def load_config(self, config_path: Path | str) -> None:
-        """
-        Load custom file signatures from a JSON config file.
+        """Load custom file signatures from a JSON config file.
 
         The JSON structure is::
 
@@ -209,8 +207,7 @@ class FileTypeValidator:
 
     @staticmethod
     def _parse_hex(hex_str: str) -> bytes:
-        """
-        Parse a hex string into raw bytes.
+        """Parse a hex string into raw bytes.
 
         Supports three input styles:
             - Python-style escapes:  "\\xff\\xd8"
@@ -225,12 +222,12 @@ class FileTypeValidator:
             result = bytearray()
             i = 0
             while i < len(hex_str):
-                if hex_str[i] == '\\' and i + 3 < len(hex_str) and hex_str[i + 1] == "x":
+                if hex_str[i] == "\\" and i + 3 < len(hex_str) and hex_str[i + 1] == "x":
                     byte_val = int(hex_str[i + 2:i + 4], 16)
                     result.append(byte_val)
                     i += 4
-                elif hex_str[i] == '\\' and i + 3 < len(hex_str) and hex_str[i + 1] in ('n', 'r', 't'):
-                    mapping = {'n': b'\n', 'r': b'\r', 't': b'\t'}
+                elif hex_str[i] == "\\" and i + 3 < len(hex_str) and hex_str[i + 1] in ("n", "r", "t")
+                    mapping = {"n": b"\n", "r": b"\r", "t": b"\t"}
                     result.extend(mapping[hex_str[i + 1]])
                     i += 2
                 else:
@@ -239,13 +236,13 @@ class FileTypeValidator:
             return bytes(result)
 
         # Space-separated or contiguous hex
-        cleaned = hex_str.replace(' ', '').replace('\t', '')
+        cleaned = hex_str.replace(" ", "").replace("\t", "")
         if len(cleaned) % 2 != 0:
-            raise ValueError(f"Odd number of hex digits: '{hex_str}'")
+            raise ValueError(f"Odd number of hex digits → '{hex_str}'")
         try:
             return bytes.fromhex(cleaned)
         except ValueError:
-            raise ValueError(f"Invalid hex string: '{hex_str}'")
+            raise ValueError(f"Invalid hex string → '{hex_str}'")
 
 
     # --- Signature checking
@@ -266,8 +263,7 @@ class FileTypeValidator:
 
 
     def find_matching_signature(self, header_bytes: bytes) -> List[str]:
-        """
-        Find which file signature(s) match the provided bytes.
+        """Find which file signature(s) match the provided bytes.
 
         Each extension may have multiple valid magic byte sequences,
         so we check every entry in the list.
@@ -294,14 +290,14 @@ class FileTypeValidator:
     ) -> Tuple[bool, str, str]:
         """Validate if file extension matches its actual type based on signature."""
         if not os.path.exists(filepath):
-            raise FileNotFoundError(f"File not found: {filepath}")
+            raise FileNotFoundError(f"File not found → '{filepath}'")
 
         claimed_ext = self.get_extension(filepath)
 
         try:
             header_bytes = self.get_file_signature(filepath)
-        except IOError as e:
-            raise IOError(f"Cannot read file: {filepath}, {str(e)}")
+        except IOError as err:
+            raise IOError(f"Cannot read file: '{filepath}' → '{str(err)}'")
 
         if not header_bytes:
             return (False, "", claimed_ext)
@@ -318,10 +314,10 @@ class FileTypeValidator:
             return (False, matching_sigs[0], claimed_ext)
         else:
             compatible_groups = {
-                ('.jpg', '.jpeg'),
-                ('.docx', '.xlsx', '.pptx'),
-                ('.tiff', '.tif'),
-                ('.html', '.htm'),
+                (".jpg", ".jpeg"),
+                (".docx", ".xlsx", ".pptx"),
+                (".tiff", ".tif"),
+                (".html", ".htm"),
             }
             for group in compatible_groups:
                 if claimed_ext in group:
@@ -354,7 +350,7 @@ class FileCheckRunner:
                 return True
             if raw in ("n", "no"):
                 return False
-            print("Please enter 'y' or 'n'.")
+            print("Please enter 'y' or 'n'")
 
 
     def scan_single_file(self, file_path: Path | str) -> dict:
@@ -389,8 +385,7 @@ class FileCheckRunner:
             file_paths: List[Path | str],
             progress: bool = True,
     ) -> List[dict]:
-        """
-        Scan multiple files concurrently using a thread pool.
+        """Scan multiple files concurrently using a thread pool.
 
         Threads are chosen over processes because the workload is
         I/O-bound (reading a few header bytes per file), not CPU-bound.
@@ -456,8 +451,7 @@ class FileCheckRunner:
             recursive: bool = False,
             progress: bool = True,
     ) -> List[dict]:
-        """
-        Collect all file paths in a directory and scan them in parallel.
+        """Collect all file paths in a directory and scan them in parallel.
 
         Collecting paths first (then batching the reads) is more efficient
         than spawning threads while still walking the tree, because
@@ -475,6 +469,7 @@ class FileCheckRunner:
             except PermissionError as err:
                 self.ui.error(f"Cannot access directory {target_dir} → {err}")
                 return []
+
             walker = [(target_dir, [], entries)]
 
         for root, _dirs, files in walker:
@@ -526,20 +521,19 @@ class FileCheckRunner:
 
         for r in results:
             if r["error"]:
-                status = f"ERROR   ({r['error']})"
+                status = f"ERROR → ({r['error']})"
             elif r["valid"]:
-                status = "MATCH   ✓"
+                status = "MATCH"
             else:
                 status = (
-                    f"MISMATCH  ✗  "
+                    f"MISMATCH "
                     f"(detected: {r['detected_ext']}, "
                     f"extension: {r['claimed_ext'] or 'none'})"
                 )
 
             rel_path = r["path"]
-            print(f"  {status}")
-            print(f"    {rel_path}")
-            print()
+            self.ui.info(f"  {status}")
+            self.ui.info(f"    {rel_path}")
 
         self.ui.info(f"Total files checked : [bright_blue]{total}")
         self.ui.info(f"Matches             : [bright_green]{matched}")
@@ -557,7 +551,10 @@ class FileCheckRunner:
             ).strip("\"'")
             csv_file = Path(output_path).resolve()
             if output_path:
-                self.export_csv(results=results, output_path=csv_file)
+                self.export_csv(
+                    results=results,
+                    output_path=csv_file
+                )
 
 
     def export_csv(
