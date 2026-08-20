@@ -82,8 +82,7 @@ class DecodeResult:
             "target_timezone": self.target_tz,
             "local_time": self.local_time.isoformat() if self.local_time else None,
             "local_human_readable": self._format_human(
-                self.local_time,
-                "verbose") if self.local_time else None,
+                self.local_time, "verbose") if self.local_time else None,
         }
 
 
