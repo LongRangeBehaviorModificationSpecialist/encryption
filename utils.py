@@ -62,11 +62,14 @@ class RichUIHandler:
             self,
             message: str,
             color: str,
-            exited: bool | None = None
+            exited: bool | None = None,
+            menu_prompt: bool | None = None
     ) -> str:
         timestamp = f"[magenta][{self.get_time()}][/magenta]"
-        if not exited:
+        if not exited and not menu_prompt:
             return f"{timestamp} [{color}]{message}[/{color}]"
+        elif menu_prompt:
+            return f"[{color}]{message}[/{color}]"
         else:
             return f"\n{timestamp} [{color}]{message}[/{color}]"
 
@@ -102,9 +105,15 @@ class RichUIHandler:
     ) -> str:
         """Prompts the user for text input."""
         if not menu_prompt:
-            formatted_prompt = self._format(message, self.default_color)
+            formatted_prompt = self._format(
+                message=message,
+                color=self.default_color
+            )
         else:
-            formatted_prompt = self._format(message, self.menu_prompt_color)
+            formatted_prompt = self._format(
+                message=f"\n{message}",
+                color=self.menu_prompt_color,
+                menu_prompt=menu_prompt)
 
         return Prompt.ask(
             formatted_prompt,

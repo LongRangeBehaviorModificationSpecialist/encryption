@@ -205,7 +205,7 @@ class Main:
 
     def _call_handler(
             self,
-            menu_item: Union[SubMenuItem, SubMenuCategory]
+            menu_item: SubMenuCategory | SubMenuItem
     ) -> bool:
         """Execute a pre-bound handler callable.
 
@@ -259,7 +259,7 @@ class Main:
 
             try:
                 selection = self.ui.prompt(
-                    "\n\nENTER CHOICE",
+                    "ENTER CHOICE",
                     menu_prompt=True,
                 ).strip()
                 normalized = selection.lower()
@@ -293,7 +293,7 @@ class Main:
                         f"Executing direct handler: "
                         f"[{category_key}][{normalized}] → {sub_cat.label}"
                     )
-                    self._call_handler(sub_cat)
+                    self._call_handler(menu_item=sub_cat)
 
                     if not self._ask_continue():
                         exit_program = True
@@ -353,7 +353,7 @@ class Main:
 
             try:
                 selection = self.ui.prompt(
-                    "\n\nENTER CHOICE",
+                    "ENTER CHOICE",
                     menu_prompt=True,
                 ).strip()
                 normalized = selection.lower()
@@ -380,7 +380,7 @@ class Main:
                     f"{item.label}"
                 )
 
-                self._call_handler(item)
+                self._call_handler(menu_item=item)
 
                 if not self._ask_continue():
                     exit_loop = True
@@ -447,8 +447,8 @@ class Main:
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
             menu_table.add_row(
-                f"[white][{key}] {category.label} [grey74]"
-                f"[{category.description}]"
+                f"[white][{key}] [b][bright_green]{category.label}[/][/b] "
+                f"[grey58][{category.description}]"
             )
 
         # Add quit option
@@ -505,8 +505,8 @@ class Main:
         for sub_key in sorted(category.submenu_categories.keys()):
             sub_cat = category.submenu_categories[sub_key]
             sub_menu_table.add_row(
-                f"[white][{sub_key}] {sub_cat.label} [grey58]"
-                f"[{sub_cat.description}]"
+                f"[white][{sub_key}] [b][bright_green]{sub_cat.label}[/][/b] "
+                f"[grey58][{sub_cat.description}]"
             )
 
         sub_menu_table.add_row()
@@ -572,8 +572,8 @@ class Main:
         for item_key in sorted(sub_cat.submenu_items.keys()):
             item = sub_cat.submenu_items[item_key]
             sub_sub_table.add_row(
-                f"[white][{item_key}] {item.label} [grey74]"
-                f"[{item.description}]"
+                f"[white][{item_key}] [b][bright_green]{item.label}[/][/b] "
+                f"[grey58][{item.description}]"
             )
 
         sub_sub_table.add_row()
@@ -609,7 +609,7 @@ class Main:
 
             try:
                 selection = self.ui.prompt(
-                    "\n\nENTER CHOICE",
+                    "ENTER CHOICE",
                     menu_prompt=True,
                 ).strip()
 

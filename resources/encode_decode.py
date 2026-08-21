@@ -3,18 +3,17 @@
 import base64
 import codecs
 import functools
-from rich.console import Console
-from rich.prompt import Prompt
 from rich.traceback import install
 import string
 from typing import Dict, Tuple
 
 from . import install
+from config.log_config import get_logger
 from config.results import Results
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
 
-c = Console()
+logger = get_logger("time_converter")
 install()
 
 
@@ -49,7 +48,6 @@ def handle_exceptions(func):
 
 
 class EncodeDecode:
-    __slots__ = ["ui"]
 
     def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
         self.ui = ui or RichUIHandler(get_time=get_time)
@@ -57,36 +55,46 @@ class EncodeDecode:
 
     def run_encode_decode(self, input_type: str) -> None:
 
-        VALID_OPTIONS = {
-            "ascii": Ascii.make_ascii_data_dict(input=input),
-            "base64": Base64.make_data_dict(input=input),
-            "binary": Binary.make_data_dict(input=input),
-            "decimal_int": DecimalInteger.make_data_dict(input=input),
-            "decimal_str": DecimalString.make_data_dict(input=input),
-            "hexadecimal": Hexadecimal.make_data_dict(input=input),
-            "morse_code": MorseCode.make_data_dict(input=input),
-            "octal": Octal.make_data_dict(input=input),
-            "rotate_string": RotateString.run_rotate_string()
-        }
+        VALID_OPTIONS = [
+            "ascii", "base64", "binary", "decimal_int", "decimal_str",
+            "hexadecimal", "morse_code", "octal", "rotate_string"
+        ]
+
+        logger.info("The 'run_encode_decode()' method was called")
+        logger.info(f"The 'input_type' was passed as {input_type}")
 
         try:
-            if input_type not in VALID_OPTIONS.keys():
+            if input_type not in VALID_OPTIONS:
                 self.ui.warning(
                     f"The input type value {input_type} is not supported"
                 )
                 return
 
-            input = self.ui.prompt(
-                f"Enter the data you want to convert"
-            )
-            # results = self.make_data_dict(input=input)
-            results = VALID_OPTIONS[input_type]
+            user_input = self.ui.prompt(f"Enter the data you want to convert")
+
+            logger.info(f"Calling make_data_dict with user_input type: {type(user_input)}")
+            logger.info(f"user_input value: {repr(user_input)[:50]}")
+
+            HANDLERS = {
+                "ascii": Ascii.make_data_dict(input_value=user_input),
+                "base64": lambda: Base64.make_data_dict(input_value=user_input),
+                "binary": lambda: Binary.make_data_dict(input_value=user_input),
+                "decimal_int": lambda: DecimalInteger.make_data_dict(input_value=user_input),
+                "decimal_str": lambda: DecimalString.make_data_dict(input_value=user_input),
+                "hexadecimal": lambda: Hexadecimal.make_data_dict(input_value=user_input),
+                "morse_code": lambda: MorseCode.make_data_dict(input_value=user_input),
+                "octal": lambda: Octal.make_data_dict(input_value=user_input),
+                "rotate_string": lambda: RotateString.run_rotate_string()
+            }
+
+            results = HANDLERS[input_type]
             Results.print_results_table(results_dict=results)
+
         except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
+            self.ui.error(f"Validation Error → {err}")
+            self.ui.info(
                 "[dim]Tip: Try simpler characters like letters and numbers."
-                )
+            )
 
 
 
@@ -96,21 +104,22 @@ class Ascii(EncodeDecode):
     CONTROL_CHARS = set(chr(i) for i in range(32) if chr(i) not in '\t\n\r')
     WHITESPACE = set(string.whitespace)
 
-    def validate_ascii_input(self, input: str) -> Tuple[bool, str]:
+    @classmethod
+    def validate_ascii_input(input_value: str) -> Tuple[bool, str]:
         """Comprehensive input validation."""
-        if not input:
+        if not input_value:
             return False, "Input cannot be empty"
 
-        if not isinstance(input, str):
+        if not isinstance(input_value, str):
             return False, "Input must be a string"
 
         issues = []
-        for pos, char in enumerate(input):
+        for pos, char in enumerate(input_value):
             code = ord(char)
 
             if code > 127:
                 issues.append(f"Position {pos} → Non-ASCII '{char}' (U+{code:04X})")
-            elif char in self.CONTROL_CHARS:
+            elif char in Ascii.CONTROL_CHARS:
                 issues.append(f"Position {pos} → Control character (ord={code})")
 
         if issues:
@@ -118,7 +127,8 @@ class Ascii(EncodeDecode):
 
         return True, ""
 
-    def sanitize_input(self, input: str, mode: str = "strict") -> str:
+    @classmethod
+    def sanitize_input(input_value: str, mode: str = "strict") -> str:
         """Sanitize input based on mode.
 
         Args:
@@ -127,7 +137,7 @@ class Ascii(EncodeDecode):
         """
         sanitized = []
 
-        for char in input:
+        for char in input_value:
             code = ord(char)
 
             # Valid ASCII
@@ -156,82 +166,93 @@ class Ascii(EncodeDecode):
                     raise ValueError(f"Non-ASCII character → '{char}'")
         return ''.join(sanitized)
 
-    def ascii_to_base64(self, input: str) -> str:
+    @classmethod
+    def ascii_to_base64(input_value: str) -> str:
         """Convert the ascii input string to base64 string."""
-        is_valid, error_msg = self.validate_ascii_input(input)
+        is_valid, error_msg = Ascii.validate_ascii_input(input_value)
         if not is_valid:
             raise ValueError(error_msg)
-        return base64.b64encode(input.encode("ascii", errors="ignore")).decode()
+        return base64.b64encode(input_value.encode("ascii", errors="ignore")).decode()
 
-    def ascii_to_base32(self, input: str) -> str:
+    @classmethod
+    def ascii_to_base32(input_value: str) -> str:
         """Converts an ascii string to its base32 encoded representation."""
-        is_valid, error_msg = self.validate_ascii_input(input)
+        is_valid, error_msg = Ascii.validate_ascii_input(input_value)
         if not is_valid:
             raise ValueError(error_msg)
         return base64.b32encode(
-            input.encode("ascii", errors="ignore")
+            input_value.encode("ascii", errors="ignore")
         ).decode("ascii")
 
-    def ascii_to_binary(self, input: str) -> str:
+    @classmethod
+    def ascii_to_binary(input_value: str) -> str:
         """Convert the ascii input string to binary string."""
-        is_valid, error_msg = self.validate_ascii_input(input)
+        is_valid, error_msg = Ascii.validate_ascii_input(input_value)
         if not is_valid:
             raise ValueError(error_msg)
-        return " ".join(bin(ord(c))[2:].zfill(8) for c in input)
+        return " ".join(bin(ord(c))[2:].zfill(8) for c in input_value)
 
-    def ascii_to_decimal(self, input: str) -> str:
+    @classmethod
+    def ascii_to_decimal(input_value: str) -> str:
         """Convert the ascii input string to decimal string."""
-        is_valid, error_msg = self.validate_ascii_input(input)
+        is_valid, error_msg = Ascii.validate_ascii_input(input_value)
         if not is_valid:
             raise ValueError(error_msg)
-        return " ".join(str(ord(i)) for i in input)
+        return " ".join(str(ord(i)) for i in input_value)
 
-    def ascii_to_hexadecimal(self, input: str) -> str:
+    @classmethod
+    def ascii_to_hexadecimal(input_value: str) -> str:
         """Convert the ascii input string to hexadecimal string."""
-        is_valid, error_msg = self.validate_ascii_input(input)
+        is_valid, error_msg = Ascii.validate_ascii_input(input_value)
         if not is_valid:
             raise ValueError(error_msg)
-        return " ".join(f"{ord(c):02X}" for c in input)
+        return " ".join(f"{ord(c):02X}" for c in input_value)
 
-    def ascii_to_rot13(self, input: str) -> str:
+    @classmethod
+    def ascii_to_rot13(input_value: str) -> str:
         """Convert the ascii input string to rot13 string."""
-        is_valid, error_msg = self.validate_ascii_input(input)
+        is_valid, error_msg = Ascii.validate_ascii_input(input_value)
         if not is_valid:
             raise ValueError(error_msg)
-        return codecs.encode(input, "rot_13")
+        return codecs.encode(input_value, "rot_13")
 
-    def make_ascii_data_dict(self, input: str) -> Dict[str, str]:
+    @classmethod
+    def make_data_dict(input_value: str) -> Dict[str, str]:
         results = {}
         results["Input Type"] = "Ascii"
-        results["Input Value"] = f"{input}"
+        results["Input Value"] = f"{input_value}"
         results["Validation OK"] = True
         try:
-            results["Base64"] = f"{self.ascii_to_base64(input=input)}"
-            results["Base32"] = f"{self.ascii_to_base32(input=input)}"
-            results["Binary"] = f"{self.ascii_to_binary(input=input)}"
-            results["Decimal"] = f"{self.ascii_to_decimal(input=input)}"
-            results["Hexadecimal"] = f"{self.ascii_to_hexadecimal(input=input)}"
-            results["Rot13"] = f"{self.ascii_to_rot13(input=input)}"
+            results["Base64"] = f"{Ascii.ascii_to_base64(input_value=input_value)}"
+
+            results["Base32"] = f"{Ascii.ascii_to_base32(input_value=input_value)}"
+
+            results["Binary"] = f"{Ascii.ascii_to_binary(input_value=input_value)}"
+
+            results["Decimal"] = f"{Ascii.ascii_to_decimal(input_value=input_value)}"
+
+            results["Hexadecimal"] = f"{Ascii.ascii_to_hexadecimal(input_value=input_value)}"
+
+            results["Rot13"] = f"{Ascii.ascii_to_rot13(input_value=input_value)}"
+
             results["Morse code"] = (
-                f"{MorseCode.encode_morse_code(input=input)}"
+                f"{MorseCode.encode_morse_code(input_value=input_value)}"
             )
-        except ValueError as e:
+        except ValueError as err:
             results["Validation OK"] = False
-            results["error"] = str(e)
+            results["error"] = str(err)
         return results
 
-    def run_ascii_convert(self):
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-                )
+    # def run_ascii_convert(self):
+    #     input = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input=input)
+    #         Results.print_results_table(results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class Base64(EncodeDecode):
@@ -277,15 +298,15 @@ class Base64(EncodeDecode):
         return results
 
     def run_base64_convert(self):
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
+        input = self.ui.prompt(f"Enter the data you want to convert")
         try:
             results = self.make_data_dict(input=input)
             Results.print_results_table(results_dict=results)
         except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print("[dim]Tip: Try simpler characters like letters and numbers.")
+            self.ui.error(f"Validation Error → {err}")
+            self.ui.info(
+                "[dim]Tip: Try simpler characters like letters and numbers."
+                )
 
 
 class Binary(EncodeDecode):
@@ -426,18 +447,16 @@ class Binary(EncodeDecode):
         results["octal"] = f"{self.binary_to_octal(input=input)}"
         return results
 
-    def run_binary_convert(self):
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(self, results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-            )
+    # def run_binary_convert(self):
+    #     input = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input=input)
+    #         Results.print_results_table(self, results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class DecimalInteger(EncodeDecode):
@@ -472,18 +491,16 @@ class DecimalInteger(EncodeDecode):
         results["octal"] = f"{self.decimal_to_octal(input=input)}"
         return results
 
-    def run_decimal_int_convert(self) -> None:
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(self, results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-            )
+    # def run_decimal_int_convert(self) -> None:
+    #     input = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input=input)
+    #         Results.print_results_table(self, results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class DecimalString(EncodeDecode):
@@ -492,13 +509,13 @@ class DecimalString(EncodeDecode):
         try:
             return "".join(chr(int(c)) for c in input.split())
         except ValueError:
-            c.print(
-                "[red1][!] Error -> Please ensure the input only contains "
+            self.ui.error(
+                "Error → Please ensure the input only contains "
                 "numbers separated by spaces."
             )
         except OverflowError:
-            c.print(
-                "[red1][!] Error -> One of the numbers is too large to be a "
+            self.ui.error(
+                "Error → One of the numbers is too large to be a "
                 "valid ascii character."
             )
 
@@ -514,18 +531,16 @@ class DecimalString(EncodeDecode):
         results["base64"] = f"{self.decimal_to_base64(input=input)}"
         return results
 
-    def run_decimal_str_convert(self) -> None:
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(self, results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-            )
+    # def run_decimal_str_convert(self) -> None:
+    #     input = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input=input)
+    #         Results.print_results_table(self, results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class Hexadecimal(EncodeDecode):
@@ -603,19 +618,17 @@ class Hexadecimal(EncodeDecode):
 
         return results
 
-    @handle_exceptions
-    def run_hex_convert(self) -> None:
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(self, results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-            )
+    # @handle_exceptions
+    # def run_hex_convert(self) -> None:
+    #     input = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input=input)
+    #         Results.print_results_table(self, results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class MorseCode(EncodeDecode):
@@ -668,17 +681,17 @@ class MorseCode(EncodeDecode):
         ' ': '/'
     }
 
-    def is_valid_morse(self, input: str) -> str:
+    def is_valid_morse(self, input_value: str) -> str:
         """Validates that the input contains valid morse code characters."""
-        if not input or input.isspace():
+        if not input_value or input_value.isspace():
             return False
         allowed_characters = {".", "-", " "}
-        if set(input).issubset(allowed_characters):
+        if set(input_value).issubset(allowed_characters):
             return True
         else:
             return False
 
-    def encode_morse_code(self, input: str) -> str:
+    def encode_morse_code(self, input_value: str) -> str:
         """Conversion from Morse Code value to ascii
 
         Args:
@@ -690,8 +703,8 @@ class MorseCode(EncodeDecode):
             str: Morse Code string to convert
         """
         cipher = ""
-        input = input.upper()
-        for letter in input:
+        input_value = input_value.upper()
+        for letter in input_value:
             if letter != " ":
                 # Looks up the dictionary and adds the corresponding morse code
                 # along with a space to separate morse codes for different
@@ -701,7 +714,7 @@ class MorseCode(EncodeDecode):
                 cipher += " "
         return cipher
 
-    def decode_morse_code(self, input: str) -> str:
+    def decode_morse_code(self, input_value: str) -> str:
         """Conversion from Morse Code value to ascii.
 
         Args:
@@ -711,11 +724,11 @@ class MorseCode(EncodeDecode):
             str: ascii encoded string
         """
         # Extra space added at the end to access the last morse code
-        if self.is_valid_morse(input=input):
-            input += " "
+        if self.is_valid_morse(input_value=input_value):
+            input_value += " "
             decipher = ""
             ciphertext = ""
-            for entry in input:
+            for entry in input_value:
                 # Checks for space
                 if (entry != " "):
                     # Counter to keep track of space
@@ -740,30 +753,28 @@ class MorseCode(EncodeDecode):
                         ciphertext = ""
             return decipher
         else:
-            c.print(
-                "[red1][!] The data containes not valid morse code "
-                "characters. Check the data and try again."
+            self.ui.error(
+                "The data containes not valid morse code characters."
+                "Check the data and try again."
             )
 
-    def make_data_dict(self, input: str) -> dict:
+    def make_data_dict(self, input_value: str) -> dict:
         results = {}
         results["Input Type"] = "Morse Code"
-        results["Input Value"] = f"{input}"
-        results["Ascii"] = f"{self.decode_morse_code(input=input)}"
+        results["Input Value"] = f"{input_value}"
+        results["Ascii"] = f"{self.decode_morse_code(input_value=input_value)}"
         return results
 
-    def run_morse_code_convert(self):
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(self, results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-            )
+    # def run_morse_code_convert(self):
+    #     input_value = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input_value=input_value)
+    #         Results.print_results_table(self, results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class Octal(EncodeDecode):
@@ -822,32 +833,27 @@ class Octal(EncodeDecode):
         results["hexadecimal"] = f"{self.octal_to_hexadecimal()}"
         return results
 
-    def run_octal_convert(self) -> None:
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
-        try:
-            results = self.make_data_dict(input=input)
-            Results.print_results_table(self, results_dict=results)
-        except ValueError as err:
-            c.print(f"[bright_red]Validation Error → {err}")
-            c.print(
-                "[dim]Tip: Try simpler characters like letters and numbers."
-            )
+    # def run_octal_convert(self) -> None:
+    #     input = self.ui.prompt(f"Enter the data you want to convert")
+    #     try:
+    #         results = self.make_data_dict(input=input)
+    #         Results.print_results_table(self, results_dict=results)
+    #     except ValueError as err:
+    #         self.ui.error(f"Validation Error → {err}")
+    #         self.ui.info(
+    #             "[dim]Tip: Try simpler characters like letters and numbers."
+    #             )
 
 
 class RotateString(EncodeDecode):
 
     def get_input_value(self) -> None:
-        input = Prompt.ask(
-            f"[white][-] Enter the data you want to convert"
-        )
+        input = self.ui.prompt(f"Enter the data you want to convert")
         return input
 
     def get_cipher_shift_value(self) -> int:
-        n: int = Prompt.ask(
-            "[white][-] Enter a numeric value for the shift you "
-            "want to use"
+        n: int = self.ui.prompt(
+            "Enter a numeric value for the shift you want to use"
         )
         return n
 

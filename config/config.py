@@ -161,7 +161,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_kwargs={"action": "encrypt"},
                     ),
                     # LEVEL 2 menu item
-                    "3  ": SubMenuItem(
+                    "3": SubMenuItem(
                         key="3",
                         label="DECRYPT a single file using a .key",
                         description="",

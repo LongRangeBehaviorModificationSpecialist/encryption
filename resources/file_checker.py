@@ -226,7 +226,7 @@ class FileTypeValidator:
                     byte_val = int(hex_str[i + 2:i + 4], 16)
                     result.append(byte_val)
                     i += 4
-                elif hex_str[i] == "\\" and i + 3 < len(hex_str) and hex_str[i + 1] in ("n", "r", "t")
+                elif hex_str[i] == "\\" and i + 3 < len(hex_str) and hex_str[i + 1] in ("n", "r", "t"):
                     mapping = {"n": b"\n", "r": b"\r", "t": b"\t"}
                     result.extend(mapping[hex_str[i + 1]])
                     i += 2

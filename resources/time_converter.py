@@ -193,7 +193,7 @@ class TimestampConverter:
             if not ts_input:
                 self.ui.warning("No input provided.")
 
-            target_tz = _prompt_timezone()
+            target_tz = self._prompt_timezone()
 
             try:
                 result = self.decode(
@@ -201,11 +201,14 @@ class TimestampConverter:
                     target_tz=target_tz
                 )
 
-                self.ui.success("DECODE SUCCESSFUL")
-                self.ui.info(f"Format Detected    : {result['format']}")
+                self.ui.success("Decoding Successful:")
+                self.ui.info(
+                    f"Format Detected".ljust(25) + "→   [bright_blue]"
+                    f"{result['format']}"
+                )
                 if result.get("endianness") and result["endianness"] != "N/A":
                     self.ui.info(
-                        f"Endianness         : "
+                        f"Endianness".ljust(25) + "→   [bright_blue]"
                         f"{result['endianness'].title()}"
                     )
 
@@ -216,19 +219,39 @@ class TimestampConverter:
                     conf_label = "🟡 Medium"
                 else:
                     conf_label = "🔴 Low"
-                self.ui.info(f"Confidence         : {conf:.1f}% ({conf_label})")
-                self.ui.info(f"Datetime (UTC)     : {result['iso_format']}")
-                self.ui.info(f"Human Readable     : {result['human_readable']}")
-                self.ui.info(f"Relative Time      : {result['relative_time']}")
+                self.ui.info(
+                    f"Confidence".ljust(25) + "→   [bright_blue]"
+                    f"{conf:.1f}% ({conf_label})"
+                )
+                self.ui.info(
+                    f"Datetime (UTC)".ljust(25) + "→   [bright_blue]"
+                    f"{result['iso_format']}"
+                )
+                self.ui.info(
+                    f"Human Readable".ljust(25) + "→   [bright_blue]"
+                    f"{result['human_readable']}"
+                )
+                self.ui.info(
+                    f"Relative Time".ljust(25) + "→   [bright_blue]"
+                    f"{result['relative_time']}"
+                )
 
                 if result.get("raw_value"):
-                    self.ui.info(f"Raw Value Used     : {result['raw_value']}")
+                    self.ui.info(
+                        f"Raw Value Used".ljust(25) + "→   [bright_blue]"
+                        f"{result['raw_value']}"
+                    )
 
                 if result.get("local_time"):
                     self.ui.info(
-                        f"Local Time ({result['target_timezone']}) : "
+                        f"Local Time".ljust(25) + "→   [bright_blue]"
                         f"{result['local_human_readable']}"
                     )
+                    self.ui.info(
+                        f"Local Timezone".ljust(25) + "→   [bright_blue]"
+                        f"{result['target_timezone']}"
+                    )
+                    #
 
             except ValueError as err:
                 self.ui.error(f"DECODE FAILED → {err}")
@@ -268,13 +291,13 @@ class TimestampConverter:
                     target_format=target
                 )
 
-                self.ui.success("ENCODING RESULTS →")
+                self.ui.success("Encoding Successful:")
                 self.ui.info(
-                    f"Original Datetime".ljust(25) + " →   [bright_blue]"
+                    f"Original Datetime".ljust(25) + "→   [bright_blue]"
                     f"{results['human_readable']}"
                 )
                 self.ui.info(
-                    f"ISO Format".ljust(25) + " →   [bright_blue]"
+                    f"ISO Format".ljust(25) + "→   [bright_blue]"
                     f"{results['input_datetime']}"
                 )
 
@@ -282,12 +305,12 @@ class TimestampConverter:
                     if key not in ("human_readable", "input_datetime"):
                         if isinstance(value, int):
                             self.ui.info(
-                                f"{key}".ljust(25) + " →   [bright_blue]"
+                                f"{key}".ljust(25) + "→   [bright_blue]"
                                 f"{value}  [{(hex(value)).upper()}]"
                             )
                         else:
                             self.ui.info(
-                                f"{key}".ljust(25) + " →   [bright_blue]"
+                                f"{key}".ljust(25) + "→   [bright_blue]"
                                 f"{value}"
                             )
 
@@ -742,10 +765,21 @@ class TimestampConverter:
     # --- HEX & ENDIANNESS HANDLING
 
     def _is_hex_string(self, value: str) -> bool:
+        """Treat as hex if explicit 0x prefix OR contains hex letters (a-f)"""
         if not value:
             return False
-        clean = value.lower().replace("_", "").replace("0x", "")
-        return all(c in "0123456789abcdef" for c in clean) and len(clean) > 0
+        clean = value.lower().replace('_', '')
+
+        # Explicit 0x prefix → always hex
+        if clean.startswith('0x'):
+            return all(c in '0123456789abcdef' for c in clean[2:]) and len(clean[2:]) > 0
+
+        # No prefix → only hex if it contains at least one hex letter (a-f)
+        if any(c in 'abcdef' for c in clean):
+            return all(c in '0123456789abcdef' for c in clean) and len(clean) > 0
+
+        # Pure digits with no prefix → NOT hex, treat as decimal
+        return False
 
 
     def _parse_hex_with_endianness(self, value: str) -> Tuple[int, int]:
@@ -890,8 +924,8 @@ class TimestampConverter:
         return (
             ok,
             seconds_from_year1,
-            f"Ticks → {seconds_from_year1:.0f}s from year 1" 
-            if ok 
+            f"Ticks → {seconds_from_year1:.0f}s from year 1"
+            if ok
             else "Out of range"
         )
 
@@ -900,33 +934,31 @@ class TimestampConverter:
 
     def _get_detectors(self):
         return [
-            ("iso_format", self._detect_iso),
-            ("date_string", self._detect_date_string),
             ("unix_seconds", self._detect_unix_seconds),
             ("unix_milliseconds", self._detect_unix_ms),
             ("windows_filetime", self._detect_windows),
             ("chrome", self._detect_chrome),
             ("apple_cocoa", self._detect_apple),
             ("hfs_plus", self._detect_hfs_plus),
-            ("ms_dos", self._detect_ms_dos),
             ("microsoft_ticks", self._detect_ticks),
+            ("ms_dos", self._detect_ms_dos),
+            ("iso_format", self._detect_iso),
+            ("date_string", self._detect_date_string),
         ]
 
 
-    def _detect_iso(self, value: str) -> Optional[datetime]:
-        patterns = [r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", r"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}"]
-        for p in patterns:
-            if re.match(p, value):
-                try:
-                    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-                    return (
-                        dt.replace(tzinfo=timezone.utc) 
-                        if dt.tzinfo is None
-                        else dt.astimezone(timezone.utc)
-                    )
-                except:
-                    pass
+    def _detect_apple(self, value: str) -> Optional[float]:
+        try:
+            v = float(value)
+            if self.VALID_APPLE_RANGE[0] <= v <= self.VALID_APPLE_RANGE[1]:
+                return v
+        except:
+            pass
         return None
+
+
+    def _detect_chrome(self, value: str) -> Optional[float]:
+        return self._detect_windows(value)
 
 
     def _detect_date_string(self, value: str) -> Optional[datetime]:
@@ -938,6 +970,12 @@ class TimestampConverter:
             "%Y%m%d%H%M%S",
             "%b %d %Y %H:%M:%S",
         ]
+
+        # Only try packed format if long enough (needs at least
+        # 14 chars: YYYYMMDDHHMMSS)
+        if len(value) >= 14 and value.isdigit():
+            formats.insert(0, '%Y%m%d%H%M%S')
+
         for fmt in formats:
             try:
                 dt = datetime.strptime(value, fmt)
@@ -947,9 +985,54 @@ class TimestampConverter:
         return None
 
 
+    def _detect_hfs_plus(self, value: str) -> Optional[float]:
+        try:
+            v = int(float(value))
+            if self.VALID_HFS_PLUS_RANGE[0] <= v <= self.VALID_HFS_PLUS_RANGE[1]:
+                return float(v)
+        except:
+            pass
+        return None
+
+
+    def _detect_iso(self, value: str) -> Optional[datetime]:
+        patterns = [r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", r"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}"]
+        for p in patterns:
+            if re.match(p, value):
+                try:
+                    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    return (
+                        dt.replace(tzinfo=timezone.utc)
+                        if dt.tzinfo is None
+                        else dt.astimezone(timezone.utc)
+                    )
+                except:
+                    pass
+        return None
+
+
+    def _detect_ms_dos(self, value: str) -> Optional[dict]:
+        try:
+            v = int(float(value))
+            ok, dos_dict, _ = self._validate_ms_dos(v)
+            if ok:
+                return dos_dict
+        except:
+            pass
+        return None
+
+
+    def _detect_ticks(self, value: str) -> Optional[float]:
+        try:
+            v = int(float(value))
+            if self.VALID_TICKS_RANGE[0] <= v <= self.VALID_TICKS_RANGE[1]:
+                return v / self.TICKS_PER_SECOND
+        except:
+            pass
+        return None
+
+
     def _detect_unix_seconds(self, value: str) -> Optional[float]:
-        if self._is_hex_string(value):
-            return None
         try:
             v = int(float(value))
             if self.VALID_UNIX_SECONDS_RANGE[0] <= v <= self.VALID_UNIX_SECONDS_RANGE[1]:
@@ -960,8 +1043,6 @@ class TimestampConverter:
 
 
     def _detect_unix_ms(self, value: str) -> Optional[float]:
-        if self._is_hex_string(value):
-            return None
         try:
             v = int(float(value))
             if self.VALID_UNIX_MS_RANGE[0] <= v <= self.VALID_UNIX_MS_RANGE[1]:
@@ -974,65 +1055,10 @@ class TimestampConverter:
 
 
     def _detect_windows(self, value: str) -> Optional[float]:
-        if self._is_hex_string(value):
-            return None
         try:
             v = int(float(value))
             if self.VALID_WINDOWS_RANGE[0] <= v <= self.VALID_WINDOWS_RANGE[1]:
                 return v / self.HUNDRED_NANOSECONDS_PER_SECOND
-        except:
-            pass
-        return None
-
-
-    def _detect_chrome(self, value: str) -> Optional[float]:
-        return self._detect_windows(value)
-
-
-    def _detect_apple(self, value: str) -> Optional[float]:
-        if self._is_hex_string(value):
-            return None
-        try:
-            v = float(value)
-            if self.VALID_APPLE_RANGE[0] <= v <= self.VALID_APPLE_RANGE[1]:
-                return v
-        except:
-            pass
-        return None
-
-
-    def _detect_hfs_plus(self, value: str) -> Optional[float]:
-        if self._is_hex_string(value):
-            return None
-        try:
-            v = int(float(value))
-            if self.VALID_HFS_PLUS_RANGE[0] <= v <= self.VALID_HFS_PLUS_RANGE[1]:
-                return float(v)
-        except:
-            pass
-        return None
-
-
-    def _detect_ms_dos(self, value: str) -> Optional[dict]:
-        if self._is_hex_string(value):
-            return None
-        try:
-            v = int(float(value))
-            ok, dos_dict, _ = self._validate_ms_dos(v)
-            if ok:
-                return dos_dict
-        except:
-            pass
-        return None
-
-
-    def _detect_ticks(self, value: str) -> Optional[float]:
-        if self._is_hex_string(value):
-            return None
-        try:
-            v = int(float(value))
-            if self.VALID_TICKS_RANGE[0] <= v <= self.VALID_TICKS_RANGE[1]:
-                return v / self.TICKS_PER_SECOND
         except:
             pass
         return None
@@ -1181,265 +1207,336 @@ class TimestampConverter:
 
 # --- INTERACTIVE CLI
 
-def display_menu() -> None:
-    print("🕐  UNIVERSAL TIMESTAMP CONVERTER v3.0")
-    print("   Decode · Encode · Ambiguity · Timezones · Relative Time   ")
-    print("""
-    [1] DECODE          - Convert timestamp → human-readable datetime
-    [2] ENCODE          - Convert datetime string → timestamp format(s)
-    [3] AMBIGUITY CHECK - Analyze all possible interpretations
-    [4] BATCH PROCESS   - Convert multiple timestamps at once
-    [5] FORMAT INFO     - Learn about supported timestamp formats
-    [6] TEST SUITE      - Run built-in test cases
-    [7] EXIT
-    """)
+    def display_menu(self) -> None:
+        print("🕐  UNIVERSAL TIMESTAMP CONVERTER v3.0")
+        print("   Decode · Encode · Ambiguity · Timezones · Relative Time   ")
+        print("""
+        [1] DECODE          - Convert timestamp → human-readable datetime
+        [2] ENCODE          - Convert datetime string → timestamp format(s)
+        [3] AMBIGUITY CHECK - Analyze all possible interpretations
+        [4] BATCH PROCESS   - Convert multiple timestamps at once
+        [5] FORMAT INFO     - Learn about supported timestamp formats
+        [6] TEST SUITE      - Run built-in test cases
+        [7] EXIT
+        """)
 
 
-def _prompt_timezone() -> Optional[str]:
-    """Ask user if they want timezone conversion."""
-    print(
-        "🌍 Optional: Enter a timezone for local display (or press "
-        "[Enter] to skip)"
-    )
-    print("Examples: America/New_York, Europe/London, Asia/Tokyo, UTC")
-    tz_input = input("Timezone: ").strip()
-    if not tz_input:
-        return None
-    return tz_input
+    def display_timezone_list(self):
+        """Show all available timezone abbreviations to the user."""
+        self.ui.info("Available timezone abbreviations:")
+        self.ui.info("────────────────────────────────────────────")
+        self.ui.info("Universal:     UTC, GMT")
+        self.ui.info(
+            "US East/West:  EST, EDT, CST, CDT, MST, MDT, PST, PDT, "
+            "AKST, HST"
+        )
+        self.ui.info("Europe:        BST, CET, CEST, EET, EEST")
+        self.ui.info("Asia:          JST, KST, IST, GST")
+        self.ui.info("Australia/Oceania: AEST, AEDT, NZST")
+        self.ui.info("South America: BRT, ART")
+        self.ui.info("────────────────────────────────────────────")
 
 
-def run_interactive_session():
-    converter = TimestampConverter()
+    def _prompt_timezone(self) -> Optional[str]:
+        """Prompt user for timezone using simple abbreviations.
 
-    while True:
-        display_menu()
+        Returns:
+            The IANA timezone name (e.g. 'America/New_York') or None.
+        """
+        # Mapping: user-friendly abbreviation → IANA timezone name
+        ZONE_MAP = {
+            'UTC':   'UTC',
+            'GMT':   'UTC',
+            'EST':   'America/New_York',      # Eastern (handles EST/EDT automatically)
+            'EDT':   'America/New_York',
+            'CST':   'America/Chicago',       # Central
+            'CDT':   'America/Chicago',
+            'MST':   'America/Denver',        # Mountain
+            'MDT':   'America/Denver',
+            'PST':   'America/Los_Angeles',   # Pacific
+            'PDT':   'America/Los_Angeles',
+            'AKST':  'America/Anchorage',     # Alaska
+            'HST':   'Pacific/Honolulu',      # Hawaii
+            'BST':   'Europe/London',        # British Summer Time
+            'IND':   'Asia/Kolkata',         # India
+            'JST':   'Asia/Tokyo',            # Japan
+            'KST':   'Asia/Seoul',           # Korea
+            'IRL':   'Europe/Dublin',        # Irish
+            'CEST':  'Europe/Paris',         # Central European Summer
+            'CET':   'Europe/Paris',         # Central European
+            'EEST':  'Europe/Athens',        # Eastern European Summer
+            'EET':   'Europe/Athens',        # Eastern European
+            'GST':   'Asia/Dubai',           # Gulf
+            'AEST':  'Australia/Sydney',     # Australian Eastern
+            'AEDT':  'Australia/Sydney',
+            'NZST':  'Pacific/Auckland',     # New Zealand
+            'BRT':   'America/Sao_Paulo',    # Brazil
+            'ART':   'America/Argentina/Buenos_Aires',  # Argentina
+        }
 
-        try:
-            choice = self.ui.prompt("Enter your choice [1-7]").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("Goodbye!")
-            break
+        while True:
 
-        if choice == "1":  # DECODE
-            print("🔍 TIMESTAMP DECODER")
-            print(
-                "Enter a timestamp (integer, hex with 0x, or datetime "
-                "string)"
-            )
-            print("Examples:")
-            print("  1692384756              (Unix seconds)")
-            print("  0x01D3F6C8C5A4B8000     (Hex Windows FILETIME)")
-            print("  133365212760000000      (Windows FILETIME)")
-            print("  2023-08-18 15:45:56.123 (Datetime string)\n")
-
-            ts_input = self.ui.prompt("Enter timestamp").strip()
-            if not ts_input:
-                self.ui.warning("No input provided")
-                continue
-
-            target_tz = _prompt_timezone()
-
-            try:
-                result = converter.decode(ts_input, target_tz=target_tz)
-
-                self.ui.success("DECODE SUCCESSFUL")
-                print(f"Format Detected    : {result['format']}")
-                if result.get("endianness") and result["endianness"] != "N/A":
-                    print(
-                        f"Endianness         : "
-                        f"{result['endianness'].title()}"
-                    )
-
-                conf = result.get("confidence", 0)
-                if conf >= 75:
-                    conf_label = "🟢 High"
-                elif conf >= 50:
-                    conf_label = "🟡 Medium"
-                else:
-                    conf_label = "🔴 Low"
-                print(f"Confidence         : {conf:.1f}% ({conf_label})")
-
-                print(f"Datetime (UTC)     : {result['iso_format']}")
-                print(f"Human Readable     : {result['human_readable']}")
-                print(f"Relative Time      : {result['relative_time']}")
-                if result.get("raw_value"):
-                    print(f"Raw Value Used     : {result['raw_value']}")
-
-                if result.get("local_time"):
-                    print(
-                        f"Local Time ({result['target_timezone']})   : "
-                        f"{result['local_human_readable']}"
-                    )
-
-            except ValueError as err:
-                self.ui.error(f"DECODE FAILED → {err}")
-
-        elif choice == "2":  # ENCODE
-            print("🔧 TIMESTAMP ENCODER")
-            print("Enter a datetime in format: YYYY-MM-DD HH:MM:SS[.fff]")
-            print("Example: 2025-12-09 16:23:45.456\n")
-
-            dt_input = input("Enter datetime: ").strip()
-            if not dt_input:
-                self.ui.warning("No input provided")
-                continue
-
-            print("\nOutput formats:")
-            print("  [1] unix       [5] hfs_plus")
-            print("  [2] unix_ms    [6] ms_dos")
-            print("  [3] windows    [7] ticks")
-            print("  [4] apple      [8] all")
-
-            fmt_choice = input("\nSelect format [1-8]: ").strip()
-            fmt_map = {
-                "1": "unix",
-                "2": "unix_ms",
-                "3": "windows",
-                "4": "apple",
-                "5": "hfs_plus",
-                "6": "ms_dos",
-                "7": "ticks",
-                "8": "all",
-            }
-            target = fmt_map.get(fmt_choice, "all")
-
-            try:
-                results = converter.encode(dt_input, target)
-
-                self.ui.info("ENCODING RESULTS")
-                self.ui.info(f"Original Datetime : {results['human_readable']}")
-                self.ui.info(f"ISO Format        : {results['input_datetime']}\n")
-
-                for key, value in sorted(results.items()):
-                    if key not in ("human_readable", "input_datetime"):
-                        if isinstance(value, int):
-                            print(f"  {key:25s}: {value:>25,}  ({hex(value)})")
-                        else:
-                            print(f"  {key:25s}: {value}")
-
-            except (ValueError, KeyError) as err:
-                self.ui.error(f"ENCODING FAILED → {err}")
-
-        elif choice == "3":  # AMBIGUITY CHECK
-            print("🔬 AMBIGUITY ANALYZER")
-            print(
-                "Checks all possible format interpretations and ranks "
-                "by confidence."
+            tz_input = self.ui.prompt(
+                "Enter a timezone for the entered value (e.g., UTC, "
+                "EDT...).  Type '1' to see a list of available timezones or "
+                "press [Enter] to skip"
             )
 
-            ts_input = self.ui.prompt("Enter timestamp").strip()
-            if not ts_input:
-                self.ui.warning("No input provided")
+            # Check for help request
+            if tz_input == "1":
+                self.display_timezone_list()
                 continue
 
-            target_tz = _prompt_timezone()
+            # Empty input = skip
+            if not tz_input:
+                return None
 
-            report = converter.get_ambiguity_report(
-                ts_input,
-                target_tz=target_tz
-            )
+            tz_input = tz_input.strip().upper()
 
-            if report["ambiguous"]:
-                self.ui.info(
-                    f"AMBIGUOUS — {report['interpretation_count']} "
-                    f"valid interpretation(s) found"
-                )
+            # Validate the entered value against ZONE_MAP
+            if tz_input in ZONE_MAP:
+                iana_name = ZONE_MAP[tz_input]
+                self.ui.info(f"{tz_input} → {iana_name}")
+                return iana_name
             else:
-                self.ui.info(
-                    f"UNAMBIGUOUS — {report['interpretation_count']} "
-                    "valid interpretation found"
+                self.ui.warning(
+                    f"'{tz_input}' is not recognized. Please use a code "
+                    "from the list above (or press [Enter] to skip)."
                 )
 
-            if report.get("recommendation"):
-                print(f"📌 {report['recommendation']}")
 
-            if report.get("notes"):
-                print(f"📝 {report['notes']}")
+    def run_interactive_session(self):
+        converter = TimestampConverter()
 
-            self.ui.info(
-                f"{'#':<4} {'FORMAT':<22} {'ENDIAN':<8} "
-                f"{'CONFIDENCE':<12} {'DATETIME (UTC)':<28}"
-            )
+        while True:
+            self.display_menu()
 
-            for i, interp in enumerate(report["interpretations"], 1):
-                endian = interp.get("endianness", "N/A")
-                self.ui.info(
-                    f"{i:<4} {interp['format']:<22} {endian:<8} "
-                    f"{interp['confidence']:>5.1f}%       "
-                    f"{interp['short_format']}"
+            try:
+                choice = self.ui.prompt("Enter your choice [1-7]").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("Goodbye!")
+                break
+
+            if choice == "1":  # DECODE
+                print("🔍 TIMESTAMP DECODER")
+                print(
+                    "Enter a timestamp (integer, hex with 0x, or datetime "
+                    "string)"
                 )
+                print("Examples:")
+                print("  1692384756              (Unix seconds)")
+                print("  0x01D3F6C8C5A4B8000     (Hex Windows FILETIME)")
+                print("  133365212760000000      (Windows FILETIME)")
+                print("  2023-08-18 15:45:56.123 (Datetime string)\n")
 
-                if interp.get("local_human_readable"):
-                    self.ui.info(
-                        f"Local ({target_tz}) → "
-                        f"{interp['local_human_readable']}"
-                    )
+                ts_input = self.ui.prompt("Enter timestamp").strip()
+                if not ts_input:
+                    self.ui.warning("No input provided")
+                    continue
 
-        elif choice == "4":  # BATCH
-            print("📦 BATCH PROCESSOR")
-            print(
-                "Enter timestamps, one per line. Press Enter twice when done."
-            )
+                target_tz = self._prompt_timezone()
 
-            batch = []
-            while True:
-                line = input("> ").strip()
-                if not line and batch:
-                    break
-                if line:
-                    batch.append(line)
-
-            if not batch:
-                self.ui.warning("No inputs provided")
-                continue
-
-            target_tz = _prompt_timezone()
-
-            hdr = (
-                f"{'INPUT':<30} {'FORMAT':<20} {'CONF':<8} "
-                f"{'DATETIME (UTC)':<28}"
-            )
-            if target_tz:
-                hdr += f" {'LOCAL TIME':<30}"
-            print(hdr)
-
-            for inp in batch:
                 try:
-                    result = converter.decode(inp, target_tz=target_tz)
-                    row = (
-                        f"{inp:<30} {result['format']:<20} "
-                        f"{result['confidence']:>5.1f}%  "
-                        f"{result['short_format']}"
-                    )
-                    if target_tz and result.get("local_human_readable"):
-                        local_short = (
-                            result.get("local_time", "")[:19]
-                            if result.get("local_time")
-                            else ""
+                    result = converter.decode(ts_input, target_tz=target_tz)
+
+                    self.ui.success("DECODE SUCCESSFUL")
+                    self.ui.info(f"Format Detected    : {result['format']}")
+                    if result.get("endianness") and result["endianness"] != "N/A":
+                        self.ui.info(
+                            f"Endianness         : "
+                            f"{result['endianness'].title()}"
                         )
-                        row += f"  {local_short}"
-                    print(row)
+
+                    conf = result.get("confidence", 0)
+                    if conf >= 75:
+                        conf_label = "🟢 High"
+                    elif conf >= 50:
+                        conf_label = "🟡 Medium"
+                    else:
+                        conf_label = "🔴 Low"
+                    self.ui.info(f"Confidence         : {conf:.1f}% ({conf_label})")
+
+                    self.ui.info(f"Datetime (UTC)     : {result['iso_format']}")
+                    self.ui.info(f"Human Readable     : {result['human_readable']}")
+                    self.ui.info(f"Relative Time      : {result['relative_time']}")
+                    if result.get("raw_value"):
+                        self.ui.info(f"Raw Value Used     : {result['raw_value']}")
+
+                    if result.get("local_time"):
+                        self.ui.info(
+                            f"Local Time ({result['target_timezone']})   : "
+                            f"{result['local_human_readable']}"
+                        )
+
                 except ValueError as err:
-                    print(
-                        f"{inp:<30} {'ERROR':<20} {'N/A':<8} {str(err)[:40]}"
+                    self.ui.error(f"DECODE FAILED → {err}")
+
+            elif choice == "2":  # ENCODE
+                print("🔧 TIMESTAMP ENCODER")
+                print("Enter a datetime in format: YYYY-MM-DD HH:MM:SS[.fff]")
+                print("Example: 2025-12-09 16:23:45.456\n")
+
+                dt_input = input("Enter datetime: ").strip()
+                if not dt_input:
+                    self.ui.warning("No input provided")
+                    continue
+
+                print("\nOutput formats:")
+                print("  [1] unix       [5] hfs_plus")
+                print("  [2] unix_ms    [6] ms_dos")
+                print("  [3] windows    [7] ticks")
+                print("  [4] apple      [8] all")
+
+                fmt_choice = input("\nSelect format [1-8]: ").strip()
+                fmt_map = {
+                    "1": "unix",
+                    "2": "unix_ms",
+                    "3": "windows",
+                    "4": "apple",
+                    "5": "hfs_plus",
+                    "6": "ms_dos",
+                    "7": "ticks",
+                    "8": "all",
+                }
+                target = fmt_map.get(fmt_choice, "all")
+
+                try:
+                    results = converter.encode(dt_input, target)
+
+                    self.ui.info("ENCODING RESULTS")
+                    self.ui.info(f"Original Datetime : {results['human_readable']}")
+                    self.ui.info(f"ISO Format        : {results['input_datetime']}\n")
+
+                    for key, value in sorted(results.items()):
+                        if key not in ("human_readable", "input_datetime"):
+                            if isinstance(value, int):
+                                print(f"  {key:25s}: {value:>25,}  ({hex(value)})")
+                            else:
+                                print(f"  {key:25s}: {value}")
+
+                except (ValueError, KeyError) as err:
+                    self.ui.error(f"ENCODING FAILED → {err}")
+
+            elif choice == "3":  # AMBIGUITY CHECK
+                print("🔬 AMBIGUITY ANALYZER")
+                print(
+                    "Checks all possible format interpretations and ranks "
+                    "by confidence."
+                )
+
+                ts_input = self.ui.prompt("Enter timestamp").strip()
+                if not ts_input:
+                    self.ui.warning("No input provided")
+                    continue
+
+                target_tz = self._prompt_timezone()
+
+                report = converter.get_ambiguity_report(
+                    ts_input,
+                    target_tz=target_tz
+                )
+
+                if report["ambiguous"]:
+                    self.ui.info(
+                        f"AMBIGUOUS — {report['interpretation_count']} "
+                        f"valid interpretation(s) found"
+                    )
+                else:
+                    self.ui.info(
+                        f"UNAMBIGUOUS — {report['interpretation_count']} "
+                        "valid interpretation found"
                     )
 
-        elif choice == "5":  # FORMAT INFO
-            _display_format_info()
-            self.ui.prompt("\nPress Enter to continue...")
+                if report.get("recommendation"):
+                    print(f"📌 {report['recommendation']}")
 
-        elif choice == "6":  # TEST SUITE
-            _run_test_suite(converter)
+                if report.get("notes"):
+                    print(f"📝 {report['notes']}")
 
-        elif choice == "7":  # EXIT
-            print(
-                "Goodbye! Thanks for using the Universal Timestamp "
-                "Converter!"
-            )
-            break
+                self.ui.info(
+                    f"{'#':<4} {'FORMAT':<22} {'ENDIAN':<8} "
+                    f"{'CONFIDENCE':<12} {'DATETIME (UTC)':<28}"
+                )
 
-        else:
-            print(f"Invalid choice → '{choice}'. Please enter 1-7.")
+                for i, interp in enumerate(report["interpretations"], 1):
+                    endian = interp.get("endianness", "N/A")
+                    self.ui.info(
+                        f"{i:<4} {interp['format']:<22} {endian:<8} "
+                        f"{interp['confidence']:>5.1f}%       "
+                        f"{interp['short_format']}"
+                    )
+
+                    if interp.get("local_human_readable"):
+                        self.ui.info(
+                            f"Local ({target_tz}) → "
+                            f"{interp['local_human_readable']}"
+                        )
+
+            elif choice == "4":  # BATCH
+                print("📦 BATCH PROCESSOR")
+                print(
+                    "Enter timestamps, one per line. Press Enter twice when done."
+                )
+
+                batch = []
+                while True:
+                    line = input("> ").strip()
+                    if not line and batch:
+                        break
+                    if line:
+                        batch.append(line)
+
+                if not batch:
+                    self.ui.warning("No inputs provided")
+                    continue
+
+                target_tz = self._prompt_timezone()
+
+                hdr = (
+                    f"{'INPUT':<30} {'FORMAT':<20} {'CONF':<8} "
+                    f"{'DATETIME (UTC)':<28}"
+                )
+                if target_tz:
+                    hdr += f" {'LOCAL TIME':<30}"
+                print(hdr)
+
+                for inp in batch:
+                    try:
+                        result = converter.decode(inp, target_tz=target_tz)
+                        row = (
+                            f"{inp:<30} {result['format']:<20} "
+                            f"{result['confidence']:>5.1f}%  "
+                            f"{result['short_format']}"
+                        )
+                        if target_tz and result.get("local_human_readable"):
+                            local_short = (
+                                result.get("local_time", "")[:19]
+                                if result.get("local_time")
+                                else ""
+                            )
+                            row += f"  {local_short}"
+                        print(row)
+                    except ValueError as err:
+                        print(
+                            f"{inp:<30} {'ERROR':<20} {'N/A':<8} {str(err)[:40]}"
+                        )
+
+            elif choice == "5":  # FORMAT INFO
+                _display_format_info()
+                self.ui.prompt("\nPress Enter to continue...")
+
+            elif choice == "6":  # TEST SUITE
+                _run_test_suite(converter)
+
+            elif choice == "7":  # EXIT
+                print(
+                    "Goodbye! Thanks for using the Universal Timestamp "
+                    "Converter!"
+                )
+                break
+
+            else:
+                print(f"Invalid choice → '{choice}'. Please enter 1-7.")
 
 
 def _display_format_info():
@@ -1617,5 +1714,7 @@ if __name__ == "__main__":
     print("✨ Welcome to the Universal Timestamp Converter v3.0")
     print("Now with relative time, enhanced confidence,")
     print("ambiguity reports, and timezone support!\n")
-    
-    run_interactive_session()
+
+    converter = TimestampConverter()
+
+    converter.run_interactive_session()
