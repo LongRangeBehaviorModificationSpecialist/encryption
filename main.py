@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 
 #TODO - Make this an "all in one tool"? Options to add:
-#TODO - (A) encode/decode text repo
-#TODO       Import the encoding/decoding files and then add them to the
-#TODO       __init__ method.
-#TODO - (B) text/file hasher
-#TODO - (C) timestamp converter (most common formats)
-#TODO - (D) QR code generator (with options to pick custom colors)
-#TODO - (E) image-to-base64 / base64-to-image converter
-#TODO - (F) password generator (w/ various requirements)
-#TODO - (G) file type checker (signatures vs. extensions)
-#TODO - (H) key word searcher (file names and contents)
-#TODO - (I) file hash searcher (read from txt file or input)
+
+#TODO - (A) text/file hasher
+#TODO - (B) QR code generator (with options to pick custom colors)
+#TODO - (C) image-to-base64 / base64-to-image converter
+#TODO - (D) password generator (w/ various requirements)
+#TODO - (E) key word searcher (file names and contents)
+#TODO - (F) file hash searcher (read from txt file or input)
 
 from functools import partial
 import logging
@@ -22,7 +18,6 @@ from rich.traceback import install
 import signal
 import sys
 import traceback
-from typing import Union
 
 from config.config import (
     GLOBAL_CONFIG,
@@ -216,25 +211,6 @@ class Main:
         Returns:
             True if handler executed successfully, False otherwise
         """
-        # if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
-        #     try:
-        #         menu_item.handler_callable()
-        #         return True
-        #     except Exception as err:
-        #         # Get handler name from menu_item attributes
-        #         handler_name = getattr(menu_item, 'label', None) or \
-        #                   getattr(menu_item, 'name', None) or \
-        #                   getattr(menu_item, 'key', None) or \
-        #                   str(type(menu_item.handler_callable))
-        #         self.ui.error(
-        #             f"Error executing handler: '{handler_name}': "
-        #             f"{type(err).__name__} → {err}"
-        #         )
-        #         return False
-        # else:
-        #     self.ui.error("No handler callable bound to this menu item")
-        #     return False
-
         if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
             handler_name = getattr(menu_item, 'label', 'Unknown')
 
@@ -245,12 +221,19 @@ class Main:
                     logger.warning(f"Handler '{handler_name}' returned None")
                 return True
             except Exception as err:
-                # Print full stack trace for debugging
+                # Get handler name from menu_item attributes
+                handler_name = getattr(menu_item, 'label', None) or \
+                    getattr(menu_item, 'name', None) or \
+                    getattr(menu_item, 'key', None) or \
+                    str(type(menu_item.handler_callable))
                 self.ui.error(
-                    f"Error executing handler '{handler_name}': "
+                    f"Error executing handler: '{handler_name}': "
                     f"{type(err).__name__} → {err}\n"
                     f"Traceback:\n{traceback.format_exc()}"
                 )
+            return False
+        else:
+            self.ui.error("No handler callable bound to this menu item")
             return False
 
 

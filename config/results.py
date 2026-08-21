@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 from rich import box
-from rich.align import Align
-from rich.console import Console, Group
+from rich.console import Console
 from rich.traceback import install
-from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
@@ -12,7 +10,7 @@ from config.display_helpers import escape_for_display
 
 
 # Make the console object
-c = Console()
+console = Console()
 install(show_locals=True)
 
 
@@ -66,54 +64,4 @@ class Results:
             display_value = escape_for_display(str(value))
             table.add_row(key, display_value)
 
-        c.print(table)
-
-        # results_table = Table(
-        #     box=box.HORIZONTALS,
-        #     show_header=True,
-        #     header_style="bold #2070b2",
-        #     show_lines=True,
-        # )
-
-        # results_table.add_column(
-        #     Text("Format", justify="left"),
-        #         justify="left",
-        #         no_wrap=False,
-        # )
-
-        # results_table.add_column(
-        #     Text("Encoded String", justify="left"),
-        #         justify="left",
-        #         ratio=2,
-        #         no_wrap=False,
-        # )
-
-        # results_table.add_row(
-        #     f"[bold green3]Input Value",
-        #     f"[bold green3]'{results_dict['user_input']}'"
-        # )
-
-        # new_dict = {
-        #     key: value for key, value in results_dict.items()
-        #     if key not in ["Input Type", "Input Value"]
-        # }
-
-        # for key, value in new_dict.items():
-        #     results_table.add_row(
-        #         f"[white]{key}",
-        #         f"[khaki1]{value}",
-        #         end_section=True,
-        #     )
-
-        # inner_panel = Panel(
-        #     Align.center(Group(Align.left(results_table)), vertical="middle"),
-        #     box=box.ROUNDED,
-        #     expand=False,
-        #     style="none",
-        #     border_style="none",
-        #     title=f"Input Data Type : {results_dict['type']}",
-        #     safe_box=True,
-        # )
-
-        # c.print("\n")
-        # c.print(inner_panel)
+        console.print(table)
