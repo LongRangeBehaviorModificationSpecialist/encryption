@@ -1256,13 +1256,12 @@ def run_interactive_session():
                 print(f"Datetime (UTC)     : {result['iso_format']}")
                 print(f"Human Readable     : {result['human_readable']}")
                 print(f"Relative Time      : {result['relative_time']}")
-
                 if result.get("raw_value"):
                     print(f"Raw Value Used     : {result['raw_value']}")
 
                 if result.get("local_time"):
                     print(
-                        f"Local Time ({result['target_timezone']}) : "
+                        f"Local Time ({result['target_timezone']})   : "
                         f"{result['local_human_readable']}"
                     )
 
