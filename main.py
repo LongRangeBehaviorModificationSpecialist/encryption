@@ -216,19 +216,42 @@ class Main:
         Returns:
             True if handler executed successfully, False otherwise
         """
+        # if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
+        #     try:
+        #         menu_item.handler_callable()
+        #         return True
+        #     except Exception as err:
+        #         # Get handler name from menu_item attributes
+        #         handler_name = getattr(menu_item, 'label', None) or \
+        #                   getattr(menu_item, 'name', None) or \
+        #                   getattr(menu_item, 'key', None) or \
+        #                   str(type(menu_item.handler_callable))
+        #         self.ui.error(
+        #             f"Error executing handler: '{handler_name}': "
+        #             f"{type(err).__name__} → {err}"
+        #         )
+        #         return False
+        # else:
+        #     self.ui.error("No handler callable bound to this menu item")
+        #     return False
+
         if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
+            handler_name = getattr(menu_item, 'label', 'Unknown')
+
+            import traceback
             try:
-                menu_item.handler_callable()
+                result = menu_item.handler_callable()
+                if result is None:
+                    logger.warning(f"Handler '{handler_name}' returned None")
                 return True
             except Exception as err:
+                # Print full stack trace for debugging
                 self.ui.error(
-                    f"Error executing handler: {type(err).__name__} → {err}"
+                    f"Error executing handler '{handler_name}': "
+                    f"{type(err).__name__} → {err}\n"
+                    f"Traceback:\n{traceback.format_exc()}"
                 )
-                return False
-
-        self.ui.warning("No handler configured for this item")
-
-        return False
+            return False
 
 
     def run_submenu_loop(self, category_key: str) -> None:
@@ -264,11 +287,11 @@ class Main:
                 ).strip()
                 normalized = selection.lower()
 
-                logger.debug(f"User selected → {normalized}")
+                logger.info(f"User selected → {normalized}")
 
                 # Check for back command
                 if normalized in ["r"]:
-                    logger.debug("User returned to main menu")
+                    logger.info("User returned to main menu")
                     # Return to main menu
                     return
 
@@ -447,7 +470,7 @@ class Main:
         for key in sorted(self.config.main_categories.keys()):
             category = self.config.main_categories[key]
             menu_table.add_row(
-                f"[white][{key}] [b][bright_green]{category.label}[/][/b] "
+                f"[white][{key}] [b][orange1]{category.label}[/][/b] "
                 f"[grey58][{category.description}]"
             )
 
@@ -505,7 +528,7 @@ class Main:
         for sub_key in sorted(category.submenu_categories.keys()):
             sub_cat = category.submenu_categories[sub_key]
             sub_menu_table.add_row(
-                f"[white][{sub_key}] [b][bright_green]{sub_cat.label}[/][/b] "
+                f"[white][{sub_key}] [b][orange1]{sub_cat.label}[/][/b] "
                 f"[grey58][{sub_cat.description}]"
             )
 
@@ -572,7 +595,7 @@ class Main:
         for item_key in sorted(sub_cat.submenu_items.keys()):
             item = sub_cat.submenu_items[item_key]
             sub_sub_table.add_row(
-                f"[white][{item_key}] [b][bright_green]{item.label}[/][/b] "
+                f"[white][{item_key}] [b][orange1]{item.label}[/][/b] "
                 f"[grey58][{item.description}]"
             )
 

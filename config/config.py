@@ -405,7 +405,7 @@ MAIN_CATEGORIES_CONFIG = {
             EncodeDecodeMethod.FROM_DECIMAL_INT.value: SubMenuCategory(
                 key="4",
                 label="From Decimal Integer",
-                description="Convert Decimal Integer",
+                description="Convert decimal integers",
                 method_enum=EncodeDecodeMethod.FROM_DECIMAL_INT,
                 handler_module="encode_decode",
                 handler_method="run_encode_decode",
@@ -415,7 +415,7 @@ MAIN_CATEGORIES_CONFIG = {
             EncodeDecodeMethod.FROM_DECIMAL_STR.value: SubMenuCategory(
                 key="5",
                 label="From Decimal String",
-                description="Convert Decimal String",
+                description="Convert decimal string",
                 method_enum=EncodeDecodeMethod.FROM_DECIMAL_STR,
                 handler_module="encode_decode",
                 handler_method="run_encode_decode",
@@ -425,7 +425,7 @@ MAIN_CATEGORIES_CONFIG = {
             EncodeDecodeMethod.FROM_HEX.value: SubMenuCategory(
                 key="6",
                 label="From Hexadecimal",
-                description="Convert Hexadecimal Value",
+                description="Convert hexadecimal values",
                 method_enum=EncodeDecodeMethod.FROM_HEX,
                 handler_module="encode_decode",
                 handler_method="run_encode_decode",
@@ -435,7 +435,7 @@ MAIN_CATEGORIES_CONFIG = {
             EncodeDecodeMethod.FROM_OCT.value: SubMenuCategory(
                 key="7",
                 label="From Octal",
-                description="Convert Octal Value",
+                description="Convert octal value",
                 method_enum=EncodeDecodeMethod.FROM_OCT,
                 handler_module="encode_decode",
                 handler_method="run_encode_decode",

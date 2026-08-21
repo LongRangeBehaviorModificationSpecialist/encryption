@@ -19,31 +19,28 @@ install(show_locals=True)
 class Results:
 
 
-    def print_rotation_results(self, results: str) -> str:
-        return c.print(
-            f"[bold blue]String Rotation Results\n"
-            "-----------------------\n"
-            f"[bold khaki3]{results}\n"
-        )
-
-
     @staticmethod
     def print_results_table(results_dict: dict) -> None:
         table = Table(
             box=box.ROUNDED,
             title="\nConversion Results",
+            title_style="bold bright_blue",
+            title_justify="center",
             show_lines=True,
+            pad_edge=True,
+            padding=(0, 5, 0, 1),
+            border_style="dim",
+            safe_box=True,
         )
 
         table.add_column(
-            Text("Field", justify="left"),
-            style="gray78",
+            Text("Field", justify="left", style="bright_yellow"),
         )
         table.add_column(
-            Text("Value", justify="left"),
-            style="gold1",
+            Text("Value", justify="left", style="bright_yellow"),
             ratio=2,
             no_wrap=False,
+            overflow="fold",
         )
 
         table.add_row(
@@ -52,13 +49,13 @@ class Results:
         )
 
         table.add_row(
-            f"[green3]Input Value",
-            f"[green3]{results_dict['Input Value']}"
+            f"[bright_green]Input Value",
+            f"[bright_green]{results_dict['Input Value']}"
         )
 
         table.add_row(
-            f"[green3]Validation OK",
-            f"[green3]{results_dict['Validation OK']}"
+            f"[bright_green]Validation OK",
+            f"[bright_green]{results_dict['Validation OK']}"
         )
 
         for key, value in results_dict.items():
