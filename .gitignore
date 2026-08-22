@@ -4,4 +4,5 @@ temp
 *.asc
 .vscode
 testing.txt
+testing.py
 /logs/

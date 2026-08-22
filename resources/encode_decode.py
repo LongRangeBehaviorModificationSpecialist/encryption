@@ -185,7 +185,7 @@ class EncodeDecode:
 
             # Single generic builder instead of 9 methods
             results = self._build_conversion_dict(input_type, user_input)
-            Results.print_results_table(results_dict=results)
+            Results.print_encode_decode_results_table(results_dict=results)
 
         except ValueError as err:
             self.ui.error(f"Validation Error → {err}")

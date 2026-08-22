@@ -33,7 +33,6 @@ from resources.encrypt_decrypt._xor import XOR
 from resources.encrypt_decrypt.detect import FileAnalyzer
 from resources.file_checker import FileCheckRunner
 from resources.time_converter import TimestampConverter
-from resources.encode_decode import EncodeDecode
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 from versions import (
     __version__,
@@ -55,7 +54,7 @@ logger = get_logger("main")
 class Main:
     """Main application class."""
 
-    def __init__(self,  ui: UIHandlerProtocol | None = None) -> None:
+    def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
         """Initialize the application and register signal handlers."""
         # Register SIGINT handler during initialization
         signal.signal(signal.SIGINT, self.handle_sigint)
@@ -78,7 +77,6 @@ class Main:
         self.pgp = PGP()
         self.xor = XOR()
         self.detect = FileAnalyzer()
-        self.encode_decode = EncodeDecode()
         self.file_checker = FileCheckRunner()
         self.time_converter = TimestampConverter()
 
@@ -89,13 +87,25 @@ class Main:
             "pgp": self.pgp,
             "xor": self.xor,
             "detect": self.detect,
-            "encode_decode": self.encode_decode,
             "file_checker": self.file_checker,
             "time_converter": self.time_converter,
         }
+        self._set_up_modules()
 
         self._bind_handlers()
         logger.info("All modules initialized successfully")
+
+
+    def _set_up_modules(self) -> None:
+        """Initialize and register all modules."""
+        from resources.encode_decode import EncodeDecode
+        from resources.hashing import Hashing
+
+        self.encode_decode = EncodeDecode(ui=self.ui)
+        self._modules["encode_decode"] = self.encode_decode
+
+        self.hashing = Hashing(ui=self.ui)
+        self._modules["hashing"] = self.hashing
 
 
     def handle_sigint(self, sig, frame) -> None:

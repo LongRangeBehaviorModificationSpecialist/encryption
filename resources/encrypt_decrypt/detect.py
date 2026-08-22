@@ -409,7 +409,7 @@ class FileAnalyzer:
             results.append(result)
 
         if results:
-            self.print_results_table(results)
+            self.print_detect_results_table(results)
 
         return results
 
@@ -469,7 +469,10 @@ class FileAnalyzer:
         )
 
 
-    def print_results_table(self, results: List[Dict[str, Any]]) -> None:
+    def print_detect_results_table(
+            self,
+            results: List[Dict[str, Any]]
+    ) -> None:
         """Renders analysis results using Rich tables with enhanced
         encryption detection data.
         """
@@ -478,7 +481,7 @@ class FileAnalyzer:
             header_style="bold cyan",
             show_lines=True,
             row_styles=["dim", ""]
-            )
+        )
 
         table.add_column("File", style="bold white")
         table.add_column("Size", justify="right", style="dim")
@@ -570,7 +573,9 @@ class FileAnalyzer:
         console.print(f"\n[bold green]Summary:\n")
         console.print(f"  Total Files: {total_files}")
         console.print(f"  Encrypted/Detected: [red]{encrypted_count}")
-        console.print(f"  Plaintext: [green]{total_files - encrypted_count - error_count}[/green]")
+        console.print(
+            f"  Plaintext: [green]"
+            f"{total_files - encrypted_count - error_count}[/green]")
         console.print(f"  Errors: [yellow]{error_count}\n")
 
         if results:

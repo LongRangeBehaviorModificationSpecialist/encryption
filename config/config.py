@@ -18,7 +18,6 @@ class EncryptionMethod(Enum):
     XOR = "4"
     DETECT = "5"
 
-
 class EncodeDecodeMethod(Enum):
     """Top-level encode/decode method categories"""
     FROM_ASCII = "1"
@@ -31,15 +30,18 @@ class EncodeDecodeMethod(Enum):
     ROTATE_STR = "8"
     FROM_MORSE_CODE = "9"
 
-
 class FileTypeCheckerMethod(Enum):
     CHECK_FILE = "1"
     CHECK_FOLDER = "2"
 
-
 class TimeConvertMethod(Enum):
     TIME_DECODE = "1"
     TIME_ENCODE = "2"
+
+class HashingMethod(Enum):
+    HASH_STR = "1"
+    HASH_FILE = "2"
+    HASH_DIR = "3"
 
 
 @dataclass
@@ -187,7 +189,7 @@ MAIN_CATEGORIES_CONFIG = {
                         handler_method="_handle_key_process_folder",
                         handler_kwargs={"action": "decrypt"},
                     )
-                },
+                }
             ),
             # LEVEL 1 sub-menu (with child menu)
             EncryptionMethod.AES_PASSWORD.value: SubMenuCategory(
@@ -363,7 +365,7 @@ MAIN_CATEGORIES_CONFIG = {
                     ),
                 }
             ),
-        },
+        }
     ),
     # LEVEL 0 menu item - Data Converter, Encoder, & Decoder
     "2": MainMenuCategory(
@@ -461,7 +463,7 @@ MAIN_CATEGORIES_CONFIG = {
                 handler_method="run_encode_decode",
                 handler_kwargs={"input_type": "morse_code"},
             ),
-        },
+        }
     ),
     # LEVEL 0 menu item - File Type Checker
     "3": MainMenuCategory(
@@ -489,7 +491,7 @@ MAIN_CATEGORIES_CONFIG = {
                 handler_method="run_file_checker",
                 handler_kwargs={"type": "folder"},
             ),
-        },
+        }
     ),
     # LEVEL 0 menu item - Time Decoder / Encoder
     "4": MainMenuCategory(
@@ -518,7 +520,45 @@ MAIN_CATEGORIES_CONFIG = {
                 handler_kwargs={"method": "encode"},
             )
         }
-    )
+    ),
+    # LEVEL 0 menu item - Hashing
+    "5": MainMenuCategory(
+        key="5",
+        label="Hashing",
+        description="Hash a string, file, or folder",
+        submenu_categories={
+            # LEVEL 1 sub-menu (w/o child menu)
+            HashingMethod.HASH_STR.value: SubMenuCategory(
+                key="1",
+                label="Hash text string",
+                description="Get the hash of a text string",
+                method_enum=HashingMethod.HASH_STR,
+                handler_module="hashing",
+                handler_method="run_hash_with_ui_selection",
+                handler_kwargs={"input_type": "string"},
+            ),
+            # LEVEL 1 sub-menu (w/o child menu)
+            HashingMethod.HASH_FILE.value: SubMenuCategory(
+                key="2",
+                label="Hash a file",
+                description="Get the hash of a single file",
+                method_enum=HashingMethod.HASH_FILE,
+                handler_module="hashing",
+                handler_method="run_hash_with_ui_selection",
+                handler_kwargs={"input_type": "file"},
+            ),
+            # LEVEL 1 sub-menu (w/o child menu)
+            HashingMethod.HASH_DIR.value: SubMenuCategory(
+                key="3",
+                label="Hash files in a directory",
+                description="Get the hashes of files in a directory",
+                method_enum=HashingMethod.HASH_DIR,
+                handler_module="hashing",
+                handler_method="run_hash_with_ui_selection",
+                handler_kwargs={"input_type": "directory"},
+            ),
+        },
+    ),
 }
 
 
