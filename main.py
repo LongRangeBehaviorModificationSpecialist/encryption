@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-#TODO - Make this an "all in one tool"? Options to add:
+# TODO - Make this an "all in one tool"? Options to add:
 
-#TODO - (A) text/file hasher
-#TODO - (B) QR code generator (with options to pick custom colors)
-#TODO - (C) image-to-base64 / base64-to-image converter
-#TODO - (D) password generator (w/ various requirements)
-#TODO - (E) key word searcher (file names and contents)
-#TODO - (F) file hash searcher (read from txt file or input)
+# TODO - (A) text/file hasher
+# TODO - (B) QR code generator (with options to pick custom colors)
+# TODO - (C) image-to-base64 / base64-to-image converter
+# TODO - (D) password generator (w/ various requirements)
+# TODO - (E) key word searcher (file names and contents)
+# TODO - (F) file hash searcher (read from txt file or input)
 
 from functools import partial
 import logging
@@ -26,6 +26,7 @@ from config.config import (
 )
 
 from config.log_config import setup_logging, get_logger
+from resources.decorators import handle_exceptions
 from resources.encrypt_decrypt._aes import AES
 from resources.encrypt_decrypt._key import KEY
 from resources.encrypt_decrypt._pgp import PGP
@@ -95,7 +96,7 @@ class Main:
         self._bind_handlers()
         logger.info("All modules initialized successfully")
 
-
+    @handle_exceptions()
     def _set_up_modules(self) -> None:
         """Initialize and register all modules."""
         from resources.encode_decode import EncodeDecode
@@ -107,14 +108,14 @@ class Main:
         self.hashing = Hashing(ui=self.ui)
         self._modules["hashing"] = self.hashing
 
-
+    @handle_exceptions()
     def handle_sigint(self, sig, frame) -> None:
         """Gracefully handles Ctrl+C signals across the entire application."""
         console.print("\n")
         self.ui.warning("Operation cancelled by user. Exiting...\n")
         sys.exit(0)
 
-
+    @handle_exceptions()
     def _bind_handlers(self) -> None:
         """Bind partial functions for all menu items across all tiers."""
         # Iterate through each main category
@@ -133,22 +134,23 @@ class Main:
 
                         if handler and callable(handler):
 
-                            try:
-                                sub_cat.handler_callable = partial(
-                                    handler,
-                                    **sub_cat.handler_kwargs
-                                )
-                                logger.info(
+                            # try:
+                            sub_cat.handler_callable = partial(
+                                handler,
+                                **sub_cat.handler_kwargs
+                            )
+                            logger.info(
                                 f"Bound handler → "
                                 f"[{category_key}][{sub_key}] "
                                 f"{sub_cat.handler_module}."
-                                f"{sub_cat.handler_method}"
+                                f"{sub_cat.handler_method}."
+                                f"{sub_cat.handler_kwargs}"
                             )
-                            except Exception as err:
-                                self.ui.error(
-                                    f"Failed to bind "
-                                    f"[{category_key}][{sub_key}] → {err}"
-                                )
+                            # except Exception as err:
+                            #     self.ui.error(
+                            #         f"Failed to bind "
+                            #         f"[{category_key}][{sub_key}] → {err}"
+                            #     )
                         else:
                             self.ui.warning(
                                 f"Method '{sub_cat.handler_method}' "
@@ -167,47 +169,48 @@ class Main:
                 # ── Case 2: SubMenuCategory has submenu_items (third tier) ──
                 for item_key, item in sub_cat.submenu_items.items():
                     if item.handler_module and item.handler_method:
-                            module = self._modules.get(item.handler_module)
-                            if module:
-                                handler = getattr(
+                        module = self._modules.get(item.handler_module)
+                        if module:
+                            handler = getattr(
                                     module,
                                     item.handler_method,
                                     None,
                                 )
-                                if handler and callable(handler):
-                                    try:
-                                        item.handler_callable = partial(
-                                            handler,
-                                            **item.handler_kwargs
-                                        )
-                                        logger.info(
-                                            f"Bound handler → "
-                                            f"[{category_key}][{sub_key}]"
-                                            f"[{item_key}] "
-                                            f"{item.handler_module}."
-                                            f"{item.handler_method}"
-                                        )
-                                    except Exception as err:
-                                        self.ui.error(
-                                            f"Failed to bind "
-                                            f"[{category_key}][{sub_key}]"
-                                            f"[{item_key}] → {err}"
-                                        )
-                                else:
-                                    self.ui.warning(
-                                        f"Method '{item.handler_method}' "
-                                        f"not found in '{item.handler_module}'"
+                            if handler and callable(handler):
+                                # try:
+                                item.handler_callable = partial(
+                                        handler,
+                                        **item.handler_kwargs
                                     )
-                                    available = [
-                                        m for m in dir(module)
-                                        if callable(getattr(module, m))
-                                        and not m.startswith("_")
-                                    ]
-                                    self.ui.info(
-                                        f"Available → {', '.join(available)}"
+                                logger.info(
+                                        f"Bound handler → "
+                                        f"[{category_key}][{sub_key}]"
+                                        f"[{item_key}] "
+                                        f"{item.handler_module}."
+                                        f"{item.handler_method}."
+                                        f"{item.handler_kwargs}"
                                     )
+                                # except Exception as err:
+                                #     self.ui.error(
+                                #             f"Failed to bind "
+                                #             f"[{category_key}][{sub_key}]"
+                                #             f"[{item_key}] → {err}"
+                                #         )
+                            else:
+                                self.ui.warning(
+                                    f"Method '{item.handler_method}' "
+                                    f"not found in '{item.handler_module}'"
+                                )
+                                available = [
+                                    m for m in dir(module)
+                                    if callable(getattr(module, m))
+                                    and not m.startswith("_")
+                                ]
+                                self.ui.info(
+                                    f"Available → {', '.join(available)}"
+                                )
 
-
+    @handle_exceptions()
     def _call_handler(
             self,
             menu_item: SubMenuCategory | SubMenuItem
@@ -224,29 +227,29 @@ class Main:
         if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
             handler_name = getattr(menu_item, 'label', 'Unknown')
 
-            import traceback
-            try:
-                result = menu_item.handler_callable()
-                if result is None:
-                    logger.warning(f"Handler '{handler_name}' returned None")
-                return True
-            except Exception as err:
-                # Get handler name from menu_item attributes
-                handler_name = getattr(menu_item, 'label', None) or \
-                    getattr(menu_item, 'name', None) or \
-                    getattr(menu_item, 'key', None) or \
-                    str(type(menu_item.handler_callable))
-                self.ui.error(
-                    f"Error executing handler: '{handler_name}': "
-                    f"{type(err).__name__} → {err}\n"
-                    f"Traceback:\n{traceback.format_exc()}"
-                )
-            return False
+            # import traceback
+            # try:
+            result = menu_item.handler_callable()
+            if result is None:
+                logger.warning(f"Handler '{handler_name}' returned None")
+            return True
+            # except Exception as err:
+            #     # Get handler name from menu_item attributes
+            #     handler_name = getattr(menu_item, 'label', None) or \
+            #         getattr(menu_item, 'name', None) or \
+            #         getattr(menu_item, 'key', None) or \
+            #         str(type(menu_item.handler_callable))
+            #     self.ui.error(
+            #         f"Error executing handler: '{handler_name}': "
+            #         f"{type(err).__name__} → {err}\n"
+            #         f"Traceback:\n{traceback.format_exc()}"
+            #     )
+            #     return False
         else:
             self.ui.error("No handler callable bound to this menu item")
             return False
 
-
+    @handle_exceptions()
     def run_submenu_loop(self, category_key: str) -> None:
         """Run the submenu loop for a selected top-level category.
 
@@ -273,72 +276,72 @@ class Main:
             # Show the middle-tier (level 1) sub-menu
             self.display_sub_menu(category_key)
 
-            try:
-                selection = self.ui.prompt(
-                    "ENTER CHOICE",
-                    menu_prompt=True,
-                ).strip()
-                normalized = selection.lower()
+            # try:
+            selection = self.ui.prompt(
+                "ENTER CHOICE",
+                menu_prompt=True,
+            ).strip()
+            normalized = selection.lower()
 
-                logger.info(f"User selected → {normalized}")
+            logger.info(f"User selected → {normalized}")
 
-                # Check for back command
-                if normalized in ["r"]:
-                    logger.info("User returned to main menu")
-                    # Return to main menu
-                    return
+            # Check for back command
+            if normalized in ["r"]:
+                logger.info("User returned to main menu")
+                # Return to main menu
+                return
 
-                # Check for quit
-                if normalized in ["q"]:
-                    logger.info("User chose to exit from submenu")
-                    exit_program = True
-                    Utils.exit_application(self)
-                    return
+            # Check for quit
+            if normalized in ["q"]:
+                logger.info("User chose to exit from submenu")
+                exit_program = True
+                Utils.exit_application(self)
+                return
 
-                # Look up the SubMenuCategory by key
-                sub_cat = category.submenu_categories.get(normalized)
-                if not sub_cat:
-                    self.ui.error(
-                        "Invalid choice. Try again or press \"R\" to go back."
-                    )
-                    continue
+            # Look up the SubMenuCategory by key
+            sub_cat = category.submenu_categories.get(normalized)
+            if not sub_cat:
+                self.ui.error(
+                    "Invalid choice. Try again or press \"R\" to go back."
+                )
+                continue
 
-                # ── Branch A: Direct handler (encode/decode) ──
-                if sub_cat.handler_module and sub_cat.handler_method:
-                    logger.info(
-                        f"Executing direct handler: "
-                        f"[{category_key}][{normalized}] → {sub_cat.label}"
-                    )
-                    self._call_handler(menu_item=sub_cat)
-
-                    if not self._ask_continue():
-                        exit_program = True
-                        return
-                    continue  # Back to the submenu loop
-
-                # ── Branch B: Has submenu_items (encryption) ──
-                if not sub_cat.submenu_items:
-                    self.ui.warning(
-                        "This category has no available actions."
-                    )
-                    continue
-
-                # Enter the third-tier (sub-submenu) loop
-                self.run_sub_submenu_loop(category_key, normalized)
+            # ── Branch A: Direct handler (encode/decode) ──
+            if sub_cat.handler_module and sub_cat.handler_method:
+                logger.info(
+                    f"Executing direct handler: "
+                    f"[{category_key}][{normalized}] → {sub_cat.label}"
+                )
+                self._call_handler(menu_item=sub_cat)
 
                 if not self._ask_continue():
                     exit_program = True
                     return
+                continue  # Back to the submenu loop
 
-            except KeyboardInterrupt:
-                msg = "Application was interrupted by user (Ctrl+C)"
-                self.ui.warning(msg)
-                logger.warning(msg)
+            # ── Branch B: Has submenu_items (encryption) ──
+            if not sub_cat.submenu_items:
+                self.ui.warning(
+                    "This category has no available actions."
+                )
+                continue
+
+            # Enter the third-tier (sub-submenu) loop
+            self.run_sub_submenu_loop(category_key, normalized)
+
+            if not self._ask_continue():
+                exit_program = True
                 return
-            except EOFError:
-                return
 
+            # except KeyboardInterrupt:
+            #     msg = "Application was interrupted by user (Ctrl+C)"
+            #     self.ui.warning(msg)
+            #     logger.warning(msg)
+            #     return
+            # except EOFError:
+            #     return
 
+    @handle_exceptions()
     def run_sub_submenu_loop(
             self,
             category_key: str,
@@ -367,77 +370,77 @@ class Main:
             # Display third-tier menu
             self.display_sub_sub_menu(category_key, sub_cat_key)
 
-            try:
-                selection = self.ui.prompt(
-                    "ENTER CHOICE",
-                    menu_prompt=True,
-                ).strip()
-                normalized = selection.lower()
+            # try:
+            selection = self.ui.prompt(
+                "ENTER CHOICE",
+                menu_prompt=True,
+            ).strip()
+            normalized = selection.lower()
 
-                if normalized in ["r"]:
-                    logger.debug("User returned to submenu")
-                    return
+            if normalized in ["r"]:
+                logger.debug("User returned to submenu")
+                return
 
-                if normalized in ["q"]:
-                    logger.info("User chose to exit from sub-submenu")
-                    Utils.exit_application(self)
-                    return
+            if normalized in ["q"]:
+                logger.info("User chose to exit from sub-submenu")
+                Utils.exit_application(self)
+                return
 
-                if normalized not in sub_cat.submenu_items.keys():
-                    self.ui.error(
-                        "Invalid choice. Try again or press \"R\" to go back."
-                    )
-                    continue
-
-                item = sub_cat.submenu_items[normalized]
-                logger.info(
-                    f"Executing operation: "
-                    f"[{category_key}][{sub_cat_key}][{normalized}] → "
-                    f"{item.label}"
+            if normalized not in sub_cat.submenu_items.keys():
+                self.ui.error(
+                    "Invalid choice. Try again or press \"R\" to go back."
                 )
+                continue
 
-                self._call_handler(menu_item=item)
+            item = sub_cat.submenu_items[normalized]
+            logger.info(
+                f"Executing operation: "
+                f"[{category_key}][{sub_cat_key}][{normalized}] → "
+                f"{item.label}"
+            )
 
-                if not self._ask_continue():
-                    exit_loop = True
-                    return
+            self._call_handler(menu_item=item)
 
-            except KeyboardInterrupt:
-                msg = "Application was interrupted by user (Ctrl+C)"
-                self.ui.warning(msg)
-                logger.warning(msg)
+            if not self._ask_continue():
+                exit_loop = True
                 return
-            except EOFError:
-                return
 
+            # except KeyboardInterrupt:
+            #     msg = "Application was interrupted by user (Ctrl+C)"
+            #     self.ui.warning(msg)
+            #     logger.warning(msg)
+            #     return
+            # except EOFError:
+            #     return
 
+    @handle_exceptions()
     def _ask_continue(self) -> bool:
         """Ask user if they want to continue to main menu.
 
         Returns:
             True if user wants to continue, False to exit
         """
-        try:
+        # try:
 
-            response = self.ui.confirm(
-                "Return to previous menu?",
-                default="y"
-            )
+        response = self.ui.confirm(
+            "Return to previous menu?",
+            default="y"
+        )
 
-            if not response:
-                logger.info("The application was closed by the user")
-                Utils.exit_application(self)
-                return False
-
-            logger.info("User returned to the previous menu")
-            return True
-
-        except (KeyboardInterrupt, EOFError) as e:
-            logger.error(f"An error occured during this operation → {e}")
-            # Exit on interrupt during prompt
+        if not response:
+            logger.info("The application was closed by the user")
+            Utils.exit_application(self)
             return False
 
+        logger.info("User returned to the previous menu")
+        return True
 
+        # except (KeyboardInterrupt, EOFError) as e:
+        #     logger.error(f"An error occured during this operation → {e}")
+        #     # Exit on interrupt during prompt
+        #     return False
+
+    @handle_exceptions()
     def display_main_menu(self) -> None:
         """Render the main menu using configuration."""
         logger.info("Displaying main menu")
@@ -490,7 +493,7 @@ class Main:
 
         console.print(menu_panel)
 
-
+    @handle_exceptions()
     def display_sub_menu(self, category_key: str) -> None:
         """Render the middle-tier submenu for a top-level category.
 
@@ -547,7 +550,7 @@ class Main:
 
         console.print(sub_menu_panel)
 
-
+    @handle_exceptions()
     def display_sub_sub_menu(
             self,
             category_key: str,
@@ -607,8 +610,8 @@ class Main:
 
         console.print(sub_sub_panel)
 
-
-    def main(self, ui: UIHandlerProtocol | None = None) -> None:
+    @handle_exceptions()
+    def main(self) -> None:
         """Main application controller for the ENCRYPT/DECRYPT utility.
 
         Orchestrates input/output operations and manages converter
@@ -623,48 +626,48 @@ class Main:
             # Show the main app menu
             self.display_main_menu()
 
-            try:
-                selection = self.ui.prompt(
-                    "ENTER CHOICE",
-                    menu_prompt=True,
-                ).strip()
+            # try:
+            selection = self.ui.prompt(
+                "ENTER CHOICE",
+                menu_prompt=True,
+            ).strip()
 
-                normalized = selection.lower()
+            normalized = selection.lower()
 
-                # Check for quit
-                if normalized in ["q"]:
-                    exit_program = True
-                    Utils.exit_application(self)
-                    break
-
-                # Validate main category
-                if normalized not in self.config.main_categories.keys():
-                    self.ui.warning(
-                        "Invalid choice. Please enter 1-4 or 'Q' to quit."
-                    )
-                    continue
-
-                # Navigate to submenu
-                self.run_submenu_loop(normalized)
-
-                # After submenu returns, ask if want to continue in main menu
-                if not self._ask_continue():
-                    exit_program = True
-                    break
-
-            except KeyboardInterrupt:
-                self.ui.warning(
-                    "Program interrupted by user (Ctrl+C)..."
-                )
-                logger.info("Program interrupted by user (KeyboardInterrupt)")
+            # Check for quit
+            if normalized in ["q"]:
                 exit_program = True
                 Utils.exit_application(self)
-                sys.exit(1)
-            except EOFError:
-                self.ui.error("EOFError received. Exiting...")
-                logger.error("EOFError received. Program exited.")
+                break
+
+            # Validate main category
+            if normalized not in self.config.main_categories.keys():
+                self.ui.warning(
+                    "Invalid choice. Please enter 1-5 or 'Q' to quit."
+                )
+                continue
+
+            # Navigate to submenu
+            self.run_submenu_loop(normalized)
+
+            # After submenu returns, ask if want to continue in main menu
+            if not self._ask_continue():
                 exit_program = True
-                sys.exit(1)
+                break
+
+            # except KeyboardInterrupt:
+            #     self.ui.warning(
+            #         "Program interrupted by user (Ctrl+C)..."
+            #     )
+            #     logger.info("Program interrupted by user (KeyboardInterrupt)")
+            #     exit_program = True
+            #     Utils.exit_application(self)
+            #     sys.exit(1)
+            # except EOFError:
+            #     self.ui.error("EOFError received. Exiting...")
+            #     logger.error("EOFError received. Program exited.")
+            #     exit_program = True
+            #     sys.exit(1)
 
 
 if __name__ != "__main__":

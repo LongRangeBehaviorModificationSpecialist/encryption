@@ -22,6 +22,8 @@ class Results:
     def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
         self.ui = ui or RichUIHandler(get_time=get_time)
 
+    def _confirm_results(self, saved_path: str) -> None:
+        pass
 
     @staticmethod
     def print_encode_decode_results_table(results_dict: dict) -> None:
@@ -72,7 +74,6 @@ class Results:
 
         console.print(table)
 
-
     def print_hasher_results(self, results_dict: dict) -> None:
         """Print results in formatted table, handling multiple algorithms."""
 
@@ -86,7 +87,6 @@ class Results:
             Results._print_hash_directory_results(self, data=results_dict)
         else:
             Results._print_hash_simple_results(self, data=results_dict)
-
 
     def _print_hash_simple_results(self, data: dict):
         """Print string/file hash results (single or multiple algorithms)."""
@@ -133,23 +133,39 @@ class Results:
 
         console.print(table)
 
-
     def _print_hash_directory_results(self, data: dict):
         """Print directory hash results with summary and per-file tables."""
         from rich.box import ROUNDED
 
         # Summary table
         summary = Table(
-            title="Directory Hash Summary",
-            title_style="bold bright_blue",
-            box=ROUNDED,
-            border_style="blue",
+            title="\nDirectory Hash Summary",
+            title_style="bold bright_white",
+            box=box.ROUNDED,
+            border_style="bright_blue",
             expand=True,
-            padding=(0, 2)
+            padding=(0, 2),
+            show_lines=False,
         )
 
-        summary.add_column("Metric", style="cyan", width=15)
-        summary.add_column("Value", style="green", width=40)
+        summary.add_column(
+            Text(
+                "Metric",
+                style="bright_white",
+                justify="left",
+            ),
+            style="bright_white",
+            width=15,
+        )
+        summary.add_column(
+            Text(
+                "Value",
+                style="bright_white",
+                justify="left",
+            ),
+            style="green",
+            width=40,
+        )
 
         summary.add_row("Algorithm(s)", data.get("Algorithms Used", "N/A"))
         summary.add_row("Total Files", data.get("Total Files", "N/A"))
@@ -168,16 +184,49 @@ class Results:
 
             file_table = Table(
                 title="Per-File Hashes",
-                box=ROUNDED,
+                title_style="bold bright_white",
+                title_justify="center",
+                box=box.ROUNDED,
                 border_style="dim",
-                expand=True
+                expand=True,
+                show_lines=True,
+                pad_edge=True,
+                padding=(0, 5, 0, 1),
             )
 
-            file_table.add_column("File", style="white", overflow="fold")
-            file_table.add_column("Size", justify="right", style="yellow")
+            file_table.add_column(
+                Text(
+                    "File",
+                    justify="left",
+                    style="bright_white",
+                ),
+                overflow="fold",
+                style="bright_white",
+                vertical="middle",
+            ),
+            file_table.add_column(
+                Text(
+                    "Size",
+                    justify="left",
+                    style="bright_white",
+                ),
+                justify="left",
+                style="bright_white",
+                vertical="middle",
+            )
             for algo in hash_keys:
-                display_name = f"[cyan]{algo.upper()}[/cyan]"
-                file_table.add_column(display_name, style="bright_blue", overflow="fold")
+                display_name = f"{algo.upper()}"
+                file_table.add_column(
+                    Text(
+                        display_name,
+                        justify="left",
+                        style="bright_white",
+                    ),
+                    justify="left",
+                    overflow="fold",
+                    style="bright_green",
+                    vertical="middle",
+                )
 
             for file_entry in files:
                 row = [
@@ -189,4 +238,5 @@ class Results:
                     row.append(hashes.get(algo, "N/A"))
                 file_table.add_row(*row)
 
-            console.print(Panel(file_table, border_style="blue"))
+            # console.print(Panel(file_table, border_style="blue"))
+            console.print(file_table)

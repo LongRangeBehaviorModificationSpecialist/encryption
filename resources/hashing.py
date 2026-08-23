@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
+import csv
+from datetime import datetime
 import hashlib
+import json
 from pathlib import Path
 from typing import Dict, List, Any, Optional
-from rich.console import Console
 
+from config.log_config import get_logger
 from config.results import Results
 from utils import UIHandlerProtocol, RichUIHandler, get_time
+
+
+logger = get_logger("hasher")
 
 
 class Hashing:
@@ -34,6 +40,7 @@ class Hashing:
 
     SUPPORTED_ALGORITHMS = list(ALGORITHM_NAMES.keys())
 
+    SUPPORTED_EXPORT_FORMATS = ["csv", "json", "txt"]
 
     def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
         """
@@ -54,12 +61,6 @@ class Hashing:
         Returns:
             List of selected algorithm names (e.g., ["md5", "sha256"]).
         """
-        # self.ui.info("[bold]Available Algorithms:[/bold]")
-        # for num, algo in self.ALGORITHM_CHOICES.items():
-        #     display_name = self.ALGORITHM_NAMES[algo]
-        #     self.ui.info(f"  [{num}] {display_name}")
-        # self.ui.info("  [5] All (run all available algorithms)")
-        # self.ui.info("")
 
         while True:
             selection = self.ui.prompt(
@@ -314,6 +315,8 @@ class Hashing:
         if failed > 0:
             output["error"] = f"{failed} file(s) could not be hashed."
 
+        # print(output)
+
         return self._wrap_result(output)
 
 
@@ -361,9 +364,215 @@ class Hashing:
         return text
 
 
+    def _offer_export(self, results: Dict[str, Any]) -> None:
+        """Ask user if they want to export directory results.
+
+        Args:
+            results: dictionary containing hashing results.
+
+        Returns:
+            None
+        """
+        if results.get("Validation OK") in ["False"]:
+            return
+
+        export_choice = self.ui.prompt(
+            "Export results? (Options: [1] CSV, [2] JSON, [3] TXT "
+            "(press [ENTER] to skip)")
+
+        if not export_choice:
+            return
+
+        format_map = {"1": "csv", "2": "json", "3": "txt"}
+
+        if export_choice not in format_map:
+            self.ui.warning("Skipping export → invalid option was input")
+            return
+
+        export_format = format_map[export_choice]
+
+        # Ask for custom path or use default
+        custom_dir = self.ui.prompt(
+            f"Press [ENTER] to save next to the current directory or enter a "
+            "custom file path"
+        )
+        custom_dir = Path(custom_dir.strip("\"'"))
+
+        output_filename = self.ui.prompt(
+            "Enter the name of the output file (w/o file extension)"
+        )
+
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        custom_path = (
+            custom_dir / f"{timestamp}_{output_filename}.{export_format}"
+        )
+
+        try:
+            saved_path = self.export_directory_results(
+                results=results,
+                export_path=custom_path if custom_path else None,
+                export_format=export_format
+            )
+            self.ui.success(
+                f"✅ Results exported to: [bright_blue]{saved_path}")
+        except Exception as err:
+            self.ui.error(f"❌ Export failed → {err}")
+
+
+    def export_directory_results(
+        self,
+        results: Dict[str, Any],
+        export_path: Optional[Path | str] = None,
+        export_format: str = "csv",
+    ) -> str:
+        """
+        Export directory hash results to a file.
+
+        Args:
+            results: Results dict from compute_directory_hash().
+            export_path: Destination file path. If None, saves next to the
+                directory.
+            export_format: "csv", "json", or "txt".
+
+        Returns:
+            Path to the exported file.
+        """
+        export_format = export_format.lower().strip()
+
+        if export_format not in self.SUPPORTED_EXPORT_FORMATS:
+            raise ValueError(
+                f"Unsupported format → '{export_format}'. "
+                f"Choose from: {', '.join(self.SUPPORTED_EXPORT_FORMATS)}"
+            )
+
+        # If no path provided, generate one based on the directory and timestamp
+        if not export_path:
+            dir_path = results.get("Directory Path", "hash_results")
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_name = f"hash_results_{timestamp}"
+            export_path = str(Path(dir_path).parent / f"{base_name}.{export_format}")
+
+        export_file = Path(export_path)
+        export_file.parent.mkdir(parents=True, exist_ok=True)
+
+        if export_format == "csv":
+            self._export_csv(results=results, path=export_file)
+        elif export_format == "json":
+            self._export_json(results=results, path=export_file)
+        elif export_format == "txt":
+            self._export_txt(results=results, path=export_file)
+
+        return str(export_file.absolute())
+
+
+    def _export_csv(self, results: Dict[str, Any], path: Path) -> None:
+        """Export file names and hash values to CSV format."""
+        files = results.get("Files", [])
+
+        if not files:
+            self.ui.warning("No files to export")
+            return
+
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+
+            # Get algorithm keys from the first file that has hashes
+            algo_columns = []
+            for file_entry in files:
+                hashes = file_entry.get("Hashes", {})
+                if hashes:
+                    algo_columns = list(hashes.keys())
+                    break
+
+            # Write header row (just File + algorithm names)
+            header = ["File"] + algo_columns
+            writer.writerow(header)
+
+            # Write each file's data
+            for file_entry in files:
+                file_name = file_entry.get("File", "")
+                hashes = file_entry.get("Hashes", {})
+
+                row_data = [file_name]
+                for algo in algo_columns:
+                    row_data.append(hashes.get(algo, ""))
+
+                writer.writerow(row_data)
+
+
+    def _export_json(self, results: Dict[str, Any], path: Path) -> None:
+        """Export to JSON format."""
+        export_data = {
+            "export_timestamp": datetime.now().isoformat(),
+            "summary": {
+                "directory_path": results.get("Directory Path", ""),
+                "algorithms_used": results.get("Algorithms Used", ""),
+                "total_files": results.get("Total Files", ""),
+                "successful": results.get("Successful", ""),
+                "failed": results.get("Failed", ""),
+                "total_size": results.get("Total Size", ""),
+                "validation_status": results.get("Validation OK", ""),
+            },
+            "files": [],
+        }
+
+        for file_entry in results.get("Files", []):
+            export_data["files"].append(
+                {
+                    "file": file_entry.get("File", ""),
+                    "size": file_entry.get("Size", ""),
+                    "hashes": file_entry.get("Hashes", {}),
+                    "success": file_entry.get("Success", False),
+                }
+            )
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(export_data, f, indent=4, ensure_ascii=False)
+
+
+    def _export_txt(self, results: Dict[str, Any], path: Path) -> None:
+        """Export to plain text format."""
+        lines = []
+        lines.append("=" * 72)
+        lines.append("DIRECTORY HASH REPORT")
+        lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append("=" * 72)
+        lines.append("")
+        lines.append(f"Directory:    {results.get('Directory Path', '')}")
+        lines.append(f"Algorithm(s): {results.get('Algorithms Used', '')}")
+        lines.append(f"Total Files:  {results.get('Total Files', '')}")
+        lines.append(f"Successful:   {results.get('Successful', '')}")
+        lines.append(f"Failed:       {results.get('Failed', '')}")
+        lines.append(f"Total Size:   {results.get('Total Size', '')}")
+        lines.append("")
+
+        files = results.get("Files", [])
+
+        if files:
+            for file_entry in files:
+                file_name = file_entry.get("File", "")
+                file_size = file_entry.get("Size", "")
+                hashes = file_entry.get("Hashes", {})
+
+                # File name and size on the same line
+                lines.append(f"File Name : {file_name}")
+                lines.append(f"    File Size : {file_size}")
+
+                # Each hash algorithm indented underneath
+                for algo, hash_val in hashes.items():
+                    lines.append(f"    {algo.upper()} : {hash_val}")
+
+                lines.append("")  # Blank line between files
+
+        lines.append("=" * 72)
+
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+
+
     def run_hash_with_ui_selection(self, input_type: str) -> Dict[str, Any]:
         """
-        Interactive flow with algorithm selection prompt.
+        Interactive flow with algorithm selection and optional export.
 
         Args:
             input_type: "string", "file", or "directory".
@@ -374,7 +583,7 @@ class Hashing:
         algorithms = self.prompt_algorithm_selection()
 
         if input_type == "string":
-            user_input = self.ui.prompt("Enter text to hash")
+            user_input = self.ui.prompt("Enter text string to hash")
             results = self.compute_string_hash(
                 text=user_input,
                 algorithms=algorithms,
@@ -393,6 +602,10 @@ class Hashing:
                 dir_path=dir_path,
                 algorithms=algorithms,
             )
+
+            # Offer export for directory results
+            self._offer_export(results)
+
         else:
             results = self._wrap_result({
                 "Input Type": "Unknown",

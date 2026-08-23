@@ -9,41 +9,12 @@ from typing import Dict, Tuple
 from . import install
 from config.log_config import get_logger
 from config.results import Results
+from resources.decorators import handle_exceptions
 from utils import UIHandlerProtocol, RichUIHandler, get_time
 
 
 logger = get_logger("time_converter")
 install()
-
-
-def handle_exceptions(func):
-    """Defining the error handling decorator."""
-    # Preserves the original function's name and docstring
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        try:
-            return func(self, *args, **kwargs)
-        except AttributeError as err:
-            return f"{err}"
-        except TypeError as err:
-            return (
-                f"[Error Handled] {hex_str} caused a TypeError in "
-                f"'{func.__name__}' -> {err}."
-            )
-        except ValueError as err:
-            hex_str = args[0] if args else "Unknown Input"
-            return (
-                f"[Error Handled] {hex_str} caused a ValueError in "
-                f"{func.__name__}' -> {err}."
-            )
-        except UnicodeDecodeError:
-            return (
-                f"Error: This hex sequence ({hex_str}) contains binary data "
-                "that cannot be read as text."
-            )
-        except Exception as err:
-            return f"[Error Handled] An unexpected error occurred -> {err}"
-    return wrapper
 
 
 class EncodeDecode:
@@ -197,6 +168,7 @@ class EncodeDecode:
     PRINTABLE_ASCII = set(string.printable)
     CONTROL_CHARS = set(chr(i) for i in range(32) if chr(i) not in '\t\n\r')
     WHITESPACE = set(string.whitespace)
+
 
     def validate_ascii_input(self, input_value: str) -> Tuple[bool, str]:
         """Comprehensive input validation."""
@@ -406,25 +378,6 @@ class EncodeDecode:
     def binary_to_base32(self, input_value: str) -> str:
         """Converts a binary string to base32 string."""
         binary_string = self._validate_binary(input_value=input_value)
-        # Ensure the binary string is a multiple of 8 bits by padding
-        # with leading zeros
-        # remainder = len(binary_string) % 8
-
-        # if remainder != 0:
-        #     binary_string = (
-        #         binary_string.zfill(len(binary_string) + (8 - remainder))
-        #     )
-
-        # byte_list = []
-        # for i in range(0, len(binary_string), 8):
-        #     byte_chunk = binary_string[i : i + 8]
-        #     byte_list.append(int(byte_chunk, 2))
-
-        # raw_bytes = bytes(byte_list)
-        # return base64.b32encode(raw_bytes).decode("ascii")
-
-
-        # Pad binary string so length is multiple of 8
         padding_length = (8 - len(binary_string) % 8) % 8
         binary_string += "0" * padding_length
 

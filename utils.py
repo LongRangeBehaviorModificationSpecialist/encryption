@@ -52,7 +52,7 @@ class RichUIHandler:
     ) -> None:
         self.console = console or Console()
         self.get_time = get_time
-        self.default_color = "grey74"
+        self.default_color = "bright_white"
         self.success_color = "bright_green"
         self.warning_color = "bright_yellow"
         self.error_color = "bright_red"
@@ -290,7 +290,7 @@ class Utils:
         else:
             base_prompt = (
                 "Enter the directory where you want to save the processed "
-                "files (press [Enter] to use the current folder)"
+                "files (press [ENTER] to use the current folder)"
             )
 
         # Show default location clearly in the prompt

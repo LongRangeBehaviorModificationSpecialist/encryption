@@ -1278,8 +1278,8 @@ class TimestampConverter:
 
             tz_input = self.ui.prompt(
                 "Enter a timezone for the entered value (e.g., UTC, "
-                "EDT...).  Type '1' to see a list of available timezones or "
-                "press [Enter] to skip"
+                "EDT...). Type '1' to see a list of available timezones or "
+                "press [ENTER] to skip"
             )
 
             # Check for help request
@@ -1301,7 +1301,7 @@ class TimestampConverter:
             else:
                 self.ui.warning(
                     f"'{tz_input}' is not recognized. Please use a code "
-                    "from the list above (or press [Enter] to skip)."
+                    "from the list above (or press [ENTER] to skip)."
                 )
 
 

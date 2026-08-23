@@ -583,7 +583,7 @@ class FileAnalyzer:
 
             if export:
                 custom_path = self.ui.prompt(
-                    "Enter output path (press [Enter] for auto-generated "
+                    "Enter output path (press [ENTER] for auto-generated "
                     "filename)"
                 )
 
