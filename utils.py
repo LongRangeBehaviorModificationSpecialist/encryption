@@ -107,13 +107,14 @@ class RichUIHandler:
         if not menu_prompt:
             formatted_prompt = self._format(
                 message=message,
-                color=self.default_color
+                color=self.default_color,
             )
         else:
             formatted_prompt = self._format(
                 message=f"\n{message}",
                 color=self.menu_prompt_color,
-                menu_prompt=menu_prompt)
+                menu_prompt=menu_prompt,
+            )
 
         return Prompt.ask(
             formatted_prompt,
