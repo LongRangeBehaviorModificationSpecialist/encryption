@@ -397,6 +397,12 @@ class Utils:
     def get_password(self) -> bytearray:
         """Prompts the user for a password until they provide one that
         passes strength validation, returning a mutable bytearray.
+        
+        Args:
+            None
+            
+        Returns:
+            bytearray representing the password
         """
         while True:
             # Prompt user and convert directly to a mutable bytearray
@@ -534,7 +540,14 @@ class Utils:
 
 
     def verify_file_access(self, target_file: Path | str) -> bool:
-        """Returns True if the user has permission to read the file."""
+        """Returns True if the user has permission to read the file.
+        
+        Args:
+            target_file: path to the file to verify.
+            
+        Returns:
+            True if user has correct permissions, False otherwise.
+        """
         target_path = Path(target_file)
         if not os.access(target_path, os.R_OK):
             self.ui.error(
@@ -548,6 +561,13 @@ class Utils:
 
     def verify_is_directory(self, target_dir: Path | str) -> Path:
         """Validates target_dir and returns its resolved Path object.
+
+        Args:
+            target_dir: path to the directory to be verified.
+            
+        Returns:
+            bool: True if target_dir is a directory that exists, False
+                otherwise.
 
         Raises:
             FileNotFoundError: If the path does not exist.
