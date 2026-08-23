@@ -43,7 +43,9 @@ class UIHandlerProtocol(Protocol):
 
 
 class RichUIHandler:
-    """Handles Rich console outputs with standardized timestamping and color themes."""
+    """Handles Rich console outputs with standardized timestamping and 
+    color themes.
+    """
 
     def __init__(
             self,
@@ -221,13 +223,11 @@ class Utils:
         """
         date_time_formats = {
             "display": "%d-%b-%Y %H:%M:%S",
-            "file": "%Y-%m-%d_%H.%M.%S"
+            "file": "%Y-%m-%d_%H.%M.%S",
         }
         local_time = datetime.now().astimezone()
         dt_format = date_time_formats[format]
-        current_time = local_time.strftime(
-            f"{dt_format}"
-        )
+        current_time = local_time.strftime(f"{dt_format}")
 
         return current_time
 
@@ -338,6 +338,9 @@ class Utils:
     def select_recursive_option(self) -> bool:
         """Prompts the user for a yes/no answer
 
+        Args:
+            None
+
         Returns:
             boolean (True or False).
         """
@@ -351,6 +354,9 @@ class Utils:
 
     def get_confirmed_password(self) -> str | None:
         """Prompt user for passphrase until confirmation matches.
+
+        Args:
+            None
 
         Returns:
             The password as a string.
@@ -536,7 +542,7 @@ class Utils:
     def print_not_file_error(self, target_file: Path) -> str:
         return self.ui.error(
             f"Validation for {target_file.name} failed → the file does not "
-            "exist or is not a file."
+            "exist or is not a file"
         )
 
 
@@ -555,7 +561,7 @@ class Utils:
                 f"The current user does not have permission to access the "
                 f"file → {target_path.name}"
             )
-            logger.warning(f"The user did not have valid file permissions.")
+            logger.warning(f"The user did not have valid file permissions")
             return False
         return True
 
@@ -590,7 +596,14 @@ class Utils:
 
 
     def get_pgp_key_expire_date(self) -> str | None:
-        """Get expiration from user, return as GNU format string."""
+        """Get expiration from user, return as GNU format string.
+        
+        Args:
+            None
+            
+        Returns:
+            str: expiration date or None
+        """
         expire_option = self.ui.confirm(
             "Do you want to set an expiration date for the new key?"
         )
