@@ -40,12 +40,12 @@ def setup_logging(
         root_logger.handlers.clear()
 
     formatter = logging.Formatter(
-        level=logging.DEBUG,
-        format="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
+        # level=logging.DEBUG,
+        fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        filename=log_file,
-        filemode="w",
-        encoding="utf-8"
+        # filename=log_file,
+        # filemode="w",
+        # encoding="utf-8"
     )
 
     # File handler (ALL logs go here)

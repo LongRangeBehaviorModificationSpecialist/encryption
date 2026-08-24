@@ -53,10 +53,12 @@ class Hashing:
         self.ui = ui or RichUIHandler(get_time=get_time)
         self._chunk_size = 8192  # 8 KB chunks for large file streaming
 
-
     def prompt_algorithm_selection(self) -> List[str]:
         """
         Prompt user to select one or more hashing algorithms.
+
+        Args:
+            None
 
         Returns:
             List of selected algorithm names (e.g., ["md5", "sha256"]).
@@ -79,11 +81,14 @@ class Hashing:
                 selected_names = [
                     self.ALGORITHM_NAMES[a].upper() for a in algorithms
                 ]
-                self.ui.info(f"Selected: {', '.join(selected_names)}")
+                selections = ', '.join(selected_names)
+                self.ui.info(f"Selected: {selections}")
+                logger.info(
+                    f"User chose the following hashing algorithm(s) → "
+                    f"[ {selections} ]")
                 return algorithms
             else:
                 self.ui.error("Invalid selection. Please use numbers 1-5.")
-
 
     def _parse_algorithm_selection(
             self,
@@ -121,7 +126,6 @@ class Hashing:
 
         return parsed_algorithms if parsed_algorithms else None
 
-
     def _get_hash_key(self, algorithm: str) -> str:
         """Generate result key for algorithm."""
         name = self.ALGORITHM_NAMES[algorithm]
@@ -129,13 +133,11 @@ class Hashing:
             return "Hash"
         return f"{name} Hash"
 
-
     def _wrap_result(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Ensure result has required keys for framework compatibility."""
         if "Validation OK" not in data:
             data["Validation OK"] = "True"
         return data
-
 
     def compute_string_hash(
             self,
@@ -171,7 +173,6 @@ class Hashing:
 
         return results
 
-
     def compute_file_hash(
         self,
         file_path: str,
@@ -189,12 +190,15 @@ class Hashing:
         path = Path(file_path)
 
         if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
+            logger.warning(f"File not found → '{file_path}'")
+            raise FileNotFoundError(f"File not found → {file_path}")
         if not path.is_file():
-            raise ValueError(f"Not a file: {file_path}")
+            logger.warning(f"'{file_path}' is not a file")
+            raise ValueError(f"Not a file → {file_path}")
 
         algs = algorithms or self.SUPPORTED_ALGORITHMS
         file_size = path.stat().st_size
+        logger.info(f"Size of '{path}' is → '{file_size:,} bytes'")
 
         hashes = {}
         try:
@@ -209,6 +213,10 @@ class Hashing:
 
                 for algo in algs:
                     hashes[algo] = hashers[algo].hexdigest()
+                    logger.info(
+                        f"The '{algo.upper()}' hash of '{path}' is → "
+                        f"'{hashers[algo].hexdigest()}'"
+                    )
         except PermissionError:
             raise PermissionError(f"Permission denied: {file_path}")
         except IOError as err:
@@ -227,7 +235,6 @@ class Hashing:
             results[key] = hashes[algo]
 
         return results
-
 
     def compute_directory_hash(
             self,
@@ -319,7 +326,6 @@ class Hashing:
 
         return self._wrap_result(output)
 
-
     def _compute_hashes_for_file(
             self,
             file_path: str,
@@ -345,7 +351,6 @@ class Hashing:
 
         return hashes
 
-
     def _normalize_algorithm(self, algorithm: str) -> str:
         """Normalize algorithm name and validate."""
         algo = algorithm.lower().strip()
@@ -356,13 +361,11 @@ class Hashing:
             )
         return algo
 
-
     def _truncate(self, text: str, max_length: int = 100) -> str:
         """Truncate long strings for display."""
         if len(text) > max_length:
             return text[:max_length] + "..."
         return text
-
 
     def _offer_export(self, results: Dict[str, Any]) -> None:
         """Ask user if they want to export directory results.
@@ -381,15 +384,21 @@ class Hashing:
             "(press [ENTER] to skip)")
 
         if not export_choice:
+            logger.info("User did not enter an option to export the results")
             return
 
         format_map = {"1": "csv", "2": "json", "3": "txt"}
 
         if export_choice not in format_map:
-            self.ui.warning("Skipping export → invalid option was input")
+            self.ui.warning("Skipping export → an invalid option was entered")
+            logger.info(
+                f"Skipping data export. User entered an invalid export "
+                f"option → '{export_choice}'"
+            )
             return
 
         export_format = format_map[export_choice]
+        logger.info(f"User chose to export the results as → '{export_format}'")
 
         # Ask for custom path or use default
         custom_dir = self.ui.prompt(
@@ -397,15 +406,20 @@ class Hashing:
             "custom file path"
         )
         custom_dir = Path(custom_dir.strip("\"'"))
+        logger.info(f"'{custom_dir}' was selected as the export location")
 
         output_filename = self.ui.prompt(
             "Enter the name of the output file (w/o file extension)"
+        )
+        logger.info(
+            f"User entered the export file name as → '{output_filename}'"
         )
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         custom_path = (
             custom_dir / f"{timestamp}_{output_filename}.{export_format}"
         )
+        logger.info(f"Full export file path → '{custom_path}'")
 
         try:
             saved_path = self.export_directory_results(
@@ -414,10 +428,13 @@ class Hashing:
                 export_format=export_format
             )
             self.ui.success(
-                f"✅ Results exported to: [bright_blue]{saved_path}")
+                f"The results were exported to: [bright_blue]{saved_path}"
+            )
+            logger.info(f"The results were exported to: '{saved_path}'")
         except Exception as err:
-            self.ui.error(f"❌ Export failed → {err}")
-
+            error_msg = f"❌ Export failed → {err}"
+            self.ui.error(error_msg)
+            logger.error(error_msg)
 
     def export_directory_results(
         self,
@@ -450,7 +467,9 @@ class Hashing:
             dir_path = results.get("Directory Path", "hash_results")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             base_name = f"hash_results_{timestamp}"
-            export_path = str(Path(dir_path).parent / f"{base_name}.{export_format}")
+            export_path = (
+                str(Path(dir_path).parent / f"{base_name}.{export_format}")
+            )
 
         export_file = Path(export_path)
         export_file.parent.mkdir(parents=True, exist_ok=True)
@@ -464,13 +483,13 @@ class Hashing:
 
         return str(export_file.absolute())
 
-
     def _export_csv(self, results: Dict[str, Any], path: Path) -> None:
         """Export file names and hash values to CSV format."""
         files = results.get("Files", [])
 
         if not files:
             self.ui.warning("No files to export")
+            logger.warning("No files to export")
             return
 
         with open(path, "w", newline="", encoding="utf-8") as f:
@@ -498,7 +517,6 @@ class Hashing:
                     row_data.append(hashes.get(algo, ""))
 
                 writer.writerow(row_data)
-
 
     def _export_json(self, results: Dict[str, Any], path: Path) -> None:
         """Export to JSON format."""
@@ -528,7 +546,6 @@ class Hashing:
 
         with open(path, "w", encoding="utf-8") as f:
             json.dump(export_data, f, indent=4, ensure_ascii=False)
-
 
     def _export_txt(self, results: Dict[str, Any], path: Path) -> None:
         """Export to plain text format."""
@@ -569,7 +586,6 @@ class Hashing:
         with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
 
-
     def run_hash_with_ui_selection(self, input_type: str) -> Dict[str, Any]:
         """
         Interactive flow with algorithm selection and optional export.
@@ -584,19 +600,22 @@ class Hashing:
 
         if input_type == "string":
             user_input = self.ui.prompt("Enter text string to hash")
+            logger.info(f"User entered string value → '{user_input}'")
             results = self.compute_string_hash(
                 text=user_input,
                 algorithms=algorithms,
             )
         elif input_type == "file":
-            user_input = self.ui.prompt("Enter path of file to hash")
+            user_input = self.ui.prompt("Enter path of file to process")
+            logger.info(f"User entered file path → '{user_input}'")
             file_path = user_input.strip("\"'")
             results = self.compute_file_hash(
                 file_path=file_path,
                 algorithms=algorithms,
             )
         elif input_type == "directory":
-            user_input = self.ui.prompt("Enter directory path to hash")
+            user_input = self.ui.prompt("Enter directory path to process")
+            logger.info(f"User entered directory path → '{user_input}'")
             dir_path = user_input.strip("\"'")
             results = self.compute_directory_hash(
                 dir_path=dir_path,
