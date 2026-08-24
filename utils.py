@@ -43,7 +43,9 @@ class UIHandlerProtocol(Protocol):
 
 
 class RichUIHandler:
-    """Handles Rich console outputs with standardized timestamping and color themes."""
+    """Handles Rich console outputs with standardized timestamping and 
+    color themes.
+    """
 
     def __init__(
             self,
@@ -107,13 +109,14 @@ class RichUIHandler:
         if not menu_prompt:
             formatted_prompt = self._format(
                 message=message,
-                color=self.default_color
+                color=self.default_color,
             )
         else:
             formatted_prompt = self._format(
                 message=f"\n{message}",
                 color=self.menu_prompt_color,
-                menu_prompt=menu_prompt)
+                menu_prompt=menu_prompt,
+            )
 
         return Prompt.ask(
             formatted_prompt,
@@ -220,13 +223,11 @@ class Utils:
         """
         date_time_formats = {
             "display": "%d-%b-%Y %H:%M:%S",
-            "file": "%Y-%m-%d_%H.%M.%S"
+            "file": "%Y-%m-%d_%H.%M.%S",
         }
         local_time = datetime.now().astimezone()
         dt_format = date_time_formats[format]
-        current_time = local_time.strftime(
-            f"{dt_format}"
-        )
+        current_time = local_time.strftime(f"{dt_format}")
 
         return current_time
 
@@ -337,6 +338,9 @@ class Utils:
     def select_recursive_option(self) -> bool:
         """Prompts the user for a yes/no answer
 
+        Args:
+            None
+
         Returns:
             boolean (True or False).
         """
@@ -350,6 +354,9 @@ class Utils:
 
     def get_confirmed_password(self) -> str | None:
         """Prompt user for passphrase until confirmation matches.
+
+        Args:
+            None
 
         Returns:
             The password as a string.
@@ -397,6 +404,12 @@ class Utils:
     def get_password(self) -> bytearray:
         """Prompts the user for a password until they provide one that
         passes strength validation, returning a mutable bytearray.
+        
+        Args:
+            None
+            
+        Returns:
+            bytearray representing the password
         """
         while True:
             # Prompt user and convert directly to a mutable bytearray
@@ -529,25 +542,39 @@ class Utils:
     def print_not_file_error(self, target_file: Path) -> str:
         return self.ui.error(
             f"Validation for {target_file.name} failed → the file does not "
-            "exist or is not a file."
+            "exist or is not a file"
         )
 
 
     def verify_file_access(self, target_file: Path | str) -> bool:
-        """Returns True if the user has permission to read the file."""
+        """Returns True if the user has permission to read the file.
+        
+        Args:
+            target_file: path to the file to verify.
+            
+        Returns:
+            True if user has correct permissions, False otherwise.
+        """
         target_path = Path(target_file)
         if not os.access(target_path, os.R_OK):
             self.ui.error(
                 f"The current user does not have permission to access the "
                 f"file → {target_path.name}"
             )
-            logger.warning(f"The user did not have valid file permissions.")
+            logger.warning(f"The user did not have valid file permissions")
             return False
         return True
 
 
     def verify_is_directory(self, target_dir: Path | str) -> Path:
         """Validates target_dir and returns its resolved Path object.
+
+        Args:
+            target_dir: path to the directory to be verified.
+            
+        Returns:
+            bool: True if target_dir is a directory that exists, False
+                otherwise.
 
         Raises:
             FileNotFoundError: If the path does not exist.
@@ -569,7 +596,14 @@ class Utils:
 
 
     def get_pgp_key_expire_date(self) -> str | None:
-        """Get expiration from user, return as GNU format string."""
+        """Get expiration from user, return as GNU format string.
+        
+        Args:
+            None
+            
+        Returns:
+            str: expiration date or None
+        """
         expire_option = self.ui.confirm(
             "Do you want to set an expiration date for the new key?"
         )
