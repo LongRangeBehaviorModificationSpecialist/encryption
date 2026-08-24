@@ -52,6 +52,7 @@ def handle_exceptions(
         except ImportError:
             return None  # Fall back to silent mode
 
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

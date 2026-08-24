@@ -26,9 +26,9 @@ install()
 
 def get_time() -> str:
     dt = datetime.now()
-    time = dt.strftime("%H:%M:%S")
+    time = dt.strftime("%Y-%m-%d_%H:%M:%S")
     # Pad to 6 then slice to 4
-    microseconds = str(dt.microsecond).zfill(6)[:4]
+    microseconds = str(dt.microsecond).zfill(6)[:3]
 
     return f"{time}.{microseconds}"
 
@@ -43,7 +43,7 @@ class UIHandlerProtocol(Protocol):
 
 
 class RichUIHandler:
-    """Handles Rich console outputs with standardized timestamping and 
+    """Handles Rich console outputs with standardized timestamping and
     color themes.
     """
 
@@ -247,7 +247,9 @@ class Utils:
 
 
     def get_directory_path(self) -> str:
-        return self.ui.prompt("Path of the directory to be processed").strip("\"'")
+        return self.ui.prompt(
+            "Enter the path of the directory to be processed"
+        ).strip("\"'")
 
 
     def get_output_path(
@@ -404,10 +406,10 @@ class Utils:
     def get_password(self) -> bytearray:
         """Prompts the user for a password until they provide one that
         passes strength validation, returning a mutable bytearray.
-        
+
         Args:
             None
-            
+
         Returns:
             bytearray representing the password
         """
@@ -548,10 +550,10 @@ class Utils:
 
     def verify_file_access(self, target_file: Path | str) -> bool:
         """Returns True if the user has permission to read the file.
-        
+
         Args:
             target_file: path to the file to verify.
-            
+
         Returns:
             True if user has correct permissions, False otherwise.
         """
@@ -571,7 +573,7 @@ class Utils:
 
         Args:
             target_dir: path to the directory to be verified.
-            
+
         Returns:
             bool: True if target_dir is a directory that exists, False
                 otherwise.
@@ -597,10 +599,10 @@ class Utils:
 
     def get_pgp_key_expire_date(self) -> str | None:
         """Get expiration from user, return as GNU format string.
-        
+
         Args:
             None
-            
+
         Returns:
             str: expiration date or None
         """

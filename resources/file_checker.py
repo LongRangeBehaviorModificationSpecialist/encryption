@@ -5,50 +5,54 @@ import csv
 import json
 import os
 from pathlib import Path
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
 from typing import Dict, List, Optional, Tuple
 
 from . import install
 from config.log_config import get_logger
+from resources.signatures import FILE_SIGNATURES
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
 
-logger = get_logger("type_checker")
+logger = get_logger()
 install()
 
 
 class FileTypeValidator:
     """Validates file types by comparing magic bytes against extensions."""
 
-    # Built-in file signatures (magic bytes)
-    FILE_SIGNATURES: Dict[str, List[bytes]] = {
-        '.jpg':      [b'\xFF\xD8\xFF'],
-        '.jpeg':     [b'\xFF\xD8\xFF'],
-        '.png':      [b'\x89PNG\r\n\x1a\n'],
-        '.gif':      [b'GIF87a'],
-        '.pdf':      [b'%PDF-'],
-        '.zip':      [b'PK\x03\x04'],
-        '.mp3':      [b'\xFF\xFB'],
-        '.mp4':      [b'\x00\x00\x00\x1cftypmp4'],
-        '.mov':      [b'\x00\x00\x00\x14moov'],
-        '.avi':      [b'RIFF'],
-        '.wav':      [b'RIFF'],
-        '.exe':      [b'MZ'],
-        '.elf':      [b'\x7fELF'],
-        '.bmp':      [b'BM'],
-        '.tiff':     [b'II\x2a\x00'],
-        '.tif':      [b'II\x2a\x00'],
-        '.rar':      [b'Rar!\x1a\x07\x00'],
-        '.7z':       [b'7z\xbc\xaf\'\x1c'],
-        '.gzip':     [b'\x1f\x8b'],
-        '.tar.gz':   [b'\x1f\x8b'],
-        '.docx':     [b'PK\x03\x04'],
-        '.xlsx':     [b'PK\x03\x04'],
-        '.pptx':     [b'PK\x03\x04'],
-        '.html':     [b'<!DOCTYPE html'],
-        '.htm':      [b'<!DOCTYPE html'],
-        '.xml':      [b'<?xml'],
-        '.json':     [b'{'],
-    }
+    DEFAULT_HEADER_SIZE = 16  # Changed from 8 to handle longer signatures
+
+    # # Built-in file signatures (magic bytes)
+    # FILE_SIGNATURES: Dict[str, List[bytes]] = {
+    #     '.jpg':      [b'\xFF\xD8\xFF'],
+    #     '.jpeg':     [b'\xFF\xD8\xFF'],
+    #     '.png':      [b'\x89PNG\r\n\x1a\n'],
+    #     '.gif':      [b'GIF87a'],
+    #     '.pdf':      [b'%PDF-'],
+    #     '.zip':      [b'PK\x03\x04'],
+    #     '.mp3':      [b'\xFF\xFB'],
+    #     '.mp4':      [b'\x00\x00\x00\x1cftypmp4'],
+    #     '.mov':      [b'\x00\x00\x00\x14moov'],
+    #     '.avi':      [b'RIFF'],
+    #     '.wav':      [b'RIFF'],
+    #     '.exe':      [b'MZ'],
+    #     '.elf':      [b'\x7fELF'],
+    #     '.bmp':      [b'BM'],
+    #     '.tiff':     [b'II\x2a\x00'],
+    #     '.tif':      [b'II\x2a\x00'],
+    #     '.rar':      [b'Rar!\x1a\x07\x00'],
+    #     '.7z':       [b'7z\xbc\xaf\'\x1c'],
+    #     '.gzip':     [b'\x1f\x8b'],
+    #     '.tar.gz':   [b'\x1f\x8b'],
+    #     '.docx':     [b'PK\x03\x04'],
+    #     '.xlsx':     [b'PK\x03\x04'],
+    #     '.pptx':     [b'PK\x03\x04'],
+    #     '.html':     [b'<!DOCTYPE html'],
+    #     '.htm':      [b'<!DOCTYPE html'],
+    #     '.xml':      [b'<?xml'],
+    #     '.json':     [b'{'],
+    # }
 
     def __init__(
             self,
@@ -77,14 +81,14 @@ class FileTypeValidator:
             self.ui.info(f"'module_dir' is {module_dir}")
             config_path = os.path.join(
                 module_dir,
-                "\\resources\\signature_config.json"
+                "\\resources\\signatures_config.json"
             )
             self.ui.success(f"'config_path' → {config_path}")
             self.load_config(config_path)
 
         if self.config_path:
             self.load_config(self.config_path)
-
+            logger.info(f"Configuration file loaded from '{config_path}'")
 
     # --- Config file handling
     def load_config(self, config_path: Path | str) -> None:
@@ -110,6 +114,15 @@ class FileTypeValidator:
             - "FFD8"          (contiguous hex pairs)
 
         If the file does not exist, a template is created.
+
+        Args:
+            config_path: Path to the configuration file.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: if an entry has an invalid signature.
         """
         if not os.path.exists(config_path):
             self._create_config_template(config_path)
@@ -117,8 +130,12 @@ class FileTypeValidator:
             self.ui.info(f"Edit it to add custom signatures, then re-run.")
             return
 
+        logger.info(f"Configuration file located at → {config_path}")
+
         with open(config_path, "r", encoding="utf-8") as f:
+            logger.info(f"Reading configuration file...")
             data = json.load(f)
+            logger.info("Configuration file loaded successfully")
 
         sig_section = data.get("signatures", {})
 
@@ -132,46 +149,53 @@ class FileTypeValidator:
             elif isinstance(hex_value, list):
                 hex_list = hex_value
             else:
-                self.ui.warning(
+                skip_msg = (
                     f"Warning: skipping '{ext}' → value must be a string or "
                     "list of strings"
                 )
+                self.ui.warning(skip_msg)
+                logger.warning(skip_msg)
                 continue
 
             # Parse each hex string into bytes
             parsed_bytes: List[bytes] = []
             for hs in hex_list:
                 if not isinstance(hs, str):
-                    self.ui.warning(
+                    warn_msg = (
                         f"Warning: skipping non-string entry for "
-                        f"'{ext}' → {hs!r}"
+                        f"'{ext}' → '{hs!r}'"
                     )
+                    self.ui.warning(warn_msg)
+                    logger.warning(warn_msg)
                     continue
                 try:
                     parsed_bytes.append(self._parse_hex(hs))
                 except ValueError as err:
-                    self.ui.warning(
+                    ve_msg = (
                         f"Warning: skipping invalid signature for "
-                        f"'{ext}' → {err}"
+                        f"'{ext}' → '{err}'"
                     )
+                    self.ui.warning(ve_msg)
+                    logger.warning(ve_msg)
 
             if parsed_bytes:
                 self.custom_signatures[ext] = parsed_bytes
 
         # Merge: custom signatures override built-ins with the same extension
-        self.FILE_SIGNATURES = {
-            **self.FILE_SIGNATURES,
+        UPDATED_FILE_SIGNATURES = {
+            **FILE_SIGNATURES,
             **self.custom_signatures
         }
 
         count = sum(len(v) for v in self.custom_signatures.values())
         ext_count = len(self.custom_signatures)
 
-        self.ui.info(
+        load_msg = (
             f"Loaded {count} signature(s) across {ext_count} extension(s) "
             f"from the config file"
         )
-
+        self.ui.info(load_msg)
+        logger.info(load_msg)
 
     @staticmethod
     def _create_config_template(path: Path | str) -> None:
@@ -203,7 +227,6 @@ class FileTypeValidator:
         os.makedirs(directory, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(template, f, indent=4)
-
 
     @staticmethod
     def _parse_hex(hex_str: str) -> bytes:
@@ -244,20 +267,35 @@ class FileTypeValidator:
         except ValueError:
             raise ValueError(f"Invalid hex string → '{hex_str}'")
 
-
     # --- Signature checking
     def get_file_signature(
             self,
             filepath: Path | str,
-            num_bytes: int = 8
+            num_bytes: int = DEFAULT_HEADER_SIZE
     ) -> bytes:
-        """Read the first N bytes of a file."""
+        """Read the first n bytes of a file to get the file signature.
+
+        Args:
+            filepath: path to the file to be read.
+            num_bytes: number of bytes to be read from the beginning of the
+                file.
+
+        Returns:
+            bytes: first n bytes of the file.
+        """
         with open(filepath, 'rb') as f:
             return f.read(num_bytes)
 
 
     def get_extension(self, filepath: Path | str) -> str:
-        """Get file extension including the dot, lowercase."""
+        """Get file extension including the dot, lowercase.
+
+        Args:
+            filepath: path to the file being read.
+
+        Returns:
+            the file extension (in lower case), including the "."
+        """
         _, ext = os.path.splitext(filepath)
         return ext.lower()
 
@@ -267,10 +305,16 @@ class FileTypeValidator:
 
         Each extension may have multiple valid magic byte sequences,
         so we check every entry in the list.
+
+        Args:
+            header_bytes: the known header signature of a file.
+
+        Returns:
+            list of file types with a matching file signature.
         """
         matches = []
 
-        for ext, sig_list in self.FILE_SIGNATURES.items():
+        for ext, sig_list in FILE_SIGNATURES.items():
             if not sig_list:
                 continue
             for sig in sig_list:
@@ -288,7 +332,9 @@ class FileTypeValidator:
             filepath: Path | str,
             strict: bool = False
     ) -> Tuple[bool, str, str]:
-        """Validate if file extension matches its actual type based on signature."""
+        """Validate if file extension matches its actual type based on
+        signature.
+        """
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"File not found → '{filepath}'")
 
@@ -352,7 +398,6 @@ class FileCheckRunner:
                 return False
             print("Please enter 'y' or 'n'")
 
-
     def scan_single_file(self, file_path: Path | str) -> dict:
         """Scan one file and return a result dictionary."""
         target_path = Path(file_path).resolve()
@@ -379,11 +424,10 @@ class FileCheckRunner:
 
         return result
 
-
     def scan_files_parallel(
             self,
             file_paths: List[Path | str],
-            progress: bool = True,
+            progress: bool,
     ) -> List[dict]:
         """Scan multiple files concurrently using a thread pool.
 
@@ -398,49 +442,53 @@ class FileCheckRunner:
         Returns:
             List of result dicts in the same order as input paths.
         """
+        self.ui.info(f"Stating scan_files_parallel() method...")
+        logger.info("Method started...")
         results: List[Optional[dict]] = [None] * len(file_paths)
+        total = len(file_paths)
+        logger.info(f"There are {total} files to be scanned...")
 
-        with ThreadPoolExecutor(max_workers=self.validator.max_workers) as executor:
-            # Submit all tasks, mapping future -> index for ordered results
-            future_to_idx = {
-                executor.submit(self.scan_single_file, fp): idx
-                for idx, fp in enumerate(file_paths)
-            }
+        def _scan():
+            with ThreadPoolExecutor(max_workers=self.validator.max_workers) as executor:
+                # Submit all tasks, mapping future -> index for ordered results
+                future_to_idx = {
+                    executor.submit(self.scan_single_file, fp): idx
+                    for idx, fp in enumerate(file_paths)
+                }
 
-            completed = 0
-            total = len(file_paths)
-            for future in as_completed(future_to_idx):
-                idx = future_to_idx[future]
-                try:
-                    results[idx] = future.result()
-                except Exception as err:
-                    results[idx] = {
-                        "path": file_paths[idx],
-                        "valid": False,
-                        "detected_ext": "",
-                        "claimed_ext": "",
-                        "error": str(err),
-                    }
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    try:
+                        results[idx] = future.result()
+                    except Exception as err:
+                        results[idx] = {
+                            "path": file_paths[idx],
+                            "valid": False,
+                            "detected_ext": "",
+                            "claimed_ext": "",
+                            "error": str(err),
+                        }
+                    yield
 
-                if progress:
-                    completed += 1
-                    # Progress bar
-                    bar_width = 30
-                    filled = (
-                        int(bar_width * completed / total)
-                        if total else bar_width
-                    )
-                    bar = '#' * filled + '-' * (bar_width - filled)
-                    pct = (completed / total * 100) if total else 100
-                    self.ui.info(
-                        f"Scanning [{bar}] {completed}/{total} "
-                        f"({pct:.0f}%)",
-                        end='',
-                        flush=True,
-                    )
+        if not progress:
+            # Run without the progress bar
+            for _ in _scan():
+                pass
+            return [r for r in results if r is not None]
 
-        if progress:
-            print()  # newline after progress bar
+        # Run with Rich progress bar
+        progress_columns = [
+            TextColumn("[bold blue]Scanning"),
+            BarColumn(bar_width=40),
+            TextColumn("{task.completed}/{task.total}"),
+            TextColumn("({task.percentage:>3.0f}%)"),
+            TimeRemainingColumn(),
+        ]
+
+        with Progress(*progress_columns, console=self.ui.console) as prog:
+            task_id = prog.add_task("scan", total=total)
+            for _ in _scan():
+                prog.advance(task_id)
 
         return [r for r in results if r is not None]
 
@@ -448,8 +496,8 @@ class FileCheckRunner:
     def scan_directory(
             self,
             dir_path: Path | str,
+            progress: bool,
             recursive: bool = False,
-            progress: bool = True,
     ) -> List[dict]:
         """Collect all file paths in a directory and scan them in parallel.
 
@@ -467,7 +515,9 @@ class FileCheckRunner:
             try:
                 entries = os.listdir(target_dir)
             except PermissionError as err:
-                self.ui.error(f"Cannot access directory {target_dir} → {err}")
+                self.ui.error(
+                    f"Cannot access directory '{target_dir}' → '{err}'"
+                )
                 return []
 
             walker = [(target_dir, [], entries)]
@@ -485,12 +535,15 @@ class FileCheckRunner:
         self.ui.info(
             f"Found {len(file_paths)} file(s). Starting parallel scan..."
         )
+
         return self.scan_files_parallel(file_paths, progress=progress)
 
 
-    def run_file_checker(self, type: str) -> List[dict]:
+    def run_file_checker(self, type: str, progress: bool = True) -> List[dict]:
         """Main entry point: prompt user, scan, report."""
         # mode, path, recursive = self.prompt_user()
+
+        logger.info(f"Method started ['type' = {type}]...")
 
         if type == "file":
             target_file = Utils.get_file_path(self)
@@ -498,14 +551,23 @@ class FileCheckRunner:
         else:
             target_dir = Utils.get_directory_path(self)
             recursive = Utils.select_recursive_option(self)
+            logger.info(
+                f"Calling the 'scan_directory()' method [ dir_path = "
+                f"'{target_dir}', recursive = '{recursive}', "
+                f"progress = '{progress}' ]"
+                )
             results = self.scan_directory(
                 dir_path=target_dir,
                 recursive=recursive,
+                progress=progress,
             )
 
-        self.print_report(results)
-        return results
+        if len(results) > 1:
+            self.ui.prompt("Press [ENTER] to view the results...")
 
+        self.print_report(results)
+
+        return results
 
     # --- Reporting
     def print_report(self, results: List[dict]) -> None:
@@ -520,25 +582,29 @@ class FileCheckRunner:
         self.ui.success("RESULTS")
 
         for r in results:
+            rel_path = r["path"]
             if r["error"]:
                 status = f"ERROR → ({r['error']})"
             elif r["valid"]:
-                status = "MATCH"
+                status = f"[bright_green]MATCH →    \"{rel_path}\""
             else:
+                detected = r["detected_ext"]
+                claimed = r["claimed_ext"]
                 status = (
-                    f"MISMATCH "
-                    f"(detected: {r['detected_ext']}, "
-                    f"extension: {r['claimed_ext'] or 'none'})"
+                    f"[bright_yellow]MISMATCH → \"{rel_path}\"\n"
+                    f"{' ' * 39}Actual/detected file type → "
+                    f"[bold]{detected}[/bold]\n"
+                    f"{' ' * 39}Current file extension → "
+                    f"[bold]{claimed}[/bold]"
                 )
 
-            rel_path = r["path"]
             self.ui.info(f"  {status}")
-            self.ui.info(f"    {rel_path}")
 
         self.ui.info(f"Total files checked : [bright_blue]{total}")
         self.ui.info(f"Matches             : [bright_green]{matched}")
         self.ui.info(f"Mismatches          : [bright_yellow]{mismatched}")
         self.ui.info(f"Errors              : [bright_red]{errors}")
+
         if total > 0:
             pct = (matched / total) * 100
             self.ui.info(f"Match rate         : [bright_blue]{pct:.1f}%")
@@ -555,7 +621,6 @@ class FileCheckRunner:
                     results=results,
                     output_path=csv_file
                 )
-
 
     def export_csv(
             self,
