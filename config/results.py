@@ -167,6 +167,9 @@ class Results:
             width=40,
         )
 
+        summary.add_row("Input Type", data.get("Input Type", "N/A"))
+        summary.add_row("Directory Path", data.get("Directory Path", "N/A"))
+        summary.add_row("Recursive", data.get("Recursive", "N/A"))
         summary.add_row("Algorithm(s)", data.get("Algorithms Used", "N/A"))
         summary.add_row("Total Files", data.get("Total Files", "N/A"))
         summary.add_row("Successful", data.get("Successful", "N/A"))

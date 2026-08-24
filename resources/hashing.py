@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional
 
 from config.log_config import get_logger
 from config.results import Results
-from utils import UIHandlerProtocol, RichUIHandler, get_time
+from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 
 
 logger = get_logger("hasher")
@@ -257,9 +257,17 @@ class Hashing:
         path = Path(dir_path)
 
         if not path.exists():
-            raise FileNotFoundError(f"Directory not found: {dir_path}")
+            logger.warning(f"Directory not found → {dir_path}")
+            raise FileNotFoundError(f"Directory not found → {dir_path}")
         if not path.is_dir():
-            raise ValueError(f"Not a directory: {dir_path}")
+            logger.warning(f"The input path is not a directory → {dir_path}")
+            raise ValueError(f"Not a directory → {dir_path}")
+
+        recursive = Utils.select_recursive_option(self)
+        if recursive:
+            logger.info("User selected recursive = 'True'")
+        else:
+            logger.info("User selected recursive = 'False'")
 
         algs = algorithms or self.SUPPORTED_ALGORITHMS
         pattern = "**/*" if recursive else "*"
@@ -381,7 +389,7 @@ class Hashing:
 
         export_choice = self.ui.prompt(
             "Export results? (Options: [1] CSV, [2] JSON, [3] TXT "
-            "(press [ENTER] to skip)")
+            "(or press [ENTER] to skip)")
 
         if not export_choice:
             logger.info("User did not enter an option to export the results")
