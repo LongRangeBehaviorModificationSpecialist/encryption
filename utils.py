@@ -347,7 +347,10 @@ class Utils:
             boolean (True or False).
         """
         while True:
-            recursive = self.ui.confirm("Process sub-directories recursively?")
+            recursive = self.ui.confirm(
+                "Process sub-directories recursively?",
+                default="y"
+            )
             if not recursive:
                 return False
             else:

@@ -8,7 +8,7 @@ from pathlib import Path
 def setup_logging(
         log_dir: str = "logs",
         log_file_name: str = "app.log",
-        log_level: int = logging.DEBUG,
+        log_level: int = logging.INFO,
         backup_count: int = 5,
         max_bytes: int = 10 * 1024 * 1024
 ) -> logging.Logger:
@@ -28,7 +28,7 @@ def setup_logging(
     if log_path and not log_path.exists():
         log_path.mkdir(exist_ok=True)
 
-    # Generate timestamped log filename
+    # Generate log filename
     log_file = log_path / log_file_name
 
     # Configure root logger
@@ -40,12 +40,8 @@ def setup_logging(
         root_logger.handlers.clear()
 
     formatter = logging.Formatter(
-        # level=logging.DEBUG,
         fmt="%(asctime)s.%(msecs)03d | %(levelname)-8s | %(filename)s:%(lineno)d | %(funcName)s() | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        # filename=log_file,
-        # filemode="w",
-        # encoding="utf-8"
     )
 
     # File handler (ALL logs go here)
@@ -64,7 +60,7 @@ def setup_logging(
     root_logger.addHandler(file_handler)
 
     # Log startup info
-    root_logger.info(f"=== Application started ===")
+    root_logger.info(f"===> APPLICATION STARTED <===")
     root_logger.info(f"Log file → [ '{log_file}' ]")
 
     # Store log path for reference
@@ -81,7 +77,7 @@ def get_logger(name: str = None) -> logging.Logger:
     """Get logger instance with optional submodule name.
 
     Args:
-        name: Optional submodule name (e.g., "key", "aes", "pgp", "xor")
+        name: Optional submodule name
 
     Returns:
         Logger instance

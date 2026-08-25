@@ -2,6 +2,7 @@
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -182,10 +183,10 @@ class FileTypeValidator:
                 self.custom_signatures[ext] = parsed_bytes
 
         # Merge: custom signatures override built-ins with the same extension
-        UPDATED_FILE_SIGNATURES = {
-            **FILE_SIGNATURES,
-            **self.custom_signatures
-        }
+        # UPDATED_FILE_SIGNATURES = {
+        #     **FILE_SIGNATURES,
+        #     **self.custom_signatures
+        # }
 
         count = sum(len(v) for v in self.custom_signatures.values())
         ext_count = len(self.custom_signatures)
@@ -286,7 +287,6 @@ class FileTypeValidator:
         with open(filepath, 'rb') as f:
             return f.read(num_bytes)
 
-
     def get_extension(self, filepath: Path | str) -> str:
         """Get file extension including the dot, lowercase.
 
@@ -298,7 +298,6 @@ class FileTypeValidator:
         """
         _, ext = os.path.splitext(filepath)
         return ext.lower()
-
 
     def find_matching_signature(self, header_bytes: bytes) -> List[str]:
         """Find which file signature(s) match the provided bytes.
@@ -314,11 +313,16 @@ class FileTypeValidator:
         """
         matches = []
 
-        for ext, sig_list in FILE_SIGNATURES.items():
-            if not sig_list:
+        for ext, sig_values in FILE_SIGNATURES.items():
+            if isinstance(sig_values, bytes):
+                sig_list = [sig_values]
+            elif isinstance(sig_values, list):
+                sig_list = sig_values
+            else:
                 continue
+
             for sig in sig_list:
-                if not sig:
+                if not isinstance(sig, bytes) or not sig:
                     continue
                 if header_bytes.startswith(sig):
                     matches.append(ext)
@@ -326,12 +330,11 @@ class FileTypeValidator:
 
         return matches
 
-
     def validate_file_type(
             self,
             filepath: Path | str,
             strict: bool = False
-    ) -> Tuple[bool, str, str]:
+    ) -> Tuple[bool, List[str], str]:
         """Validate if file extension matches its actual type based on
         signature.
         """
@@ -346,31 +349,36 @@ class FileTypeValidator:
             raise IOError(f"Cannot read file: '{filepath}' → '{str(err)}'")
 
         if not header_bytes:
-            return (False, "", claimed_ext)
+            return (False, [], claimed_ext)
 
         matching_sigs = self.find_matching_signature(header_bytes)
 
         if not matching_sigs:
-            return (False, "unknown", claimed_ext)
+            return (False, [], claimed_ext)
 
+        # Direct match — claimed extension is in the detected list
         if claimed_ext in matching_sigs:
-            return (True, matching_sigs[0], claimed_ext)
+            return (True, matching_sigs, claimed_ext)
 
         if strict:
-            return (False, matching_sigs[0], claimed_ext)
+            return (False, matching_sigs, claimed_ext)
         else:
+            # Check compatibility groups (e.g., .jpg ↔ .jpeg)
             compatible_groups = {
                 (".jpg", ".jpeg"),
                 (".docx", ".xlsx", ".pptx"),
                 (".tiff", ".tif"),
                 (".html", ".htm"),
             }
+
             for group in compatible_groups:
                 if claimed_ext in group:
-                    for sig_ext in matching_sigs:
-                        if sig_ext in group:
-                            return (True, matching_sigs[0], claimed_ext)
-            return (False, matching_sigs[0], claimed_ext)
+                    # If ANY detected ext is in the same compatible
+                    # group, it's valid
+                    if any(sig_ext in group for sig_ext in matching_sigs):
+                        return (True, matching_sigs, claimed_ext)
+
+            return (False, matching_sigs, claimed_ext)
 
 
 class FileCheckRunner:
@@ -405,19 +413,25 @@ class FileCheckRunner:
         result = {
             "path": target_path,
             "valid": False,
-            "detected_ext": "",
+            "detected_exts": [],
             "claimed_ext": "",
             "error": None,
         }
         try:
-            is_valid, detected_ext, claimed_ext = (
+            is_valid, detected_exts, claimed_ext = (
                 self.validator.validate_file_type(
                     target_path,
                     strict=False,
                 )
             )
+            # Normalize to list
+            if isinstance(detected_exts, str):
+                detected_exts = [detected_exts]
+            elif not isinstance(detected_exts, list):
+                detected_exts = list(detected_exts)
+
             result["valid"] = is_valid
-            result["detected_ext"] = detected_ext
+            result["detected_exts"] = detected_exts  # now is a list
             result["claimed_ext"] = claimed_ext
         except Exception as err:
             result["error"] = str(err)
@@ -464,7 +478,7 @@ class FileCheckRunner:
                         results[idx] = {
                             "path": file_paths[idx],
                             "valid": False,
-                            "detected_ext": "",
+                            "detected_exts": [],
                             "claimed_ext": "",
                             "error": str(err),
                         }
@@ -491,7 +505,6 @@ class FileCheckRunner:
                 prog.advance(task_id)
 
         return [r for r in results if r is not None]
-
 
     def scan_directory(
             self,
@@ -538,7 +551,6 @@ class FileCheckRunner:
 
         return self.scan_files_parallel(file_paths, progress=progress)
 
-
     def run_file_checker(self, type: str, progress: bool = True) -> List[dict]:
         """Main entry point: prompt user, scan, report."""
         # mode, path, recursive = self.prompt_user()
@@ -579,47 +591,87 @@ class FileCheckRunner:
         )
         errors = sum(1 for r in results if r["error"] is not None)
 
-        self.ui.success("RESULTS")
+        self.ui.success("===> RESULTS <===")
 
         for r in results:
             rel_path = r["path"]
+
             if r["error"]:
-                status = f"ERROR → ({r['error']})"
-            elif r["valid"]:
-                status = f"[bright_green]MATCH →    \"{rel_path}\""
+                self.ui.error(
+                    f"ERROR → ({r['error']})\n"
+                    f"{' ' * 39}{rel_path}"
+                )
+                continue
+
+            # Format the detected extensions as a grouped list
+            detected_list = r.get("detected_exts", [])
+            if isinstance(detected_list, str):
+                detected_list = [detected_list]
+            elif not isinstance(detected_list, list):
+                detected_list = list(detected_list)
+
+            claimed_display = r["claimed_ext"] or "none"
+
+            if len(detected_list) == 0:
+                detected_display = "[dim]unknown[/dim]"
+            elif len(detected_list) == 1:
+                detected_display = detected_list[0]
             else:
-                detected = r["detected_ext"]
-                claimed = r["claimed_ext"]
-                status = (
-                    f"[bright_yellow]MISMATCH → \"{rel_path}\"\n"
-                    f"{' ' * 39}Actual/detected file type → "
-                    f"[bold]{detected}[/bold]\n"
-                    f"{' ' * 39}Current file extension → "
-                    f"[bold]{claimed}[/bold]"
+                detected_display = f"[{', '.join(detected_list)}]"
+
+            if r["valid"]:
+                self.ui.success(f"MATCH    → \"{rel_path}\"")
+            else:
+                self.ui.warning(
+                    f"MISMATCH → \"{rel_path}\"\n"
+                    f"{' ' * 38}Actual/detected file type → "
+                    f"[b]{detected_display}[/b]\n"
+                    f"{' ' * 38}Current file extension → "
+                    f"[b]{claimed_display}[/b]"
                 )
 
-            self.ui.info(f"  {status}")
+            # self.ui.info(f"  {status}")
 
-        self.ui.info(f"Total files checked : [bright_blue]{total}")
-        self.ui.info(f"Matches             : [bright_green]{matched}")
-        self.ui.info(f"Mismatches          : [bright_yellow]{mismatched}")
-        self.ui.info(f"Errors              : [bright_red]{errors}")
+        self.ui.info("[dim]=[/dim]" * 60)
+        self.ui.info(f"Total checked : {total}")
+        self.ui.info(
+            f"Matches       : [bright_green]{matched}[/bright_green]"
+        )
+        self.ui.info(
+            f"Mismatches    : [bright_yellow]{mismatched}[/bright_yellow]"
+        )
+        self.ui.info(
+            f"Errors        : [bright_red]{errors}[/bright_red]"
+        )
+        self.ui.info("[dim]=[/dim]" * 60)
 
         if total > 0:
             pct = (matched / total) * 100
-            self.ui.info(f"Match rate         : [bright_blue]{pct:.1f}%")
+            self.ui.info(
+                f"Match rate      : [bright_blue]{pct:.1f}%[/bright_blue]"
+            )
 
-        export = self.ui.confirm("Do you want to export the results to a CSV?")
+        export = self.ui.confirm(
+            "Do you want to export the results to a CSV?",
+            default="y",
+        )
 
         if export:
+            file_ext = "CSV"
             output_path = self.ui.prompt(
-                "Enter the path where the CSV file will be saved"
+                "Enter the folder where the CSV file will be saved"
             ).strip("\"'")
-            csv_file = Path(output_path).resolve()
+            output_path = Path(output_path)
+            csv_file_name = self.ui.prompt(
+                "Enter the name of the output file (w/o file extension)"
+            )
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            full_file_name = f"{timestamp}_{csv_file_name}.{file_ext}"
+            csv_file = output_path / full_file_name
             if output_path:
                 self.export_csv(
                     results=results,
-                    output_path=csv_file
+                    output_path=csv_file,
                 )
 
     def export_csv(
@@ -635,42 +687,20 @@ class FileCheckRunner:
                 "valid",
                 "detected_ext",
                 "claimed_ext",
-                "error"
+                "error",
             ])
             for r in results:
+                # Join multiple extensions with semicolons for CSV safety
+                detected = (
+                    "; ".join(r["detected_exts"])
+                    if r["detected_exts"]
+                    else "unknown"
+                )
                 writer.writerow([
                     r["path"],
                     r["valid"],
-                    r["detected_ext"],
+                    detected,
                     r["claimed_ext"],
                     r["error"] or "",
                 ])
         self.ui.success(f"Results exported to → {output_path}")
-
-
-# --- Entry point
-# if __name__ == "__main__":
-#     config_path = os.path.join(
-#         os.path.dirname(os.path.abspath(__file__)),
-#         "signatures_config.json"
-#     )
-
-#     print("  Initialising validator...")
-#     validator = FileTypeValidator(config_path=config_path)
-
-#     runner = FileCheckRunner(validator=validator)
-
-#     try:
-#         results = runner.run_file_checker()
-
-#         if len(results) > 1:
-#             export = FileCheckRunner._prompt_yes_no(
-#                 "\nExport results to CSV?", default=False
-#             )
-#             if export:
-#                 out = input("Output file path: ").strip()
-#                 if out:
-#                     runner.export_csv(results, out)
-
-#     except KeyboardInterrupt:
-#         print("\n\nCancelled by user. Goodbye!")

@@ -20,13 +20,16 @@ logger = get_logger("detect")
 install()
 
 
-class FileAnalyzer:
+class EncryptionDetector:
 
     # Refined entropy thresholds based on empirical analysis
     ENTROPY_THRESHOLDS = {
-        "high_confidence": 7.95,      # Near-perfect randomness
-        "medium_confidence": 7.80,    # Strong encryption signal
-        "low_confidence": 7.60,       # Suspected encryption
+        # Near-perfect randomness
+        "high_confidence": 7.95,
+        # Strong encryption signal
+        "medium_confidence": 7.80,
+        # Suspected encryption
+        "low_confidence": 7.60,
     }
 
     # Known MIME types associated with standard encrypted payloads
@@ -73,7 +76,6 @@ class FileAnalyzer:
     def __init__(self, ui: UIHandlerProtocol | None = None) -> None:
         self.ui = ui or RichUIHandler(get_time=get_time)
 
-
     def _calculate_entropy(self, data: bytes) -> float:
         """Calculates Shannon entropy using vectorized NumPy operations."""
         if not data:
@@ -93,11 +95,11 @@ class FileAnalyzer:
 
         return entropy
 
-
     def _chi_square_test(self, data: bytes) -> float:
-        """
-        Perform chi-square test for uniform distribution.
+        """Perform chi-square test for uniform distribution.
+
         Higher values indicate deviation from uniform distribution.
+
         Encrypted data should have LOW chi-square values (uniform).
         """
         if not data:
@@ -109,7 +111,8 @@ class FileAnalyzer:
 
         expected = len(data) / 256
         chi_square = sum(
-            (observed - expected) ** 2 / expected for observed in byte_counts)
+            (observed - expected) ** 2 / expected for observed in byte_counts
+        )
 
         # Normalize to 0-1 scale (approximate)
         max_chi = len(data) * 255 / 256  # Worst case
@@ -117,7 +120,6 @@ class FileAnalyzer:
 
         # Higher = more uniform = more likely encrypted
         return 1.0 - normalized
-
 
     def _run_length_check(self, data: bytes, max_run: int = 100) -> bool:
         """Check for suspiciously long runs of identical bytes.
@@ -143,7 +145,6 @@ class FileAnalyzer:
                 run_length = 1
 
         return True
-
 
     def _sample_regions(
             self,
@@ -177,20 +178,20 @@ class FileAnalyzer:
 
         return samples
 
-
     def _handle_inspect_file(self) -> None:
         raw_input = self.ui.prompt(
-            "Enter the file path(s) of the file to be checked (separated by spaces)"
+            "Enter the file path(s) of the file to be checked "
+            "(separated by spaces)"
         )
         paths = [Path(p) for p in split(raw_input)]
 
         if not paths:
             self.ui.warning("No files provided")
+            logger.warning("No files provided")
             return
-        logger.info(f"The file path(s) were entered as '{raw_input}'")
+        logger.info(f"The file path(s) were entered as → '{raw_input}'")
 
         self.scan_files(file_paths=paths)
-
 
     def inspect_file(
             self,
@@ -262,7 +263,7 @@ class FileAnalyzer:
             description = magic.from_buffer(first_sample, mime=False)
             result["mime_type"] = mime_type
 
-        # Check known encryption signatures
+            # Check known encryption signatures
             for enc_name, magic_bytes in self.ENCRYPTION_MAGIC_BYTES.items():
                 if header.startswith(magic_bytes):
                     result["is_encrypted"] = True
@@ -399,7 +400,6 @@ class FileAnalyzer:
 
         return result
 
-
     def scan_files(self, file_paths: List[Path]) -> List[Dict[str, Any]]:
         """Scans one or more files and prints the results table."""
         results = []
@@ -419,14 +419,16 @@ class FileAnalyzer:
         statuses.
         """
         path_input = self.ui.prompt(
-            "Enter the file path(s) of the file to be checked (separated "
-            "by spaces)"
+            "Enter the file path(s) of the file to be checked "
+            "(separated by spaces)"
         ).strip("\"'")
         path = Path(path_input)
-        logger.info(f"The target_dir was entered as '{path}'")
+        logger.info(f"The target_dir was entered as → '{path}'")
 
         if not path.exists():
-            self.ui.error(f"The input path does not exist → '{path}'")
+            warn_msg = f"The input path does not exist → '{path}'"
+            self.ui.error(warn_msg)
+            logger.warning(warn_msg)
             return
 
         if path.is_file():
@@ -446,7 +448,7 @@ class FileAnalyzer:
             # Optionally filter by extension
             filter_ext = self.ui.prompt(
                 "Filter by file extension? (press Enter to skip, or type "
-                "extensions -- e.g. .bin .enc .dat)"
+                "extensions -- e.g. .bin, .enc, .dat)"
             )
 
             if filter_ext:
@@ -458,16 +460,15 @@ class FileAnalyzer:
 
         else:
             self.ui.error(f"Not a valid file or directory → {path}")
+            logger.error(f"Not a valid file or directory → '{path}'")
             return
 
         if not files:
-            self.ui.warning("No files found to scan.")
+            self.ui.warning("No files found to scan")
+            logger.warning("No files found to scan")
             return
 
-        self.scan_files(
-            file_paths=files,
-        )
-
+        self.scan_files(file_paths=files)
 
     def print_detect_results_table(
             self,
@@ -480,7 +481,6 @@ class FileAnalyzer:
             show_header=True,
             header_style="bold cyan",
             show_lines=True,
-            row_styles=["dim", ""]
         )
 
         table.add_column("File", style="bold white")
@@ -505,7 +505,13 @@ class FileAnalyzer:
 
             # Get file size
             file_size = result.get("file_size", 0)
-            size_str = f"{file_size:,}B" if file_size < 1024 else f"{file_size/1024:.1f}KB" if file_size < 1048576 else f"{file_size/1048576:.1f}MB"
+            size_str = (
+                f"{file_size:,}B"
+                if file_size < 1024
+                else f"{file_size/1024:.1f}KB"
+                if file_size < 1048576
+                else f"{file_size/1048576:.1f}MB"
+            )
 
             # Get detected format
             detected_format = (
@@ -519,9 +525,9 @@ class FileAnalyzer:
             if is_encrypted:
                 confidence = result.get("confidence", "Low")
                 if confidence == "High":
-                    status_style = f"[bold red]ENCRYPTED[/bold red]"
+                    status_style = f"[bright_red]ENCRYPTED"
                 elif confidence == "Medium":
-                    status_style = f"[yellow]Suspected[/yellow]"
+                    status_style = f"[bright_yellow]Suspected"
                 else:  # Low
                     status_style = f"[dim yellow]Possible[/dim yellow]"
             else:
@@ -559,24 +565,27 @@ class FileAnalyzer:
             if r.get("is_encrypted") and r.get("analysis_notes")
         ]
         if encrypted_results:
-            console.print("\n[bold cyan]Detailed Analysis:")
+            self.ui.info("Detailed Analysis:")
             for result in encrypted_results:
-                console.print(f"  [cyan]• {result['file_name']}")
+                self.ui.info(f"  • {result['file_name']}")
                 for note in result["analysis_notes"]:
-                    console.print(f"    [dim]- {note}")
+                    self.ui.info(f"    [dim]- {note}")
 
         # Print summary statistics (after both loops finish)
         total_files = len(results)
         encrypted_count = sum(1 for r in results if r.get("is_encrypted"))
         error_count = sum(1 for r in results if r.get("error"))
 
-        console.print(f"\n[bold green]Summary:\n")
-        console.print(f"  Total Files: {total_files}")
-        console.print(f"  Encrypted/Detected: [red]{encrypted_count}")
-        console.print(
-            f"  Plaintext: [green]"
-            f"{total_files - encrypted_count - error_count}[/green]")
-        console.print(f"  Errors: [yellow]{error_count}\n")
+        self.ui.success("====> Summary <====")
+        self.ui.info(f"  Total Files: {total_files}")
+        self.ui.info(
+            f"  Encrypted/Detected: [bright_red]{encrypted_count}"
+        )
+        self.ui.info(
+            f"  Plaintext: "
+            f"{total_files - encrypted_count - error_count}"
+        )
+        self.ui.info(f"  Errors: [bright_yellow]{error_count}")
 
         if results:
             export = self.ui.confirm("Export results to CSV?")
@@ -594,10 +603,13 @@ class FileAnalyzer:
 
                 try:
                     csv_path = self.export_results_csv(results, output_path)
-                    self.ui.success(f"Results exported to → '{csv_path}'")
+                    export_msg = f"Results exported to → '{csv_path}'"
+                    self.ui.success(export_msg)
+                    logger.info(export_msg)
                 except Exception as err:
-                    self.ui.error(f"Failed to export CSV → {err}")
-
+                    export_err_msg = f"Failed to export CSV → {err}"
+                    self.ui.error(export_err_msg)
+                    logger.error(export_err_msg)
 
     def export_results_csv(
             self,
@@ -614,8 +626,8 @@ class FileAnalyzer:
             Path to the exported CSV file.
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = Path(f"encryption_scan_{timestamp}.csv")
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            output_path = Path(f"{timestamp}_encryption_scan.csv")
 
         fieldnames = [
             "file_name",

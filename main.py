@@ -2,12 +2,11 @@
 
 # TODO - Make this an "all in one tool"? Options to add:
 
-# TODO - (A) text/file hasher
-# TODO - (B) QR code generator (with options to pick custom colors)
-# TODO - (C) image-to-base64 / base64-to-image converter
-# TODO - (D) password generator (w/ various requirements)
-# TODO - (E) key word searcher (file names and contents)
-# TODO - (F) file hash searcher (read from txt file or input)
+# TODO - (a) QR code generator (with options to pick custom colors)
+# TODO - (b) image-to-base64 / base64-to-image converter
+# TODO - (c) password generator (w/ various requirements)
+# TODO - (d) key word searcher (file names and contents)
+# TODO - (e) file hash searcher (read from txt file or input)
 
 from functools import partial
 import logging
@@ -31,9 +30,7 @@ from resources.encrypt_decrypt._aes import AES
 from resources.encrypt_decrypt._key import KEY
 from resources.encrypt_decrypt._pgp import PGP
 from resources.encrypt_decrypt._xor import XOR
-from resources.encrypt_decrypt.detect import FileAnalyzer
-from resources.file_checker import FileCheckRunner
-from resources.time_converter import TimestampConverter
+from resources.encrypt_decrypt.detect import EncryptionDetector
 from utils import Utils, UIHandlerProtocol, RichUIHandler, get_time
 from versions import (
     __version__,
@@ -77,9 +74,7 @@ class Main:
         self.aes = AES()
         self.pgp = PGP()
         self.xor = XOR()
-        self.detect = FileAnalyzer()
-        self.file_checker = FileCheckRunner()
-        self.time_converter = TimestampConverter()
+        self.detect = EncryptionDetector()
 
         # Map handler names to actual method references
         self._modules = {
@@ -88,8 +83,6 @@ class Main:
             "pgp": self.pgp,
             "xor": self.xor,
             "detect": self.detect,
-            "file_checker": self.file_checker,
-            "time_converter": self.time_converter,
         }
         self._set_up_modules()
 
@@ -100,13 +93,21 @@ class Main:
     def _set_up_modules(self) -> None:
         """Initialize and register all modules."""
         from resources.encode_decode import EncodeDecode
+        from resources.file_checker import FileCheckRunner
         from resources.hashing import Hashing
+        from resources.time_converter import TimestampConverter
 
         self.encode_decode = EncodeDecode(ui=self.ui)
         self._modules["encode_decode"] = self.encode_decode
 
+        self.file_checker = FileCheckRunner(ui=self.ui)
+        self._modules["file_checker"] = self.file_checker
+
         self.hashing = Hashing(ui=self.ui)
         self._modules["hashing"] = self.hashing
+
+        self.time_converter = TimestampConverter(ui=self.ui)
+        self._modules["time_converter"] = self.time_converter
 
     @handle_exceptions()
     def handle_sigint(self, sig, frame) -> None:
@@ -134,23 +135,17 @@ class Main:
 
                         if handler and callable(handler):
 
-                            # try:
                             sub_cat.handler_callable = partial(
                                 handler,
                                 **sub_cat.handler_kwargs
                             )
-                            logger.info(
+                            logger.debug(
                                 f"Bound handler → "
                                 f"[{category_key}][{sub_key}] "
                                 f"{sub_cat.handler_module}."
                                 f"{sub_cat.handler_method}."
                                 f"{sub_cat.handler_kwargs}"
                             )
-                            # except Exception as err:
-                            #     self.ui.error(
-                            #         f"Failed to bind "
-                            #         f"[{category_key}][{sub_key}] → {err}"
-                            #     )
                         else:
                             self.ui.warning(
                                 f"Method '{sub_cat.handler_method}' "
@@ -177,12 +172,11 @@ class Main:
                                     None,
                                 )
                             if handler and callable(handler):
-                                # try:
                                 item.handler_callable = partial(
                                         handler,
                                         **item.handler_kwargs
                                     )
-                                logger.info(
+                                logger.debug(
                                         f"Bound handler → "
                                         f"[{category_key}][{sub_key}]"
                                         f"[{item_key}] "
@@ -190,12 +184,6 @@ class Main:
                                         f"{item.handler_method}."
                                         f"{item.handler_kwargs}"
                                     )
-                                # except Exception as err:
-                                #     self.ui.error(
-                                #             f"Failed to bind "
-                                #             f"[{category_key}][{sub_key}]"
-                                #             f"[{item_key}] → {err}"
-                                #         )
                             else:
                                 self.ui.warning(
                                     f"Method '{item.handler_method}' "
@@ -227,24 +215,11 @@ class Main:
         if hasattr(menu_item, 'handler_callable') and menu_item.handler_callable:
             handler_name = getattr(menu_item, 'label', 'Unknown')
 
-            # import traceback
-            # try:
             result = menu_item.handler_callable()
             if result is None:
                 logger.warning(f"Handler '{handler_name}' returned None")
             return True
-            # except Exception as err:
-            #     # Get handler name from menu_item attributes
-            #     handler_name = getattr(menu_item, 'label', None) or \
-            #         getattr(menu_item, 'name', None) or \
-            #         getattr(menu_item, 'key', None) or \
-            #         str(type(menu_item.handler_callable))
-            #     self.ui.error(
-            #         f"Error executing handler: '{handler_name}': "
-            #         f"{type(err).__name__} → {err}\n"
-            #         f"Traceback:\n{traceback.format_exc()}"
-            #     )
-            #     return False
+
         else:
             self.ui.error("No handler callable bound to this menu item")
             return False
@@ -264,10 +239,10 @@ class Main:
         while not exit_program:
             category = self.config.main_categories.get(category_key)
             if not category:
+                self.ui.error("An invalid category was entered")
                 logger.error(
                     f"Invalid category requested: [ '{category_key}' ]"
                 )
-                self.ui.error("An invalid category was entered")
                 return
 
             # Clear the screen before showing submenu
@@ -276,7 +251,6 @@ class Main:
             # Show the middle-tier (level 1) sub-menu
             self.display_sub_menu(category_key)
 
-            # try:
             selection = self.ui.prompt(
                 "ENTER CHOICE",
                 menu_prompt=True,
@@ -333,14 +307,6 @@ class Main:
                 exit_program = True
                 return
 
-            # except KeyboardInterrupt:
-            #     msg = "Application was interrupted by user (Ctrl+C)"
-            #     self.ui.warning(msg)
-            #     logger.warning(msg)
-            #     return
-            # except EOFError:
-            #     return
-
     @handle_exceptions()
     def run_sub_submenu_loop(
             self,
@@ -370,7 +336,6 @@ class Main:
             # Display third-tier menu
             self.display_sub_sub_menu(category_key, sub_cat_key)
 
-            # try:
             selection = self.ui.prompt(
                 "ENTER CHOICE",
                 menu_prompt=True,
@@ -405,14 +370,6 @@ class Main:
                 exit_loop = True
                 return
 
-            # except KeyboardInterrupt:
-            #     msg = "Application was interrupted by user (Ctrl+C)"
-            #     self.ui.warning(msg)
-            #     logger.warning(msg)
-            #     return
-            # except EOFError:
-            #     return
-
     @handle_exceptions()
     def _ask_continue(self) -> bool:
         """Ask user if they want to continue to main menu.
@@ -420,8 +377,6 @@ class Main:
         Returns:
             True if user wants to continue, False to exit
         """
-        # try:
-
         response = self.ui.confirm(
             "Return to previous menu?",
             default="y"
@@ -434,11 +389,6 @@ class Main:
 
         logger.info("User returned to the previous menu")
         return True
-
-        # except (KeyboardInterrupt, EOFError) as e:
-        #     logger.error(f"An error occured during this operation → {e}")
-        #     # Exit on interrupt during prompt
-        #     return False
 
     @handle_exceptions()
     def display_main_menu(self) -> None:
